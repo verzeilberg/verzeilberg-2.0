@@ -1,0 +1,60 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Search Phrases - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-search me-2"></i>Search Phrases</h1>
+</div>
+
+{% if pagination.getTotalItemCount() == 0 %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>No search phrases recorded yet.
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Search Phrase</th>
+                    <th>Type</th>
+                    <th>Count</th>
+                    <th>Last Searched</th>
+                    <th class="text-center"><i class="fas fa-cogs"></i></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for phrase in pagination %}
+                <tr>
+                    <td>{{ phrase.searchPhrase }}</td>
+                    <td>
+                        <span class="badge bg-info text-dark">{{ phrase.type }}</span>
+                    </td>
+                    <td>{{ phrase.count }}</td>
+                    <td>{{ phrase.dateSearched|date('d-m-Y H:i') }}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger delete-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteModal"
+                                data-delete-url="{{ path('admin_search_delete', {id: phrase.id}) }}"
+                                data-csrf-token="{{ csrf_token('delete' ~ phrase.id) }}"
+                                data-delete-message="Are you sure you want to delete the search phrase '{{ phrase.searchPhrase }}'?">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <nav aria-label="Search phrases pagination">
+        {{ knp_pagination_render(pagination) }}
+    </nav>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/delete-modal.js') }}"></script>
+{% endblock %}

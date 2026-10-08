@@ -1,0 +1,47 @@
+/* Checklist builder (admin): sortable field tree */
+.field-item {
+    transition: all 0.2s ease;
+}
+
+.hover-shadow-hover:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-1px);
+}
+
+.drag-handle {
+    cursor: grab;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: var(--vz-surface-muted);
+}
+
+.drag-handle:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.field-content {
+    min-width: 0;
+}
+
+.field-actions {
+    flex-shrink: 0;
+    display: flex;
+    gap: 4px;
+}
+
+@media (max-width: 767px) {
+    .field-actions span {
+        display: none;
+    }
+}
+
+/* Public checklist: confirmation after submitting */
+.checklist-thanks {
+    max-width: 36rem;
+}

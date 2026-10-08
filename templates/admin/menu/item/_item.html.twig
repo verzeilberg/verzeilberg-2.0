@@ -1,0 +1,65 @@
+{# templates/admin/menu/item/_item.html.twig #}
+{% set hasChildren = item.children|length > 0 %}
+<li class="list-group-item{% if level > 0 %} ps-4{% endif %} sortable-menu-item" 
+    data-item-id="{{ item.id }}"
+    data-menu-id="{{ item.menu.id }}"
+    data-level="{{ level }}">
+    
+    <div class="d-flex align-items-center gap-2">
+        <span class="drag-handle text-muted" title="Drag to reorder">
+            <i class="fas fa-grip-lines"></i>
+        </span>
+        
+        {% if item.icon %}
+            {% set iconClass = item.icon starts with 'fa-' ? 'fas ' ~ item.icon : item.icon %}
+            <i class="{{ iconClass }} text-secondary w-20px"></i>
+        {% else %}
+            <span class="w-20px"></span>
+        {% endif %}
+        
+        <div class="flex-grow-1">
+            <strong>{{ item.label }}</strong>
+            {% if item.link %}
+                <small class="text-muted ms-2">{{ item.link }}</small>
+            {% endif %}
+            {% if not item.enabled %}
+                <span class="badge bg-secondary ms-2">Disabled</span>
+            {% endif %}
+            {% if item.authorizedFor %}
+                <span class="badge bg-info text-dark ms-2">{{ item.authorizedFor }}</span>
+            {% endif %}
+            <small class="text-muted ms-2">Order: {{ item.sortOrder }}</small>
+        </div>
+
+        <div class="btn-group btn-group-sm">
+            <a href="{{ path('admin_menu_item_edit', {id: item.menu.id, item: item.id}) }}" 
+               class="btn btn-outline-secondary" title="Edit">
+                <i class="fas fa-edit"></i>
+            </a>
+            {% if hasChildren %}
+                <button type="button" class="btn btn-outline-secondary toggle-children" 
+                        data-bs-toggle="collapse" data-bs-target="#children-{{ item.id }}">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            {% endif %}
+            <button type="button" class="btn btn-outline-danger js-ajax-delete"
+                    data-delete-url="{{ path('admin_menu_item_delete', {id: item.menu.id, item: item.id}) }}"
+                    data-delete-message="Are you sure you want to delete the menu item &quot;{{ item.label }}&quot; and all its children? This action cannot be undone."
+                    data-error-message="Failed to delete menu item"
+                    data-csrf-token="{{ csrf_token('delete' ~ item.id) }}"
+                    title="Delete">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </div>
+
+    {% if hasChildren %}
+    <div class="collapse show mt-2" id="children-{{ item.id }}">
+        <ul class="list-group list-group-flush sortable-menu" data-menu-id="{{ item.menu.id }}">
+            {% for child in item.children %}
+                {{ include('admin/menu/item/_item.html.twig', {item: child, level: level + 1}) }}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</li>

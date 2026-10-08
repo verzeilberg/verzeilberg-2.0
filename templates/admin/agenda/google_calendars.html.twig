@@ -1,0 +1,36 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Google calendars - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fab fa-google me-2"></i>Calendars of {{ account.email }}</h1>
+    <a href="{{ path('admin_agenda_agendas') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Agendas</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <p>Choose which calendars are shown in the agenda. Each chosen calendar becomes an agenda that follows Google; you can make it public afterwards.</p>
+        <form method="post">
+            <input type="hidden" name="_token" value="{{ csrf_token('google_calendars' ~ account.id) }}">
+            <div class="list-group mb-3">
+                {% for calendar in calendars %}
+                    <label class="list-group-item d-flex align-items-center gap-3">
+                        <input class="form-check-input m-0" type="checkbox" name="calendars[]" value="{{ calendar.id }}" {{ linked[calendar.id] is defined ? 'checked' }}>
+                        <span class="color-dot" style="--dot-color: {{ calendar.color }};"></span>
+                        <span>
+                            {{ calendar.summary }}
+                            {% if calendar.primary %}<span class="badge bg-secondary ms-1">main calendar</span>{% endif %}
+                            {% if linked[calendar.id] is defined %}<span class="badge bg-success ms-1">in the agenda</span>{% endif %}
+                        </span>
+                    </label>
+                {% else %}
+                    <div class="list-group-item text-muted">This account has no calendars.</div>
+                {% endfor %}
+            </div>
+            <p class="text-muted small"><i class="fas fa-info-circle me-1"></i>Unticking a calendar stops the updates; the agenda and its appointments stay as a normal agenda.</p>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

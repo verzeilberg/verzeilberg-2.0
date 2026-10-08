@@ -1,0 +1,63 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Contactformulieren - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-envelope me-2"></i>Contactformulieren</h1>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if contacts is defined and contacts.getTotalItemCount() > 0 %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Aanhef</th>
+                            <th>Naam</th>
+                            <th>E-mail</th>
+                            <th>Onderwerp</th>
+                            <th>Verstuurd op</th>
+                            <th class="text-center"><i class="fas fa-cogs"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contact in contacts %}
+                        <tr class="js-row-link cursor-pointer" data-href="{{ path('admin_contact_show', {id: contact.id}) }}">
+                            <td>{{ contact.salutationLabel }}</td>
+                            <td>{{ contact.name }}</td>
+                            <td>{{ contact.email }}</td>
+                            <td>{{ contact.subject }}</td>
+                            <td>{{ contact.dateCreated|date('d-m-Y H:i') }}</td>
+                            <td class="text-center">
+                                <a href="{{ path('admin_contact_show', {id: contact.id}) }}" class="btn btn-sm btn-outline-primary me-1" title="Bekijken">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <form action="{{ path('admin_contact_delete', {id: contact.id}) }}" method="POST" data-confirm="Weet u zeker dat u dit contactformulier wilt verwijderen?" class="d-inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ contact.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Verwijderen">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if contacts.getTotalItemCount() > contacts.getItemNumberPerPage() %}
+            <nav aria-label="Contact paginatie">
+                {{ knp_pagination_render(contacts) }}
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-envelope-open fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Geen contactformulieren gevonden.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

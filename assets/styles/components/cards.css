@@ -1,0 +1,16 @@
+/* Cards */
+.card {
+    border: none;
+    box-shadow: var(--vz-shadow-sm);
+}
+
+.card-header {
+    background-color: var(--vz-surface-muted);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+

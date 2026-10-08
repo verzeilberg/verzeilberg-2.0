@@ -1,0 +1,218 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}{{ post.title }} - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-eye me-2"></i>{{ post.title }}</h1>
+    <div>
+        <a href="{{ path('admin_blog_edit', {id: post.id}) }}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-edit me-1"></i>Edit
+        </a>
+        <a href="{{ path('admin_blog_index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Content</h5>
+                <span class="badge bg-{% if post.status == 1 %}success{% elseif post.status == 2 %}warning{% elseif post.status == 3 %}danger{% else %}secondary{% endif %}">
+                    {% if post.status == 1 %}Online
+                    {% elseif post.status == 2 %}Offline
+                    {% elseif post.status == 3 %}Archived
+                    {% else %}Draft{% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                {% if post.introText %}
+                    <div class="mb-4 p-3 bg-light rounded">
+                        <h6>Introduction</h6>
+                        <p class="mb-0">{{ post.introText|nl2br }}</p>
+                    </div>
+                {% endif %}
+                <div class="blog-content">
+                    {{ post.content|raw }}
+                </div>
+            </div>
+        </div>
+
+        {% if post.images|length > 0 %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Images ({{ post.images|length }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for image in post.images %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <img src="{{ image.getPublicPath() }}" class="card-img-top" alt="{{ image.name }}">
+                            <div class="card-body p-2">
+                                <strong>{{ image.name }}</strong>
+                                {% if image.alt %}
+                                <br><small class="text-muted">Alt: {{ image.alt }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if post.files|length > 0 %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Files ({{ post.files|length }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for file in post.files %}
+                    <a href="{{ file.getPublicPath() }}" class="list-group-item list-group-item-action" target="_blank">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ file.name ?? file.filename }}</h6>
+                            <small>{{ file.getHumanReadableSize() }}</small>
+                        </div>
+                        <small class="text-muted">{{ file.mimeType }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if post.youTubes|length > 0 %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">YouTube Videos ({{ post.youTubes|length }})</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for youtube in post.youTubes %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <img src="{{ youtube.getThumbnailUrl('mqdefault') }}" class="card-img-top" alt="{{ youtube.title }}">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ youtube.title }}</h6>
+                                <a href="{{ youtube.getEmbedUrl() }}" class="btn btn-sm btn-primary" target="_blank">
+                                    <i class="fab fa-youtube me-1"></i>Watch
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Post Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">ID</dt>
+                    <dd class="col-sm-8">{{ post.id }}</dd>
+
+                    <dt class="col-sm-4">Slug</dt>
+                    <dd class="col-sm-8">{{ post.slug }}</dd>
+
+                    <dt class="col-sm-4">Status</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-{% if post.status == 1 %}success{% elseif post.status == 2 %}warning{% elseif post.status == 3 %}danger{% else %}secondary{% endif %}">
+                            {% if post.status == 1 %}Online
+                            {% elseif post.status == 2 %}Offline
+                            {% elseif post.status == 3 %}Archived
+                            {% else %}Draft{% endif %}
+                        </span>
+                    </dd>
+
+                    <dt class="col-sm-4">Created</dt>
+                    <dd class="col-sm-8">{{ post.dateCreated|date('Y-m-d H:i') }}</dd>
+
+                    {% if post.dateChanged %}
+                    <dt class="col-sm-4">Modified</dt>
+                    <dd class="col-sm-8">{{ post.dateChanged|date('Y-m-d H:i') }}</dd>
+                    {% endif %}
+
+                    {% if post.dateOnline %}
+                    <dt class="col-sm-4">Publish Date</dt>
+                    <dd class="col-sm-8">{{ post.dateOnline|date('Y-m-d') }}
+                        {% if post.timeOnline %} {{ post.timeOnline|date('H:i') }}{% endif %}
+                    </dd>
+                    {% endif %}
+
+                    {% if post.dateOffline %}
+                    <dt class="col-sm-4">Unpublish Date</dt>
+                    <dd class="col-sm-8">{{ post.dateOffline|date('Y-m-d') }}
+                        {% if post.timeOffline %} {{ post.timeOffline|date('H:i') }}{% endif %}
+                    </dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Categories</h5>
+            </div>
+            <div class="card-body">
+                {% if post.categories|length > 0 %}
+                <div class="d-flex flex-wrap gap-1">
+                    {% for category in post.categories %}
+                    <span class="badge bg-info text-dark">{{ category.name }}</span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No categories</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Statistics</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-6">Images</dt>
+                    <dd class="col-sm-6">{{ post.images|length }}</dd>
+
+                    <dt class="col-sm-6">Files</dt>
+                    <dd class="col-sm-6">{{ post.files|length }}</dd>
+
+                    <dt class="col-sm-6">YouTube Videos</dt>
+                    <dd class="col-sm-6">{{ post.youTubes|length }}</dd>
+
+                    <dt class="col-sm-6">Comments</dt>
+                    <dd class="col-sm-6">{{ post.getCommentCount() }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ path('blog_detail', {slug: post.slug}) }}" target="_blank" class="btn btn-outline-primary">
+                        <i class="fas fa-external-link me-1"></i>View on Site
+                    </a>
+                    <a href="{{ path('admin_blog_edit', {id: post.id}) }}" class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i>Edit Post
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

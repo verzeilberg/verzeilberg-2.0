@@ -1,0 +1,18 @@
+{# 1536 → "1.5 KB" #}
+{% macro file_size(bytes) %}
+    {%- if bytes < 1024 %}{{ bytes }} B
+    {%- elseif bytes < 1048576 %}{{ (bytes / 1024)|number_format(1, ',', '.') }} KB
+    {%- else %}{{ (bytes / 1048576)|number_format(1, ',', '.') }} MB
+    {%- endif -%}
+{% endmacro %}
+
+{# Thumbnail of an image, or an icon for a folder or another file #}
+{% macro preview(entry) %}
+    {%- if entry.isFolder -%}
+        <span class="media-thumb"><i class="fas fa-folder fa-2x text-warning"></i></span>
+    {%- elseif entry.isImage -%}
+        <a href="{{ entry.url }}" target="_blank" rel="noopener" class="media-thumb"><img src="{{ entry.url }}" alt="" loading="lazy"></a>
+    {%- else -%}
+        <a href="{{ entry.url }}" target="_blank" rel="noopener" class="media-thumb"><i class="fas fa-file fa-2x text-secondary"></i></a>
+    {%- endif -%}
+{% endmacro %}

@@ -7,12 +7,43 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # Password of the public handbal page (HANDBAL_PUBLIC_PASSWORD; empty = the page can't be opened)
+    handbal_public_password: '%env(default::HANDBAL_PUBLIC_PASSWORD)%'
+    
+    # Strava API Configuration
+    strava.client_id: '%env(STRAVA_CLIENT_ID)%'
+    strava.client_secret: '%env(STRAVA_CLIENT_SECRET)%'
+    strava.redirect_uri: '%env(STRAVA_REDIRECT_URI)%'
+    # 0 while STRAVA_ATHLETE_ID is empty (Strava not configured), so the Strava pages don't crash
+    strava.athlete_id_unset: 0
+    strava.athlete_id: '%env(int:default:strava.athlete_id_unset:STRAVA_ATHLETE_ID)%'
+    strava.approval_prompt: 'auto'
+    strava.scopes: ['read', 'activity:read', 'activity:read_all']
+    strava.activities_per_page: 30
+    strava.google_maps_key: '%env(STRAVA_GOOGLE_MAPS_KEY)%'
+
+    # Time zone of the times in the agenda (they are stored as entered, e.g. "19:00");
+    # used to convert iCal imports and exports, which carry their own time zone
+    app.timezone: 'Europe/Amsterdam'
+
+    # Uploaded blog/event files, managed in the admin under Media (see MediaLibrary)
+    app.uploads_dir: '%kernel.project_dir%/public/uploads'
+    app.uploads_url: '/uploads'
 
 services:
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        bind:
+            $athleteId: '%strava.athlete_id%'
+            $activitiesPerPage: '%strava.activities_per_page%'
+            $appTimezone: '%app.timezone%'
+            $clientId: '%strava.client_id%'
+            $clientSecret: '%strava.client_secret%'
+            $redirectUri: '%strava.redirect_uri%'
+            $approvalPrompt: '%strava.approval_prompt%'
+            $scopes: '%strava.scopes%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -21,3 +52,8 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+when@test:
+    parameters:
+        # Tests get their own folder, so they never touch real uploads
+        app.uploads_dir: '%kernel.project_dir%/var/test-uploads'

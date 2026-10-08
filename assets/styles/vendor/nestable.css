@@ -1,0 +1,32 @@
+/* Nestable (drag & drop lists, used by the checklist field tree) */
+.dd-list {
+    list-style: none;
+    padding: 8px 0;
+    margin: 0;
+}
+
+.dd-item {
+    margin: 0 0 8px 0;
+}
+
+.dd-item:last-child {
+    margin-bottom: 0;
+}
+
+.dd-placeholder {
+    border: 3px dashed #0d6efd !important;
+    background: rgba(13, 110, 253, 0.15) !important;
+    border-radius: 8px !important;
+    min-height: 80px;
+    margin: 12px 0;
+}
+
+.dd-dragel {
+    box-shadow: var(--vz-shadow-lg) !important;
+}
+
+@media (max-width: 767px) {
+    .dd-list.ms-4 {
+        margin-left: 1rem !important;
+    }
+}

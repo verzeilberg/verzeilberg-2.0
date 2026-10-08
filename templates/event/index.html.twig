@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Events - Verzeilberg.nl{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Status</label>
+                    <div class="d-grid gap-2">
+                        <a href="{{ path('app_events', {status: 'upcoming'}) }}" class="btn {% if currentStatus == 'upcoming' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            <i class="fas fa-calendar-plus me-1"></i>Upcoming
+                        </a>
+                        <a href="{{ path('app_events', {status: 'ongoing'}) }}" class="btn {% if currentStatus == 'ongoing' %}btn-success{% else %}btn-outline-success{% endif %}">
+                            <i class="fas fa-calendar-check me-1"></i>Ongoing
+                        </a>
+                        <a href="{{ path('app_events', {status: 'past'}) }}" class="btn {% if currentStatus == 'past' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+                            <i class="fas fa-calendar-minus me-1"></i>Past
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Category</label>
+                    <div class="d-grid gap-2">
+                        <a href="{{ path('app_events', {status: currentStatus}) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-list me-1"></i>All Categories
+                        </a>
+                        {% for category in categories %}
+                            <a href="{{ path('app_events', {status: currentStatus, category: category.id}) }}" class="btn {% if currentCategory == category.id %}btn-info{% else %}btn-outline-info{% endif %}">
+                                {{ category.name }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-calendar-alt me-2"></i>Events</h1>
+        </div>
+
+        {% if pagination.getTotalItemCount() == 0 %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>No events found.
+            </div>
+        {% else %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for event in pagination %}
+                <div class="col">
+                    <div class="card h-100">
+                        {% if event.eventImage %}
+                            <img src="{{ event.eventImage.getPublicPath() }}" class="card-img-top" alt="{{ event.title }}">
+                        {% else %}
+                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center">
+                                <i class="fas fa-calendar-alt fa-3x text-white-50"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            {% if event.category %}
+                                <span class="badge bg-info mb-2">{{ event.category.name }}</span>
+                            {% endif %}
+                            <h5 class="card-title">{{ event.title }}</h5>
+                            {% if event.labelText %}
+                                <p class="card-text text-muted small">{{ event.labelText|u.truncate(100) }}</p>
+                            {% endif %}
+                            <div class="text-muted small mb-2">
+                                <i class="fas fa-calendar-day me-1"></i>{{ event.eventStartDate|date('d M Y') }}
+                                {% if event.eventEndDate != event.eventStartDate %}
+                                    <i class="fas fa-arrow-right mx-1"></i>{{ event.eventEndDate|date('d M Y') }}
+                                {% endif %}
+                            </div>
+                            {% if event.eventStartTime or event.eventEndTime %}
+                                <div class="text-muted small mb-2">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {% if event.eventStartTime %}{{ event.eventStartTime|date('H:i') }}{% else %}00:00{% endif %}
+                                    -
+                                    {% if event.eventEndTime %}{{ event.eventEndTime|date('H:i') }}{% else %}23:59{% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{{ path('app_event_show', {id: event.id}) }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <nav aria-label="Events pagination" class="mt-4">
+                {{ knp_pagination_render(pagination) }}
+            </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

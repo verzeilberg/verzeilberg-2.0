@@ -1,0 +1,96 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Categories - Admin{% endblock %}
+
+{% block body %}
+{% include 'admin/partials/delete_modal.html.twig' %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-tags me-2"></i>Categories</h1>
+    <a href="{{ path('admin_category_new') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>New Category
+    </a>
+</div>
+
+<div class="mb-3">
+    <div class="btn-group" role="group">
+        <a href="{{ path('admin_category_index', {status: 'enabled'}) }}" class="btn {% if currentStatus == 'enabled' %}btn-success{% else %}btn-outline-success{% endif %}">
+            <i class="fas fa-check me-1"></i>Enabled ({{ enabledCount }})
+        </a>
+        <a href="{{ path('admin_category_index', {status: 'disabled'}) }}" class="btn {% if currentStatus == 'disabled' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+            <i class="fas fa-ban me-1"></i>Disabled ({{ disabledCount }})
+        </a>
+        <a href="{{ path('admin_category_index') }}" class="btn {% if currentStatus == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            <i class="fas fa-list me-1"></i>All
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Slug</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in pagination %}
+                    <tr>
+                        <td>{{ category.name }}</td>
+                        <td>{{ category.slug }}</td>
+                        <td>{{ category.description|slice(0, 50) }}{% if category.description|length > 50 %}...{% endif %}</td>
+                        <td>
+                            {% if category.enabled %}
+                                <span class="badge bg-success">Enabled</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Disabled</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ path('admin_category_edit', {id: category.id}) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ path('admin_category_toggle', {id: category.id}) }}" method="post" class="d-inline" data-confirm="{{ category.enabled ? 'Disable' : 'Enable' }} this category?">
+                                <input type="hidden" name="_token" value="{{ csrf_token('toggle' ~ category.id) }}">
+                                <button type="submit" class="btn btn-sm {% if category.enabled %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{{ category.enabled ? 'Disable' : 'Enable' }}">
+                                    <i class="fas {% if category.enabled %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-danger js-ajax-delete"
+                                    data-delete-url="{{ path('admin_category_delete', {id: category.id}) }}"
+                                    data-delete-message="Are you sure you want to delete the category &quot;{{ category.name }}&quot;? This action cannot be undone."
+                                    data-error-message="Failed to delete category"
+                                    data-csrf-token="{{ csrf_token('delete' ~ category.id) }}"
+                                    title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No categories found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if pagination.getTotalItemCount() > 20 %}
+        <nav aria-label="Categories pagination">
+            {{ knp_pagination_render(pagination) }}
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/ajax-delete.js') }}"></script>
+{% endblock %}

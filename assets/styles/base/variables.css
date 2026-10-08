@@ -1,0 +1,10 @@
+/* Design tokens shared by the site and the admin (on top of Bootstrap's --bs-* variables) */
+:root {
+    --vz-font-display: 'Faster One', cursive;
+    --vz-accent: #ffbe33;
+    --vz-accent-hover: #e69c00;
+    --vz-surface-muted: #f8f9fa;
+    --vz-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --vz-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --vz-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+}

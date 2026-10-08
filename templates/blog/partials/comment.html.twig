@@ -1,0 +1,17 @@
+<div class="card mb-3 blog-comment ms-{{ depth * 3 }}" style="--depth: {{ depth }};">
+    <div class="card-body py-2">
+        <div class="d-flex justify-content-between mb-1">
+            <strong>{{ comment.author.getFullName() ?? comment.author.getUserIdentifier() }}</strong>
+            <small class="text-muted">{{ comment.dateCreated|date('M d, Y H:i') }}</small>
+        </div>
+        <p class="mb-0">{{ comment.content|nl2br }}</p>
+
+        {% if comment.children|length > 0 %}
+            <div class="mt-2 ms-3">
+                {% for child in comment.children %}
+                    {% include 'blog/partials/comment.html.twig' with {comment: child, depth: depth + 1} %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>

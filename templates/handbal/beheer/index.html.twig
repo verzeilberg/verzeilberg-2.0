@@ -1,0 +1,89 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Handbal Beheer - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-handshake me-2"></i>Handbal Beheer</h1>
+    <div class="d-flex gap-2">
+        <a href="{{ path('handbal_beheer_speler_new') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Nieuwe speler
+        </a>
+        <a href="{{ path('handbal_beheer_keeper_new') }}" class="btn btn-warning">
+            <i class="fas fa-plus me-1"></i>Nieuwe keeper
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6" id="spelers">
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-running me-2"></i>Spelers</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if spelers|length > 0 %}
+                    <div class="list-group list-group-flush">
+                        {% for speler in spelers %}
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ speler.naam }}</strong>
+                                    {% if speler.rugnummer %}
+                                        <span class="badge bg-secondary ms-2">#{{ speler.rugnummer }}</span>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">
+                                    <i class="fas fa-check-circle text-success me-1"></i>Actief
+                                </small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="fas fa-running fa-2x mb-2"></i>
+                        <p class="mb-0">Geen actieve spelers</p>
+                        <a href="{{ path('handbal_beheer_speler_new') }}" class="btn btn-primary btn-sm mt-2">
+                            <i class="fas fa-plus me-1"></i>Voeg eerste speler toe
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Keepers</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if keepers|length > 0 %}
+                    <div class="list-group list-group-flush">
+                        {% for keeper in keepers %}
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ keeper.naam }}</strong>
+                                    {% if keeper.rugnummer %}
+                                        <span class="badge bg-secondary ms-2">#{{ keeper.rugnummer }}</span>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">
+                                    <i class="fas fa-check-circle text-success me-1"></i>Actief
+                                </small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                        <p class="mb-0">Geen actieve keepers</p>
+                        <a href="{{ path('handbal_beheer_keeper_new') }}" class="btn btn-warning btn-sm mt-2">
+                            <i class="fas fa-plus me-1"></i>Voeg eerste keeper toe
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

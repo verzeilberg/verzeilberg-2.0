@@ -1,0 +1,84 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Strava Importeren - Admin{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-download me-2"></i>Strava Activiteiten Importeren</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle me-2"></i>Hoe werkt het?</h5>
+                    <ul class="mb-0">
+                        <li>Klik op "Activiteiten ophalen" om nieuwe activiteiten van Strava te importeren</li>
+                        <li>Al geïmporteerde activiteiten worden overgeslagen</li>
+                        <li>Elke import wordt gelogd voor later reference</li>
+                    </ul>
+                </div>
+
+                <form method="POST" id="importForm">
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-primary btn-lg" id="importBtn">
+                            <i class="fas fa-download me-2"></i>Activiteiten ophalen en importeren
+                        </button>
+                        <a href="{{ path('admin_strava_index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Terug naar overzicht
+                        </a>
+                    </div>
+                </form>
+
+                <div id="importResult" class="mt-4" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Import resultaat</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="resultSummary"></div>
+                            <div id="resultDetails"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent imports -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recente imports</h5>
+            </div>
+            <div class="card-body">
+                {% if recentImports is defined and recentImports|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Datum</th>
+                                <th>Aantal activiteiten</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recentImports %}
+                            <tr>
+                                <td>{{ log.importDate|date('d-m-Y H:i') }}</td>
+                                <td>{{ log.activityCount }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Nog geen imports uitgevoerd.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/strava/import.js') }}" data-import-url="{{ path('admin_strava_import') }}"></script>
+{% endblock %}

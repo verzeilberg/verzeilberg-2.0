@@ -1,0 +1,23 @@
+{# A game in the library; showRecent puts the playtime of the last two weeks first #}
+{% import 'games/_macros.html.twig' as steam %}
+<div class="card h-100 text-start steam-game">
+    <a href="{{ game.storeUrl }}" target="_blank" rel="noopener" class="steam-game-image" title="{{ game.name }} in the Steam store">
+        <img src="{{ game.headerImage }}" alt="{{ game.name }}" loading="lazy" class="card-img-top">
+    </a>
+    <div class="card-body d-flex flex-column gap-2">
+        <h3 class="h6 card-title mb-0 text-truncate" title="{{ game.name }}">{{ game.name }}</h3>
+        {% if game.genres %}
+            <div class="d-flex flex-wrap gap-1">
+                {% for genre in game.genres|slice(0, 3) %}<span class="badge text-bg-light border">{{ genre }}</span>{% endfor %}
+            </div>
+        {% endif %}
+        <div class="d-flex justify-content-between small text-muted mt-auto">
+            <span title="Total playtime"><i class="fas fa-hourglass-half me-1"></i>{{ steam.playtime(game.playtimeForever) }}</span>
+            <span title="Last played"><i class="fas fa-calendar-day me-1"></i>{{ steam.last_played(game.lastPlayedAt) }}</span>
+        </div>
+        {% if showRecent and game.playtimeTwoWeeks > 0 %}
+            <div class="small text-success"><i class="fas fa-fire me-1"></i>{{ steam.playtime(game.playtimeTwoWeeks) }} in the last 2 weeks</div>
+        {% endif %}
+        {{ steam.achievements(game) }}
+    </div>
+</div>

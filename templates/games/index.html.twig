@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+{% import 'games/_macros.html.twig' as steam %}
+
+{% block title %}Games - Verzeilberg.nl{% endblock %}
+
+{% block body %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <h1 class="mb-0"><i class="fab fa-steam me-2"></i>Games</h1>
+    {% if account %}
+        <a href="{{ account.profileUrl }}" target="_blank" rel="noopener" class="d-flex align-items-center gap-2 text-decoration-none text-reset steam-profile">
+            {% if account.avatarUrl %}<img src="{{ account.avatarUrl }}" alt="" class="rounded" width="48" height="48">{% endif %}
+            <span>
+                <strong class="d-block">{{ account.personaName ?? 'Steam profile' }}</strong>
+                {% if account.currentlyPlaying %}
+                    <small class="text-success"><i class="fas fa-circle me-1 small"></i>Playing {{ account.currentlyPlaying }}</small>
+                {% else %}
+                    <small class="text-muted">View on Steam <i class="fas fa-external-link-alt small"></i></small>
+                {% endif %}
+            </span>
+        </a>
+    {% endif %}
+</div>
+
+{% if stats.games == 0 %}
+    <div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>The game library hasn't been loaded yet.</div>
+{% else %}
+    <div class="row g-3 mb-4">
+        {% for label, value in {
+            'Games': stats.games,
+            'Played': stats.played,
+            'Hours played': (stats.minutes / 60)|round|number_format(0, '.', ','),
+            'Achievements': stats.achievements|number_format(0, '.', ','),
+        } %}
+            <div class="col-6 col-md-3">
+                <div class="card h-100 text-center">
+                    <div class="card-body py-3">
+                        <div class="fs-3 fw-bold">{{ value }}</div>
+                        <div class="text-muted small">{{ label }}</div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if recent %}
+        <h2 class="h4 mb-3">Recently played</h2>
+        <div class="row g-3 mb-5">
+            {% for game in recent %}
+                <div class="col-sm-6 col-lg-3">
+                    {{ include('games/_card.html.twig', {game: game, showRecent: true}) }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <h2 class="h4 mb-3" id="library">Library</h2>
+    <form method="get" action="{{ path('app_games') }}#library" class="row g-2 align-items-end mb-4" role="search">
+        <div class="col-md-4">
+            <label for="gameSearch" class="form-label small text-muted mb-1">Search</label>
+            <input type="search" id="gameSearch" name="q" value="{{ filters.q }}" class="form-control" placeholder="Game name">
+        </div>
+        <div class="col-6 col-md-3">
+            <label for="gameGenre" class="form-label small text-muted mb-1">Genre</label>
+            <select id="gameGenre" name="genre" class="form-select" data-auto-submit>
+                <option value="">All genres</option>
+                {% for genre in genres %}<option value="{{ genre }}" {{ genre == filters.genre ? 'selected' }}>{{ genre }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label for="gameSort" class="form-label small text-muted mb-1">Sort by</label>
+            <select id="gameSort" name="order" class="form-select" data-auto-submit>
+                {% for sort in sorts %}<option value="{{ sort }}" {{ sort == filters.sort ? 'selected' }}>{{ {recent: 'Last played', playtime: 'Playtime', name: 'Name', achievements: 'Achievements'}[sort] }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label for="gameShow" class="form-label small text-muted mb-1">Show</label>
+            <select id="gameShow" name="show" class="form-select" data-auto-submit>
+                <option value="">Played games</option>
+                <option value="all" {{ not filters.played ? 'selected' }}>All games</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-1">
+            <button type="submit" class="btn btn-primary w-100" title="Search"><i class="fas fa-search"></i></button>
+        </div>
+    </form>
+
+    {% if games.getTotalItemCount == 0 %}
+        <div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>No games found.</div>
+    {% else %}
+        <div class="row g-3">
+            {% for game in games %}
+                <div class="col-sm-6 col-lg-4 col-xl-3">
+                    {{ include('games/_card.html.twig', {game: game, showRecent: false}) }}
+                </div>
+            {% endfor %}
+        </div>
+        <div class="d-flex justify-content-center mt-4">
+            {{ knp_pagination_render(games, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
+        </div>
+    {% endif %}
+
+    {% if account and account.lastSyncedAt %}
+        <p class="text-muted small text-center mt-4 mb-0">Updated {{ account.lastSyncedAt|date('d-m-Y H:i') }}</p>
+    {% endif %}
+{% endif %}
+{% endblock %}

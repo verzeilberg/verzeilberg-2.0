@@ -1,0 +1,204 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}{{ account.name }} - Messages{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+{% endblock %}
+
+{% block body %}
+<div class="admin-imap-messages">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-envelope me-2"></i>{{ account.name }}</h1>
+        <a href="{{ path('admin_imap_index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back
+        </a>
+    </div>
+
+    <div class="row g-3">
+        <!-- Folders Sidebar -->
+        <div class="col-lg-3 col-xl-2">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Folders</h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary refresh-folders" 
+                            data-id="{{ account.id }}"
+                            data-csrf-token="{{ csrf_token('sync' ~ account.id) }}"
+                            title="Refresh folders">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+                <div class="list-group list-group-flush" id="folderList">
+                    {% for folder in folders %}
+                    <a href="{{ path('admin_imap_messages', {id: account.id, folder: folder}) }}" 
+                       class="list-group-item list-group-item-action {% if folder == currentFolder %}active{% endif %} d-flex justify-content-between align-items-center">
+                        {{ folder }}
+                        {% if folder == currentFolder %}
+                            <span class="badge bg-primary rounded-pill">{{ pagination.getTotalItemCount() }}</span>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages List -->
+        <div class="col-lg-9 col-xl-10">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="badge bg-primary me-2">{{ pagination.getTotalItemCount() }} messages</span>
+                    <a href="{{ path('admin_imap_compose_account', {id: account.id}) }}" class="btn btn-sm btn-primary ms-2">
+                        <i class="fas fa-edit me-1"></i>Compose
+                    </a>
+                    <button type="button" class="btn btn-sm btn-success sync-folder" 
+                            data-id="{{ account.id }}" 
+                            data-folder="{{ currentFolder }}"
+                            data-csrf-token="{{ csrf_token('sync' ~ account.id) }}">
+                        <i class="fas fa-sync me-1"></i>Sync
+                    </button>
+                </div>
+            </div>
+
+            {% if pagination.getTotalItemCount() == 0 %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5>No messages in "{{ currentFolder }}"</h5>
+                        <p class="text-muted">Click "Sync" to fetch emails from the server.</p>
+                        <button type="button" class="btn btn-success sync-folder" 
+                                data-id="{{ account.id }}" 
+                                data-folder="{{ currentFolder }}"
+                                data-csrf-token="{{ csrf_token('sync' ~ account.id) }}">
+                            <i class="fas fa-sync me-1"></i>Sync Folder
+                        </button>
+                    </div>
+                </div>
+            {% else %}
+                <form id="bulkDeleteForm" method="POST" action="{{ path('admin_imap_message_bulk_delete', {id: account.id}) }}" style="display: none;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('bulk_delete' ~ account.id) }}">
+                    <input type="hidden" name="folder" value="{{ currentFolder }}">
+                    <input type="hidden" name="messageIds" id="bulkDeleteMessageIds" value="">
+                </form>
+
+                {% if currentFolder == 'Trash' or currentFolder == 'INBOX.Trash' or currentFolder == '[Gmail]/Trash' %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted"><i class="fas fa-trash me-1"></i>Trash folder - select messages to delete permanently</span>
+                            <button type="button" class="btn btn-danger" id="bulkDeleteBtn" disabled>
+                                <i class="fas fa-trash-alt me-1"></i>Delete Permanently
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 imap-messages">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="w-40px">
+                                            {% if currentFolder == 'Trash' or currentFolder == 'INBOX.Trash' or currentFolder == '[Gmail]/Trash' %}
+                                            <input type="checkbox" id="selectAllMessages" class="form-check-input">
+                                            {% endif %}
+                                        </th>
+                                        <th class="min-w-150px">From</th>
+                                        <th class="subject-col">Subject</th>
+                                        <th class="w-130px">Received</th>
+                                        <th class="w-80px">Flags</th>
+                                        <th class="text-end w-100px col-sticky-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for message in pagination %}
+                                    <tr class="{{ message.isRead ? '' : 'table-active fw-bold' }}">
+                                        <td class="py-2">
+                                            {% if currentFolder == 'Trash' or currentFolder == 'INBOX.Trash' or currentFolder == '[Gmail]/Trash' %}
+                                            <input type="checkbox" class="form-check-input message-checkbox" value="{{ message.id }}" data-subject="{{ message.subject|escape('html_attr') }}">
+                                            {% else %}
+                                            {% if message.attachments and message.attachments|length > 0 %}
+                                                <i class="fas fa-paperclip text-muted" title="Has attachments"></i>
+                                            {% endif %}
+                                            {% endif %}
+                                        </td>
+                                        <td class="py-2">
+                                            <div class="text-truncate imap-from">
+                                                {% if message.fromName %}
+                                                    {{ message.fromName }} <{{ message.fromAddress }}>
+                                                {% else %}
+                                                    {{ message.fromAddress }}
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td class="subject-col py-2">
+                                            <div class="d-flex flex-column">
+                                                <strong class="text-truncate mw-100">{{ message.subject ?: '(no subject)' }}</strong>
+                                            </div>
+                                        </td>
+                                        <td class="py-2">{{ message.receivedAt ? message.receivedAt|date('d M Y H:i') : 'Unknown' }}</td>
+                                        <td class="py-2">
+                                            {% if message.isFlagged %}<span class="badge bg-warning text-dark me-1"><i class="fas fa-flag"></i></span>{% endif %}
+                                            {% if message.isAnswered %}<span class="badge bg-info me-1"><i class="fas fa-reply"></i></span>{% endif %}
+                                            {% if message.isDraft %}<span class="badge bg-secondary me-1"><i class="fas fa-edit"></i></span>{% endif %}
+                                            {% if not message.isRead %}<span class="badge bg-primary"><i class="fas fa-envelope"></i></span>{% endif %}
+                                        </td>
+                                        <td class="text-end py-2">
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{{ path('admin_imap_message_show', {id: message.id}) }}" class="btn btn-outline-primary" title="View">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if not message.isRead %}
+                                                    <button type="button" class="btn btn-outline-secondary mark-read" 
+                                                            data-id="{{ message.id }}" 
+                                                            data-csrf-token="{{ csrf_token('read' ~ message.id) }}"
+                                                            title="Mark as Read">
+                                                        <i class="fas fa-envelope-open"></i>
+                                                    </button>
+                                                {% else %}
+                                                    <button type="button" class="btn btn-outline-secondary mark-unread" 
+                                                            data-id="{{ message.id }}" 
+                                                            data-csrf-token="{{ csrf_token('unread' ~ message.id) }}"
+                                                            title="Mark as Unread">
+                                                        <i class="fas fa-envelope"></i>
+                                                    </button>
+                                                {% endif %}
+                                                <button type="button" class="btn btn-outline-danger delete-msg" 
+                                                        data-id="{{ message.id }}" 
+                                                        data-subject="{{ message.subject|escape('html_attr') }}"
+                                                        data-csrf-token="{{ csrf_token('delete' ~ message.id) }}"
+                                                        title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <nav aria-label="Messages pagination" class="mt-3">
+                    {{ knp_pagination_render(pagination, 'pagination/imap_pagination.html.twig') }}
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/imap/messages.js') }}"
+            data-read-url="{{ path('admin_imap_message_read', {id: '__ID__'}) }}"
+            data-unread-url="{{ path('admin_imap_message_unread', {id: '__ID__'}) }}"
+            data-delete-url="{{ path('admin_imap_message_delete', {id: '__ID__'}) }}"
+            data-sync-url="{{ path('admin_imap_sync', {id: '__ID__'}) }}"
+            data-folders-url="{{ path('admin_imap_folders', {id: '__ID__'}) }}"
+            data-messages-url="{{ path('admin_imap_messages', {id: '__ID__', folder: '__FOLDER__'}) }}"
+            data-current-folder="{{ currentFolder }}"
+            data-folder-count="{{ pagination.getTotalItemCount() }}"></script>
+{% endblock %}

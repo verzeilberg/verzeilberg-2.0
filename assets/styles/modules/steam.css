@@ -1,0 +1,32 @@
+/* Steam game library (public /games, home page, admin) */
+.steam-game {
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.steam-game:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--vz-shadow-md);
+}
+
+/* Steam header images are 460×215 */
+.steam-game .card-img-top {
+    height: auto;
+    aspect-ratio: 460 / 215;
+    object-fit: cover;
+}
+
+.steam-progress {
+    height: 6px;
+}
+
+.steam-profile img {
+    object-fit: cover;
+}
+
+.steam-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    object-fit: cover;
+}

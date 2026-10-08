@@ -1,0 +1,60 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}{{ item.id ? 'Edit' : 'New' }} Agenda Item - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-{{ item.id ? 'edit' : 'plus' }} me-2"></i>{{ item.id ? 'Edit item' : 'New item' }}</h1>
+    <a href="{{ path('admin_agenda_index', {date: item.startAt|date('Y-m-d')}) }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Agenda</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+            {% for error in form.vars.errors %}<div class="alert alert-danger">{{ error.message }}</div>{% endfor %}
+            <div class="row g-3">
+                <div class="col-md-4">{{ form_row(form.agenda, {label_attr: {class: 'form-label'}}) }}</div>
+                <div class="col-md-8">{{ form_row(form.title, {label_attr: {class: 'form-label'}}) }}</div>
+                <div class="col-12">
+                    <div class="form-check form-switch">{{ form_widget(form.allDay) }}{{ form_label(form.allDay) }}</div>
+                </div>
+                <div class="col-md-3">{{ form_row(form.startDate, {label_attr: {class: 'form-label'}}) }}</div>
+                <div class="col-md-3 js-time-col">{{ form_row(form.startTime, {label_attr: {class: 'form-label'}}) }}</div>
+                <div class="col-md-3">{{ form_row(form.endDate, {label_attr: {class: 'form-label'}}) }}</div>
+                <div class="col-md-3 js-time-col">{{ form_row(form.endTime, {label_attr: {class: 'form-label'}}) }}</div>
+                <div class="col-md-6">
+                    {% if google_maps_api_key|default('') %}
+                        {# Google place search; choosing a place fills the location field below #}
+                        <label class="form-label" for="locationSearch"><i class="fab fa-google me-1 text-muted"></i>Search on Google Maps</label>
+                        <div id="locationSearch" class="mb-2"></div>
+                        <div id="locationSearchError" class="form-text text-danger d-none mb-2"></div>
+                    {% endif %}
+                    {{ form_row(form.location, {label_attr: {class: 'form-label'}}) }}
+                </div>
+                <div class="col-12">{{ form_row(form.description, {label_attr: {class: 'form-label'}}) }}</div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save</button>
+                {% if item.id %}
+                    <button type="button" class="btn btn-outline-danger ms-auto"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                            data-delete-url="{{ path('admin_agenda_item_delete', {id: item.id}) }}"
+                            data-csrf-token="{{ csrf_token('delete_agenda_item' ~ item.id) }}"
+                            data-delete-message="Delete &quot;{{ item.title }}&quot; from the agenda?">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                {% endif %}
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/delete-modal.js') }}"></script>
+    <script src="{{ asset('js/modules/agenda/item-form.js') }}"></script>
+    {% if google_maps_api_key|default('') %}
+        <script async src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|url_encode }}&loading=async&callback=initAgendaLocationSearch"></script>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Create Account - Verzeilberg.nl{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+{% endblock %}
+
+{% block hero_section %}{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+        <!-- Illustration/Branding Card -->
+        <div class="card bg-dark text-white mb-4 d-none d-lg-flex card-border-top">
+            <div class="card-body p-5 d-flex flex-column justify-content-center">
+                <div class="text-center">
+                    <i class="fas fa-ship fa-4x text-warning mb-3"></i>
+                    <h2 class="fw-bold mb-2">Join Verzeilberg.nl</h2>
+                    <p class="lead mb-0 opacity-75">Sailing adventures, tech projects & life stories</p>
+                </div>
+                <ul class="list-unstyled mt-4">
+                    <li class="mb-2"><i class="fas fa-check text-warning me-2"></i>Weekly sailing & tech updates</li>
+                    <li class="mb-2"><i class="fas fa-check text-warning me-2"></i>Exclusive project insights</li>
+                    <li class="mb-2"><i class="fas fa-check text-warning me-2"></i>Community events & meetups</li>
+                    <li class="mb-0"><i class="fas fa-check text-warning me-2"></i>No spam, unsubscribe anytime</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Registration Form Card -->
+        <div class="card shadow-sm card-border-top">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <a href="{{ path('app_home') }}" class="text-decoration-none">
+                        <span class="fs-4 fw-bold text-dark">
+                            <i class="fas fa-anchor text-warning me-2"></i>Verzeilberg.nl
+                        </span>
+                    </a>
+                    <h3 class="fw-bold mt-3">Create your account</h3>
+                    <p class="text-muted">Join our community of sailors and developers</p>
+                </div>
+
+                {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+                <!-- Name Fields Row -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        {{ form_label(form.firstName, null, {'label_attr': {'class': 'form-label fw-medium'}}) }}
+                        {{ form_widget(form.firstName, {'attr': {'class': 'form-control', 'placeholder': 'First name', 'autocomplete': 'given-name'}}) }}
+                        {{ form_errors(form.firstName) }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form_label(form.lastName, null, {'label_attr': {'class': 'form-label fw-medium'}}) }}
+                        {{ form_widget(form.lastName, {'attr': {'class': 'form-control', 'placeholder': 'Last name', 'autocomplete': 'family-name'}}) }}
+                        {{ form_errors(form.lastName) }}
+                    </div>
+                </div>
+
+                <!-- Email Field -->
+                <div class="mb-3">
+                    {{ form_label(form.email, null, {'label_attr': {'class': 'form-label fw-medium'}}) }}
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-envelope"></i></span>
+                        {{ form_widget(form.email, {'attr': {'class': 'form-control border-start-0', 'placeholder': 'you@example.com', 'autocomplete': 'email'}}) }}
+                    </div>
+                    {{ form_errors(form.email) }}
+                </div>
+
+                <!-- Password Field with Strength Meter -->
+                <div class="mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        {{ form_label(form.plainPassword.first, 'Password', {'label_attr': {'class': 'form-label fw-medium mb-0'}}) }}
+                        <button type="button" class="btn btn-link p-0 ms-2" data-bs-toggle="popover" data-bs-placement="top" data-bs-trigger="focus" tabindex="0" data-bs-title="Password Requirements" data-bs-content="<ul class='mb-0 ps-3'><li>At least 8 characters</li><li>One uppercase letter</li><li>One lowercase letter</li><li>One number</li><li>One special character</li></ul>" aria-label="Password requirements">
+                            <i class="fas fa-info-circle text-muted"></i>
+                        </button>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock"></i></span>
+                    </div>
+                    {{ form_errors(form.plainPassword.first) }}
+
+                    <!-- Password Strength Meter -->
+                    <div class="password-strength mt-2">
+                        <div class="password-strength-bar strength-0" id="password-strength-bar"></div>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-3">
+                    {{ form_label(form.plainPassword.second, 'Confirm Password', {'label_attr': {'class': 'form-label fw-medium'}}) }}
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock"></i></span>
+                        {{ form_widget(form.plainPassword.second, {'attr': {'class': 'form-control border-start-0', 'placeholder': 'Confirm your password', 'autocomplete': 'new-password'}}) }}
+                    </div>
+                    {{ form_errors(form.plainPassword.second) }}
+                </div>
+
+                <!-- Terms Checkbox -->
+                <div class="mb-4">
+                    <div class="form-check">
+                        {{ form_widget(form.termsAccepted, {'attr': {'class': 'form-check-input', 'id': 'terms-accepted'}}) }}
+                        <label class="form-check-label" for="terms-accepted">
+                            I agree to the 
+                            <a href="#" class="link-custom" data-bs-toggle="modal" data-bs-target="#termsModal">Terms of Service</a> 
+                            and 
+                            <a href="#" class="link-custom" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>
+                        </label>
+                        {{ form_errors(form.termsAccepted, {'attr': {'class': 'text-danger small mt-1 d-block'}}) }}
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid mb-4">
+                    <button type="submit" class="btn btn-primary btn-lg py-3">
+                        <i class="fas fa-user-plus me-2"></i>Create Account
+                    </button>
+                </div>
+
+{{ form_end(form) }}
+
+                <!-- Login Link -->
+                <div class="text-center">
+                    <p class="mb-0">Already have an account? <a href="{{ path('app_login') }}" class="link-custom fw-medium">Sign in</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms of Service Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="termsModalLabel"><i class="fas fa-file-alt me-2"></i>Terms of Service</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Acceptance of Terms</h6>
+                <p>By accessing and using Verzeilberg.nl, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                
+                <h6>2. User Accounts</h6>
+                <p>When you create an account, you must provide accurate and complete information. You are responsible for maintaining the confidentiality of your account and password.</p>
+                
+                <h6>3. Content</h6>
+                <p>You retain ownership of content you post. By posting, you grant us a license to use, display, and distribute your content on our platform.</p>
+                
+                <h6>4. Prohibited Activities</h6>
+                <p>You may not use our service for any unlawful purpose or to post harmful, offensive, or illegal content.</p>
+                
+                <h6>5. Intellectual Property</h6>
+                <p>All content, features, and functionality of Verzeilberg.nl are owned by us and are protected by international copyright laws.</p>
+                
+                <h6>6. Termination</h6>
+                <p>We may terminate or suspend your account immediately, without prior notice, for conduct that we believe violates these Terms.</p>
+                
+                <h6>7. Limitation of Liability</h6>
+                <p>We shall not be liable for any indirect, incidental, or consequential damages arising from your use of the service.</p>
+                
+                <h6>8. Changes to Terms</h6>
+                <p>We reserve the right to modify these Terms at any time. Continued use after changes constitutes acceptance.</p>
+                
+                <h6>9. Governing Law</h6>
+                <p>These Terms shall be governed by the laws of the Netherlands.</p>
+                
+                <h6>10. Contact</h6>
+                <p>For questions about these Terms, contact us at <a href="mailto:legal@verzeilberg.nl">legal@verzeilberg.nl</a>.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#privacyModal">Read Privacy Policy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Privacy Policy Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="privacyModalLabel"><i class="fas fa-shield-alt me-2"></i>Privacy Policy</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Information We Collect</h6>
+                <p>We collect information you provide directly: name, email, and any content you post. We also collect usage data automatically.</p>
+                
+                <h6>2. How We Use Your Information</h6>
+                <p>To provide and improve our service, send updates, respond to inquiries, and ensure security.</p>
+                
+                <h6>3. Data Sharing</h6>
+                <p>We do not sell your personal data. We may share with service providers who assist in operating our site.</p>
+                
+                <h6>4. Data Security</h6>
+                <p>We implement appropriate security measures to protect your personal information.</p>
+                
+                <h6>5. Your Rights</h6>
+                <p>You can access, correct, or delete your personal data. Contact us to exercise these rights.</p>
+                
+                <h6>6. Cookies</h6>
+                <p>We use cookies to enhance your experience. You can disable cookies in your browser settings.</p>
+                
+                <h6>7. Third-Party Links</h6>
+                <p>Our site may contain links to third-party sites. We are not responsible for their privacy practices.</p>
+                
+                <h6>8. Children's Privacy</h6>
+                <p>Our service is not intended for children under 16. We do not knowingly collect data from children.</p>
+                
+                <h6>9. Changes</h6>
+                <p>We may update this Privacy Policy. Continued use constitutes acceptance of changes.</p>
+                
+                <h6>10. Contact</h6>
+                <p>For privacy questions, contact <a href="mailto:privacy@verzeilberg.nl">privacy@verzeilberg.nl</a>.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/popovers.js') }}"></script>
+    <script src="{{ asset('js/components/password-strength.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}About - Verzeilberg.nl{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <h1 class="mb-4">About Verzeilberg.nl</h1>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">What is this?</h2>
+                <p>
+                    Verzeilberg.nl is a personal blog and portfolio website. The name "Verzeilberg" 
+                    combines Dutch words: "ver" (far), "zeil" (sail), and "berg" (mountain) — 
+                    representing the journey of sailing far and climbing high.
+                </p>
+                <p>
+                    This site documents sailing adventures, technology projects, running/cycling activities,
+                    and various experiments in software development.
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Tech Stack</h2>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3 class="h6">Backend</h3>
+                        <ul class="list-unstyled">
+                            <li><i class="fab fa-php text-primary me-2"></i> PHP 8.4+</li>
+                            <li><i class="fab fa-symfony text-black me-2"></i> Symfony 8.1</li>
+                            <li><i class="fas fa-database text-success me-2"></i> Doctrine ORM 3.6</li>
+                            <li><i class="fab fa-dolphin text-primary me-2"></i> MySQL 8.0</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h3 class="h6">Frontend</h3>
+                        <ul class="list-unstyled">
+                            <li><i class="fab fa-bootstrap text-purple me-2"></i> Bootstrap 5.3</li>
+                            <li><i class="fab fa-font-awesome text-secondary me-2"></i> FontAwesome 6.4</li>
+                            <li><i class="fas fa-cube text-info me-2"></i> AssetMapper</li>
+                            <li><i class="fas fa-bolt text-warning me-2"></i> UX Turbo + Stimulus</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Migration History</h2>
+                <p>This is the second version of the site, migrated from a Laminas (Zend Framework) application.</p>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Version</th>
+                            <th>Framework</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>v1.x</td>
+                            <td>Laminas MVC (Zend Framework 3)</td>
+                            <td><span class="badge bg-secondary">Legacy</span></td>
+                        </tr>
+                        <tr>
+                            <td>v2.x</td>
+                            <td>Symfony 8.1 (Current)</td>
+                            <td><span class="badge bg-success">Active</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Contact</h2>
+                <p>Feel free to reach out via the <a href="#">contact form</a> or connect on social media.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+/* Home page */
+
+/* Blog cards of equal height */
+.home-blog-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 400px;
+}
+
+.home-blog-card .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.home-blog-card .card-text {
+    flex: 1;
+}
+
+/* Countdown to the next event (flip clock) */
+.flip-clock {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+}
+.flip-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 60px;
+}
+.flip-card {
+    perspective: 200px;
+    width: 60px;
+    height: 70px;
+    position: relative;
+    margin-bottom: 4px;
+}
+.flip-card-inner {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+}
+/* JS adds .flip (shows the new value on the back), then swaps the front and removes it without animating back */
+.flip-card-inner.flip {
+    transform: rotateX(-180deg);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.flip-card-front,
+.flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    font-family: var(--vz-font-display);
+    color: #fff;
+    background: linear-gradient(180deg, #2c3e50 0%, #1a252f 100%);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3), inset 0 -2px 4px rgba(0,0,0,0.2);
+    border: 1px solid #0f1419;
+}
+.flip-card-back {
+    transform: rotateX(180deg);
+    background: linear-gradient(0deg, #2c3e50 0%, #1a252f 100%);
+}
+.flip-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6c757d;
+    font-weight: 600;
+}
+.flip-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    font-family: var(--vz-font-display);
+    color: #2c3e50;
+    width: 20px;
+    animation: blink 1s infinite;
+}
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+.flip-clock.expired .flip-card-front,
+.flip-clock.expired .flip-card-back {
+    background: linear-gradient(180deg, #495057 0%, #343a40 100%);
+    color: #adb5bd;
+}
+.flip-clock.expired .flip-separator {
+    color: #adb5bd;
+    animation: none;
+}
+@media (max-width: 576px) {
+    .flip-card { width: 50px; height: 55px; }
+    .flip-card-front, .flip-card-back { font-size: 2rem; border-radius: 6px; }
+    .flip-separator { font-size: 2rem; width: 16px; }
+    .flip-label { font-size: 0.6rem; }
+}

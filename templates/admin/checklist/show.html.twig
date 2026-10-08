@@ -1,0 +1,144 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Answers - {{ checkList.name }} - Admin{% endblock %}
+
+{# Current search/filter/sort; kept in the sort links, the export and the links to the details #}
+{% set currentQuery = app.request.query.all|filter((value, key) => key in ['q', 'filter', 'order_by', 'order_dir']) %}
+{% set isFiltered = listQuery.search != '' or listQuery.filters is not empty %}
+
+{% macro sortLink(label, key, listQuery, checkList, currentQuery) %}
+    {% set active = listQuery.orderBy == key %}
+    {% set nextDir = active and listQuery.orderDir == 'asc' ? 'desc' : 'asc' %}
+    <a href="{{ path('admin_checklist_show', currentQuery|merge({id: checkList.id, order_by: key, order_dir: nextDir})) }}" class="text-reset text-decoration-none text-nowrap">
+        {{ label }}
+        {% if active %}
+            <i class="fas fa-sort-{{ listQuery.orderDir == 'asc' ? 'up' : 'down' }} ms-1" aria-hidden="true"></i>
+        {% else %}
+            <i class="fas fa-sort ms-1 text-muted opacity-50" aria-hidden="true"></i>
+        {% endif %}
+    </a>
+{% endmacro %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-eye me-2"></i>{{ checkList.name }}</h1>
+    <div class="d-flex flex-wrap gap-2">
+        {% if pagination.getTotalItemCount() > 0 %}
+            <a href="{{ path('admin_checklist_export', currentQuery|merge({id: checkList.id, format: 'csv'})) }}" class="btn btn-outline-success">
+                <i class="fas fa-file-csv me-1"></i>Export CSV
+            </a>
+            <a href="{{ path('admin_checklist_export', currentQuery|merge({id: checkList.id, format: 'xlsx'})) }}" class="btn btn-success">
+                <i class="fas fa-file-excel me-1"></i>Export Excel
+            </a>
+        {% endif %}
+        <a href="{{ path('admin_checklist_index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Checklists
+        </a>
+    </div>
+</div>
+
+{% if totalItems > 0 %}
+    {# Search and filters #}
+    <form method="get" action="{{ path('admin_checklist_show', {id: checkList.id}) }}" class="card mb-3">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label for="listSearch" class="form-label small text-muted mb-1">Search</label>
+                    <input type="search" id="listSearch" name="q" value="{{ listQuery.search }}" class="form-control" placeholder="Search in answers, #number or name">
+                </div>
+                {% for field in filterFields %}
+                    <div class="col-md-2">
+                        <label for="filter_{{ field.formFieldName }}" class="form-label small text-muted mb-1">{{ field.name }}</label>
+                        <select id="filter_{{ field.formFieldName }}" name="filter[{{ field.formFieldName }}]" class="form-select">
+                            <option value="">All</option>
+                            {% for answer in field.answers %}
+                                <option value="{{ answer.value }}" {{ (listQuery.filters[field.formFieldName] ?? null) == answer.value ? 'selected' }}>{{ answer.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endfor %}
+                {# Keep the sorting when searching/filtering #}
+                <input type="hidden" name="order_by" value="{{ listQuery.orderBy }}">
+                <input type="hidden" name="order_dir" value="{{ listQuery.orderDir }}">
+                <div class="col-md-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search me-1"></i>Apply</button>
+                    {% if isFiltered %}
+                        <a href="{{ path('admin_checklist_show', {id: checkList.id}) }}" class="btn btn-outline-secondary">Reset</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </form>
+{% endif %}
+
+{# Read-only list of items; a row opens the item's details #}
+<div class="card">
+    <div class="card-body">
+        {% if pagination.getTotalItemCount() > 0 %}
+            <p class="text-muted small">
+                {% if isFiltered %}
+                    {{ pagination.getTotalItemCount() }} of {{ totalItems }} items match
+                {% else %}
+                    {{ totalItems }} {{ totalItems == 1 ? 'item' : 'items' }}
+                {% endif %}
+            </p>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>{{ _self.sortLink('#', 'id', listQuery, checkList, currentQuery) }}</th>
+                            {% for field in overviewFields %}
+                                <th>{{ _self.sortLink(field.name, field.id ~ '', listQuery, checkList, currentQuery) }}</th>
+                            {% endfor %}
+                            <th>{{ _self.sortLink('Created', 'created', listQuery, checkList, currentQuery) }}</th>
+                            <th>{{ _self.sortLink('Created by', 'createdBy', listQuery, checkList, currentQuery) }}</th>
+                            <th class="text-end"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in pagination %}
+                            {% set detailUrl = path('admin_checklist_item_show', currentQuery|merge({id: item.id, page: pagination.currentPageNumber})) %}
+                            <tr class="js-row-link cursor-pointer" data-href="{{ detailUrl }}">
+                                <td><a href="{{ detailUrl }}" class="fw-semibold text-decoration-none">#{{ item.id }}</a></td>
+                                {% for field in overviewFields %}
+                                    {% set value = overviewValues[item.id][field.id] ?? null %}
+                                    <td>
+                                        {% if value is null %}
+                                            <span class="text-muted">&ndash;</span>
+                                        {% elseif field.formType == 'file' %}
+                                            <i class="fas fa-paperclip me-1"></i>{{ value|split('/')|last }}
+                                        {% else %}
+                                            {{ value|u.truncate(60, '…') }}
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                                <td class="text-nowrap">{{ item.dateCreated|date('d-m-Y H:i') }}</td>
+                                <td>{{ item.createdBy ? item.createdBy.fullName : '–' }}</td>
+                                <td class="text-end text-muted"><i class="fas fa-chevron-right" aria-hidden="true"></i></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if overviewFields is empty %}
+                <p class="text-muted small mt-3 mb-0">
+                    <i class="fas fa-info-circle me-1"></i>Tip: mark fields as "Show in overview" to show their answers as columns here.
+                </p>
+            {% endif %}
+
+            <nav aria-label="Items pagination" class="mt-3">
+                {{ knp_pagination_render(pagination) }}
+            </nav>
+        {% elseif isFiltered %}
+            <div class="alert alert-warning mb-0">
+                <i class="fas fa-search me-2"></i>No items match your search or filters. <a href="{{ path('admin_checklist_show', {id: checkList.id}) }}">Show all items</a>.
+            </div>
+        {% else %}
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle me-2"></i>No answers have been filled in for this checklist yet.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

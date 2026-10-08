@@ -1,0 +1,37 @@
+/* Events (admin): image cropper in the upload modal */
+.cropper-container {
+    position: relative;
+    min-height: 300px;
+}
+
+@media (min-width: 576px) {
+    .cropper-container {
+        min-height: 400px;
+    }
+}
+
+@media (min-width: 992px) {
+    .cropper-container {
+        min-height: 500px;
+    }
+}
+
+.cropper-container .cropper-view-box {
+    outline: 2px solid #0d6efd;
+}
+
+#cropperContainer {
+    width: 100%;
+    background: var(--vz-surface-muted);
+}
+
+#cropperModalImage {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Current event image on the edit page */
+.event-image-preview {
+    max-width: 200px;
+}

@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Events - Verzeilberg.nl{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <h1 class="mb-4"><i class="fas fa-calendar-alt me-2"></i>Events</h1>
+
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            The Events module is being migrated from the old Laminas application. 
+            Check back soon for the full event calendar with categories, maps, and Strava integration.
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Planned Features</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Event categories (racing, cruising, social, training)</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Interactive map with event locations</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Year and category filtering</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Event details with images</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Strava activity integration</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Admin management interface</li>
+                    <li class="mb-2"><i class="fas fa-clock text-warning me-2"></i> Google Calendar sync (evaluating)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Upcoming Events (Sample)</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Zuidwest Fryske Sail 2024</h5>
+                            <small class="text-muted">June 15-16, 2024</small>
+                        </div>
+                        <p class="mb-1">Annual sailing event in Southwest Friesland</p>
+                        <small><span class="badge bg-primary">Racing</span> <span class="badge bg-info">Sneek</span></small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Sailing Tech Meetup</h5>
+                            <small class="text-muted">July 20, 2024</small>
+                        </div>
+                        <p class="mb-1">Discussion on navigation apps, weather routing, and boat tech</p>
+                        <small><span class="badge bg-success">Social</span> <span class="badge bg-info">Amsterdam</span></small>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Round Texel Race</h5>
+                            <small class="text-muted">August 10, 2024</small>
+                        </div>
+                        <p class="mb-1">The famous around-Texel island race</p>
+                        <small><span class="badge bg-danger">Racing</span> <span class="badge bg-info">Texel</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

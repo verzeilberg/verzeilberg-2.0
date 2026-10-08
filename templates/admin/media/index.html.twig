@@ -1,0 +1,111 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/media/_macros.html.twig' as media %}
+
+{% block title %}Media - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1><i class="fas fa-images me-2"></i>Media</h1>
+    <a href="{{ path('admin_media_check') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-stethoscope me-1"></i>Check files
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <nav aria-label="Folder">
+            <ol class="breadcrumb mb-0">
+                {% for path, name in breadcrumb %}
+                    {% if loop.last and search == '' %}
+                        <li class="breadcrumb-item active" aria-current="page"><i class="fas fa-folder-open me-1"></i>{{ name }}</li>
+                    {% else %}
+                        <li class="breadcrumb-item"><a href="{{ path('admin_media_index', path ? {folder: path} : {}) }}">{{ name }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if search != '' %}
+                    <li class="breadcrumb-item active" aria-current="page">Search: "{{ search }}"</li>
+                {% endif %}
+            </ol>
+        </nav>
+        <form method="get" action="{{ path('admin_media_index') }}" class="d-flex gap-2" role="search">
+            {% if folder %}<input type="hidden" name="folder" value="{{ folder }}">{% endif %}
+            <input type="search" name="q" value="{{ search }}" class="form-control" placeholder="Search in this folder" aria-label="Search files and folders">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+            {% if search != '' %}
+                <a href="{{ path('admin_media_index', folder ? {folder: folder} : {}) }}" class="btn btn-outline-secondary" title="Clear search"><i class="fas fa-times"></i></a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+{% if entries is empty %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>{{ search != '' ? 'Nothing found for "' ~ search ~ '".' : 'This folder is empty.' }}
+    </div>
+{% else %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="w-80px"></th>
+                        <th>Name</th>
+                        {% if search != '' %}<th>Folder</th>{% endif %}
+                        <th class="w-100px">Size</th>
+                        <th class="w-130px">Modified</th>
+                        <th>In use by</th>
+                        <th class="text-center w-80px"><i class="fas fa-cogs"></i></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                        <tr>
+                            <td>{{ media.preview(entry) }}</td>
+                            <td class="text-break">
+                                {% if entry.isFolder %}
+                                    <a href="{{ path('admin_media_index', {folder: entry.path}) }}"><strong>{{ entry.name }}</strong></a>
+                                    <div class="small text-muted">{{ entry.fileCount }} file{{ entry.fileCount == 1 ? '' : 's' }}</div>
+                                {% else %}
+                                    <a href="{{ entry.url }}" target="_blank" rel="noopener">{{ entry.name }}</a>
+                                {% endif %}
+                            </td>
+                            {% if search != '' %}
+                                <td><a href="{{ path('admin_media_index', entry.folder ? {folder: entry.folder} : {}) }}">{{ entry.folder ?: 'uploads' }}</a></td>
+                            {% endif %}
+                            <td>{{ media.file_size(entry.size) }}</td>
+                            <td>{{ entry.modifiedAt|date('d-m-Y H:i') }}</td>
+                            <td>
+                                {% if entry.usedBy %}
+                                    <span class="badge text-bg-success">{{ entry.usedBy }}</span>
+                                {% elseif not entry.isFolder %}
+                                    <span class="badge text-bg-secondary">Not used</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if entry.usedBy %}
+                                    <span class="d-inline-block" tabindex="0" title="Still in use, remove it from the blog post or event first">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" disabled><i class="fas fa-trash-alt"></i></button>
+                                    </span>
+                                {% else %}
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                            data-delete-url="{{ path('admin_media_delete', {path: entry.path}) }}"
+                                            data-csrf-token="{{ csrf_token('media_delete' ~ entry.path) }}"
+                                            data-delete-message="{{ entry.isFolder ? 'Delete the folder "' ~ entry.name ~ '" with all ' ~ entry.fileCount ~ ' file(s) in it?' : 'Delete "' ~ entry.name ~ '"?' }}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/delete-modal.js') }}"></script>
+{% endblock %}

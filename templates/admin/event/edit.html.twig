@@ -1,0 +1,154 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/trix@2.0.0/dist/trix.css">
+    <link rel="stylesheet" href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css">
+{% endblock %}
+
+{% block title %}Edit Event - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit me-2"></i>Edit: {{ event.title }}</h1>
+    <a href="{{ path('admin_event_index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        {{ form_label(form.title) }}
+                        {{ form_widget(form.title, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.title) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.category) }}
+                        {{ form_widget(form.category, {'attr': {'class': 'form-select'}}) }}
+                        {{ form_errors(form.category) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.labelText) }}
+                        <trix-editor input="{{ form.labelText.vars.id }}" class="trix-content form-control"></trix-editor>
+                        {{ form_widget(form.labelText, {'attr': {'class': 'form-control d-none'}}) }}
+                        {{ form_errors(form.labelText) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.text) }}
+                        <trix-editor input="{{ form.text.vars.id }}" class="trix-content trix-content-large form-control"></trix-editor>
+                        {{ form_widget(form.text, {'attr': {'class': 'form-control d-none'}}) }}
+                        {{ form_errors(form.text) }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        {{ form_label(form.eventStartDate) }}
+                        {{ form_widget(form.eventStartDate, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.eventStartDate) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.eventEndDate) }}
+                        {{ form_widget(form.eventEndDate, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.eventEndDate) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.eventStartTime) }}
+                        {{ form_widget(form.eventStartTime, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_help(form.eventStartTime) }}
+                        {{ form_errors(form.eventStartTime) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.eventEndTime) }}
+                        {{ form_widget(form.eventEndTime, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_help(form.eventEndTime) }}
+                        {{ form_errors(form.eventEndTime) }}
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-map-marker-alt me-1"></i>Location (click on map)</label>
+                        <div id="eventMap" class="map-canvas map-canvas-bordered"></div>
+                        <div class="form-text">Click on the map to set the event location. Drag the marker to adjust.</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            {{ form_label(form.longitude) }}
+                            {{ form_widget(form.longitude, {'attr': {'class': 'form-control', 'readonly': true, 'id': 'event_longitude'}}) }}
+                            {{ form_errors(form.longitude) }}
+                        </div>
+                        <div class="col-6 mb-3">
+                            {{ form_label(form.latitude) }}
+                            {{ form_widget(form.latitude, {'attr': {'class': 'form-control', 'readonly': true, 'id': 'event_latitude'}}) }}
+                            {{ form_errors(form.latitude) }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.eventImageFile) }}
+                        {{ form_widget(form.eventImageFile, {'attr': {'class': 'form-control', 'accept': 'image/*'}}) }}
+                        {{ form_errors(form.eventImageFile) }}
+                        {{ form_help(form.eventImageFile) }}
+                        <input type="hidden" name="event_image_cropped" id="event_image_cropped">
+                    </div>
+
+                    {% if event.eventImage %}
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label">Current Image</label>
+                        <img src="{{ event.eventImage.getPublicPath() }}" alt="" class="img-thumbnail event-image-preview">
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary" id="saveEventBtn">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
+                <a href="{{ path('admin_event_index') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+
+<!-- Cropper Modal -->
+<div class="modal fade" id="cropperModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-sm-down modal-lg modal-dialog-centered">
+        <div class="modal-content h-100 d-flex flex-column">
+            <div class="modal-header flex-shrink-0">
+                <h5 class="modal-title">Crop Event Image (16:9)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 flex-grow-1 d-flex justify-content-center align-items-center overflow-hidden">
+                <div id="cropperContainer" class="cropper-container">
+                    <img id="cropperModalImage" src="" alt="Crop preview">
+                </div>
+            </div>
+            <div class="modal-footer flex-shrink-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="cropperModalDone">Apply Crop & Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|default('') }}&libraries=places"></script>
+    <script src="https://unpkg.com/trix@2.0.0/dist/trix.umd.min.js"></script>
+    <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>
+    <script src="{{ asset('js/modules/event/event-form.js') }}"></script>
+{% endblock %}

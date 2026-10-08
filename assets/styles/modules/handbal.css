@@ -1,0 +1,61 @@
+/* Handbal: standings (admin) and the public dark tables */
+
+.standings-table th,
+.standings-table td {
+    vertical-align: middle;
+    text-align: center;
+}
+.standings-table td:first-child,
+.standings-table th:first-child {
+    text-align: left;
+}
+.keeper-row {
+    background-color: #fff3cd !important;
+}
+.score-cell {
+    text-align: center;
+    font-weight: 500;
+}
+.score-goal {
+    color: #198754;
+}
+.score-save {
+    color: #0d6efd;
+}
+.score-empty {
+    color: #6c757d;
+}
+
+/* Public Handbal - Dark Theme */
+.table-dark-custom {
+    background-color: #27292a !important;
+    color: #fff !important;
+}
+.table-row-odd {
+    background-color: #1f2122 !important;
+    color: #fff !important;
+}
+.table-row-even {
+    background-color: #27292a !important;
+    color: #fff !important;
+}
+.table-row-hover:hover {
+    background-color: #3a3d3f !important;
+}
+
+.handbal-table {
+    color: #fff;
+}
+
+/* Scored / not scored in a round */
+.score-mark {
+    font-size: 1.2rem;
+}
+
+.score-mark-yes {
+    color: #28a745;
+}
+
+.score-mark-no {
+    color: #dc3545;
+}

@@ -1,0 +1,121 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ post.title }} - Blog - Verzeilberg.nl{% endblock %}
+
+{% block hero_section %}{% endblock %}
+
+{% block body %}
+<article class="row">
+    <div class="col-lg-8">
+        <header class="mb-4">
+            <h1 class="mb-3">{{ post.title }}</h1>
+
+            <div class="text-muted small">
+                <i class="fas fa-calendar me-1"></i>{{ post.dateCreated|date('F d, Y') }}
+                {% if post.dateOnline and post.dateOnline > post.dateCreated %}
+                    <i class="fas fa-clock me-2 ms-3"></i>Published {{ post.dateOnline|date('F d, Y') }}
+                {% endif %}
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-2">
+                {% for category in post.categories %}
+                    <a href="{{ path('blog_category', {slug: category.slug}) }}" class="badge bg-info text-decoration-none">
+                        {{ category.name }}
+                    </a>
+                {% endfor %}
+                <span class="badge bg-{% if post.status == 1 %}success{% elseif post.status == 2 %}warning{% else %}secondary{% endif %}">
+                    {% if post.status == 1 %}Published{% elseif post.status == 2 %}Offline{% elseif post.status == 3 %}Archived{% else %}Draft{% endif %}
+                </span>
+            </div>
+        </header>
+
+        {% if post.images|length > 0 %}
+            <div class="mb-4">
+                {% set firstImage = post.images.first() %}
+                <img src="{{ firstImage.getPublicPath() }}" alt="{{ firstImage.alt ?? post.title }}" class="img-fluid rounded">
+            </div>
+        {% endif %}
+
+        <div class="content mb-5">
+            {{ post.content|raw }}
+        </div>
+
+        {% if post.youTubes|length > 0 %}
+            <section class="mb-5">
+                <h3>Videos</h3>
+                <div class="row">
+                    {% for youtube in post.youTubes %}
+                        <div class="col-md-6 mb-3">
+                            <div class="ratio ratio-16x9">
+                                <iframe src="{{ youtube.getEmbedUrl() }}" allowfullscreen></iframe>
+                            </div>
+                            {% if youtube.title %}
+                                <p class="small text-muted mt-1">{{ youtube.title }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        {% if post.files|length > 0 %}
+            <section class="mb-5">
+                <h3>Attachments</h3>
+                <ul class="list-group">
+                    {% for file in post.files %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <a href="{{ file.getPublicPath() }}" target="_blank" class="text-decoration-none">
+                                <i class="fas fa-file me-2"></i>{{ file.name ?? file.filename }}
+                            </a>
+                            <span class="badge bg-secondary">{{ file.getHumanReadableSize() }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+
+        <hr class="my-5">
+
+        <section class="mb-5">
+            <h3>{{ comments|length }} Comment{{ comments|length != 1 ? 's' : '' }}</h3>
+
+            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                <form action="{{ path('blog_detail', {slug: post.slug}) }}" method="POST" class="mb-4">
+                    <input type="hidden" name="_token" value="{{ csrf_token('comment_' ~ post.id) }}">
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Add a Comment</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Post Comment</button>
+                </form>
+            {% else %}
+                <p class="text-muted"><a href="{{ path('app_login') }}">Log in</a> to leave a comment.</p>
+            {% endif %}
+
+            {% for comment in comments %}
+                {% include 'blog/partials/comment.html.twig' with {comment: comment, depth: 0} %}
+            {% endfor %}
+        </section>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">All Categories</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for category in categories %}
+                        <li class="list-group-item px-0">
+                            <a href="{{ path('blog_category', {slug: category.slug}) }}" class="text-decoration-none">
+                                {{ category.name }}
+                                <span class="badge bg-secondary float-end">{{ category.getOnlinePostCount() }}</span>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</article>
+{% endblock %}

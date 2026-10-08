@@ -1,0 +1,63 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Edit Role - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit me-2"></i>Edit: {{ role.name }}</h1>
+    <a href="{{ path('admin_role_index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {{ form_start(form) }}
+        
+        <div class="mb-3">
+            {{ form_label(form.name) }}
+            {{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+            {{ form_errors(form.name) }}
+            <div class="form-text">Role name (e.g. ROLE_ADMIN, ROLE_EDITOR)</div>
+        </div>
+
+        <div class="mb-3">
+            {{ form_label(form.description) }}
+            {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': 3}}) }}
+            {{ form_errors(form.description) }}
+        </div>
+
+        <hr class="my-4">
+
+        <div class="mb-3">
+            {{ form_label(form.parentRoles) }}
+            {{ form_widget(form.parentRoles, {'attr': {'class': 'form-select'}}) }}
+            {{ form_errors(form.parentRoles) }}
+            <div class="form-text">Hold Ctrl/Cmd to select multiple. Child roles inherit permissions from parents.</div>
+        </div>
+
+        <div class="mb-3">
+            {{ form_label(form.permissions) }}
+            {{ form_widget(form.permissions, {'attr': {'class': 'form-select'}}) }}
+            {{ form_errors(form.permissions) }}
+            <div class="form-text">Hold Ctrl/Cmd to select multiple permissions.</div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="mb-3">
+            <h6>Created</h6>
+            <p class="text-muted">{{ role.dateCreated|date('d M Y H:i') }}</p>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i>Save Changes
+            </button>
+            <a href="{{ path('admin_role_index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+        
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

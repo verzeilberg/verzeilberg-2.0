@@ -1,0 +1,126 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Users - Admin{% endblock %}
+
+{% block body %}
+{% include 'admin/partials/delete_modal.html.twig' %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-users me-2"></i>Users</h1>
+    <a href="{{ path('admin_user_new') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>New User
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select" data-auto-submit>
+                    <option value="all" {% if currentStatus == 'all' %}selected{% endif %}>All ({{ activeCount + inactiveCount }})</option>
+                    <option value="active" {% if currentStatus == 'active' %}selected{% endif %}>Active ({{ activeCount }})</option>
+                    <option value="inactive" {% if currentStatus == 'inactive' %}selected{% endif %}>Inactive ({{ inactiveCount }})</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-select" data-auto-submit>
+                    <option value="">All Roles</option>
+                    {% for role in roles %}
+                        <option value="{{ role.id }}" {% if currentRole == role.id %}selected{% endif %}>
+                            {{ role.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Search email, name..." value="{{ search }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <a href="{{ path('admin_user_index') }}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if pagination.getTotalItemCount() == 0 %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>No users found.
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Roles</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in pagination %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar me-2">
+                                {{ user.initials }}
+                            </div>
+                            <strong>{{ user.fullName }}</strong>
+                        </div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        {% for role in user.doctrineRoles %}
+                            <span class="badge bg-info me-1">{{ role.name }}</span>
+                        {% else %}
+                            <span class="text-muted">No roles</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% if user.isActive() %}
+                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.dateCreated|date('d M Y H:i') }}</td>
+                    <td class="text-end">
+                        <a href="{{ path('admin_user_edit', {id: user.id}) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger js-ajax-delete"
+                                data-delete-url="{{ path('admin_user_delete', {id: user.id}) }}"
+                                data-delete-message="Are you sure you want to delete the user &quot;{{ user.email }}&quot;? This action cannot be undone."
+                                data-error-message="Failed to delete user"
+                                data-csrf-token="{{ csrf_token('delete' ~ user.id) }}"
+                                title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <nav aria-label="Users pagination">
+        {{ knp_pagination_render(pagination) }}
+    </nav>
+{% endif %}
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/ajax-delete.js') }}"></script>
+{% endblock %}

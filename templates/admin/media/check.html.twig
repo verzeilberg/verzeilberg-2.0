@@ -1,0 +1,119 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'admin/media/_macros.html.twig' as media %}
+
+{% block title %}Check Files - Media - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1><i class="fas fa-stethoscope me-2"></i>Check files</h1>
+    <a href="{{ path('admin_media_index') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Media
+    </a>
+</div>
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#unused" type="button" role="tab" aria-controls="unused" aria-selected="true">
+            Files without record <span class="badge {{ unusedFiles ? 'text-bg-warning' : 'text-bg-success' }}">{{ unusedFiles|length }}</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#missing" type="button" role="tab" aria-controls="missing" aria-selected="false">
+            Records without file <span class="badge {{ missingFiles ? 'text-bg-warning' : 'text-bg-success' }}">{{ missingFiles|length }}</span>
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    {# Server check: on disk, but no blog post or event uses it #}
+    <div class="tab-pane fade show active" id="unused" role="tabpanel">
+        <p class="text-muted">Files in the uploads folder that no blog post or event refers to, e.g. left behind by a failed upload.</p>
+        {% if unusedFiles is empty %}
+            <div class="alert alert-success"><i class="fas fa-check me-2"></i>Every file is in use.</div>
+        {% else %}
+            <form method="post" action="{{ path('admin_media_delete_unused') }}" class="js-media-check" data-confirm="Delete the selected files? This can't be undone.">
+                <input type="hidden" name="_token" value="{{ csrf_token('media_delete_unused') }}">
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="w-40px"><input type="checkbox" class="form-check-input js-select-all" aria-label="Select all"></th>
+                                    <th class="w-80px"></th>
+                                    <th>File</th>
+                                    <th class="w-100px">Size</th>
+                                    <th class="w-130px">Modified</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in unusedFiles %}
+                                    <tr>
+                                        <td><input type="checkbox" class="form-check-input js-select" name="paths[]" value="{{ entry.path }}" aria-label="Select {{ entry.name }}"></td>
+                                        <td>{{ media.preview(entry) }}</td>
+                                        <td class="text-break">
+                                            {{ entry.name }}
+                                            <div class="small text-muted">{{ entry.folder }}</div>
+                                        </td>
+                                        <td>{{ media.file_size(entry.size) }}</td>
+                                        <td>{{ entry.modifiedAt|date('d-m-Y H:i') }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-danger mt-3 js-selection-action" disabled>
+                    <i class="fas fa-trash-alt me-1"></i>Delete selected files
+                </button>
+            </form>
+        {% endif %}
+    </div>
+
+    {# Database check: a record points to a file that is gone #}
+    <div class="tab-pane fade" id="missing" role="tabpanel">
+        <p class="text-muted">Image and file records whose file no longer exists. Removing a record also takes it off the blog post or event.</p>
+        {% if missingFiles is empty %}
+            <div class="alert alert-success"><i class="fas fa-check me-2"></i>Every record has its file.</div>
+        {% else %}
+            <form method="post" action="{{ path('admin_media_remove_missing') }}" class="js-media-check" data-confirm="Remove the selected records? This can't be undone.">
+                <input type="hidden" name="_token" value="{{ csrf_token('media_remove_missing') }}">
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="w-40px"><input type="checkbox" class="form-check-input js-select-all" aria-label="Select all"></th>
+                                    <th>Record</th>
+                                    <th>Expected file</th>
+                                    <th>Used by</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in missingFiles %}
+                                    <tr>
+                                        <td><input type="checkbox" class="form-check-input js-select" name="records[]" value="{{ record.type }}:{{ record.id }}" aria-label="Select {{ record.name }}"></td>
+                                        <td>
+                                            <i class="fas {{ record.type == 'image' ? 'fa-image' : 'fa-file' }} me-1 text-muted"></i>{{ record.name }}
+                                            <div class="small text-muted">{{ record.type|capitalize }} #{{ record.id }}</div>
+                                        </td>
+                                        <td class="text-break small">{{ record.location }}</td>
+                                        <td>{% if record.usedBy %}<span class="badge text-bg-info">{{ record.usedBy }}</span>{% endif %}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-danger mt-3 js-selection-action" disabled>
+                    <i class="fas fa-trash-alt me-1"></i>Remove selected records
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/media/check.js') }}"></script>
+{% endblock %}

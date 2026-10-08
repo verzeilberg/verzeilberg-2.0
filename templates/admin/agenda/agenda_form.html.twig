@@ -1,0 +1,27 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}{{ agenda.id ? 'Edit' : 'New' }} Agenda - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-{{ agenda.id ? 'edit' : 'plus' }} me-2"></i>{{ agenda.id ? 'Edit agenda' : 'New agenda' }}</h1>
+    <a href="{{ path('admin_agenda_agendas') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Agendas</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {{ form_start(form) }}
+            <div class="row mb-3">
+                <div class="col-md-6">{{ form_row(form.title, {label_attr: {class: 'form-label'}}) }}</div>
+                <div class="col-md-2">{{ form_row(form.color, {label_attr: {class: 'form-label'}}) }}</div>
+            </div>
+            <div class="form-check form-switch mb-1">
+                {{ form_widget(form.public) }}
+                {{ form_label(form.public) }}
+            </div>
+            <div class="form-text mb-3">{{ form.public.vars.help }}</div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Save</button>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+framework:
+    rate_limiter:
+        # Submissions of a checklist outside the admin (spam protection), per visitor (IP address or user) per checklist
+        checklist_submission:
+            policy: sliding_window
+            limit: 5
+            interval: '10 minutes'
+            cache_pool: cache.rate_limiter
+
+    cache:
+        pools:
+            cache.rate_limiter:
+                adapter: cache.app

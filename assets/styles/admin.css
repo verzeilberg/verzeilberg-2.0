@@ -1,0 +1,31 @@
+/*
+ * Stylesheet of the admin (templates/admin/base.html.twig). Loaded after Bootstrap.
+ * Same structure as site.css; the admin has no sticky-footer page layout but its own sidebar layout.
+ */
+@import "./base/variables.css";
+@import "./base/typography.css";
+@import "./base/utilities.css";
+
+@import "./components/buttons.css";
+@import "./components/cards.css";
+@import "./components/forms.css";
+@import "./components/navigation.css";
+@import "./components/feedback.css";
+@import "./components/tables.css";
+@import "./components/avatars.css";
+@import "./components/media.css";
+
+@import "./layout/admin.css";
+
+@import "./modules/blog.css";
+@import "./modules/agenda.css";
+@import "./modules/checklist.css";
+@import "./modules/events.css";
+@import "./modules/handbal.css";
+@import "./modules/imap.css";
+@import "./modules/media.css";
+@import "./modules/strava.css";
+@import "./modules/steam.css";
+
+@import "./vendor/flatpickr.css";
+@import "./vendor/nestable.css";

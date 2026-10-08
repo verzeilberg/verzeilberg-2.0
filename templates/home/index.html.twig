@@ -1,0 +1,147 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+{% endblock %}
+
+{% block body %}
+
+
+<div class="container px-4 text-center">
+
+    <div class="row">
+        <div class="col text-left">
+            <h1>Blogs</h1>
+        </div>
+    </div>
+
+    {% if featuredPost %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="border d-flex flex-row">
+                <div class="col-6 p-0">
+                    {% if featuredPost.images|length > 0 %}
+                        <img src="{{ featuredPost.images.first().getPublicPath() }}"
+                             alt="{{ featuredPost.images.first().alt ?? featuredPost.title }}" class="img-fluid w-100 h-100 img-cover-250">
+                    {% else %}
+                        <img src="{{ asset('images/f1.png') }}" alt="{{ featuredPost.title }}" class="img-fluid w-100 h-100 img-cover-250">
+                    {% endif %}
+                </div>
+                <div class="col-6 d-flex flex-column justify-content-between">
+                    <div class="p-4">
+                        <h6>{{ featuredPost.dateOnline ? featuredPost.dateOnline|date('M d, Y') : featuredPost.dateCreated|date('M d, Y') }}</h6>
+                        <h3>{{ featuredPost.title }}</h3>
+                        <p>{{ featuredPost.introText|striptags|u.truncate(200) }}</p>
+                    </div>
+                    <a href="{{ path('blog_detail', {slug: featuredPost.slug}) }}" class="btn btn-primary w-100">
+                        Read More <i class="fas fa-chevron-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if otherPosts %}
+    <div class="row gx-5">
+        {% for post in otherPosts %}
+        <div class="col-md-4">
+            <div class="border h-100 home-blog-card">
+                <div class="mb-3">
+                    {% if post.images|length > 0 %}
+                        <img src="{{ post.images.first().getPublicPath() }}"
+                             alt="{{ post.images.first().alt ?? post.title }}" class="img-fluid w-100 img-cover-200">
+                    {% else %}
+                        <img src="{{ asset('images/f1.png') }}" alt="{{ post.title }}" class="img-fluid w-100 img-cover-200">
+                    {% endif %}
+                </div>
+                <div class="p-3 card-body">
+                    <h6>{{ post.dateOnline ? post.dateOnline|date('M d, Y') : post.dateCreated|date('M d, Y') }}</h6>
+                    <h5>{{ post.title|u.truncate(40) }}</h5>
+                    <p class="card-text">{{ post.introText|striptags|u.truncate(100) }}</p>
+                </div>
+                <div class="mt-auto">
+                    <a href="{{ path('blog_detail', {slug: post.slug}) }}" class="btn btn-primary w-100">
+                        Read More <i class="fas fa-chevron-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if upcomingEvent %}
+    <hr class="my-5">
+    <div class="row">
+        <div class="col text-center">
+            <h2>Upcoming Event</h2>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm text-center">
+                {% if upcomingEvent.eventImage %}
+                <a href="{{ path('app_event_show', {id: upcomingEvent.id}) }}" class="d-block">
+                    <img src="{{ upcomingEvent.eventImage.getPublicPath() }}" class="card-img-top" alt="{{ upcomingEvent.title }}">
+                </a>
+                {% endif %}
+                <div class="card-body p-4 pb-2">
+                    <div class="mb-3">
+                        {% set targetDate = upcomingEvent.eventStartDate|date('Y-m-d') %}
+                        {% if upcomingEvent.eventStartTime %}
+                            {% set targetDate = targetDate ~ 'T' ~ upcomingEvent.eventStartTime|date('H:i') %}
+                        {% else %}
+                            {% set targetDate = targetDate ~ 'T00:00' %}
+                        {% endif %}
+                        <div id="flipClock" class="flip-clock mb-3" 
+                             data-target="{{ targetDate }}"></div>
+                    </div>
+                    <h3 class="mb-1">{{ upcomingEvent.title }}</h3>
+                    <div class="text-muted mb-3">
+                        {{ upcomingEvent.eventStartDate|date('l, d F Y') }}
+                        {% if upcomingEvent.eventEndDate != upcomingEvent.eventStartDate %}
+                            <i class="fas fa-arrow-right mx-2"></i>
+                            {{ upcomingEvent.eventEndDate|date('l, d F Y') }}
+                        {% endif %}
+                        {% if upcomingEvent.eventStartTime or upcomingEvent.eventEndTime %}
+                            <span class="ms-3"><i class="fas fa-clock me-1"></i>
+                            {% if upcomingEvent.eventStartTime %}{{ upcomingEvent.eventStartTime|date('H:i') }}{% else %}00:00{% endif %}
+                            -
+                            {% if upcomingEvent.eventEndTime %}{{ upcomingEvent.eventEndTime|date('H:i') }}{% else %}23:59{% endif %}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body pt-3">
+                    <a href="{{ path('app_events') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-calendar-alt me-1"></i>More Events
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if recentGames %}
+    <hr class="my-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <h2 class="mb-0">Recently Played</h2>
+        <a href="{{ path('app_games') }}" class="btn btn-outline-primary"><i class="fab fa-steam me-1"></i>Game Library</a>
+    </div>
+    <div class="row g-3">
+        {% for game in recentGames %}
+            <div class="col-sm-6 col-lg-3">
+                {{ include('games/_card.html.twig', {game: game, showRecent: true}) }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/home/flip-clock.js') }}"></script>
+{% endblock %}
+

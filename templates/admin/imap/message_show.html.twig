@@ -1,0 +1,221 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}{{ message.subject ?: '(no subject)' }}{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-envelope-open me-2"></i>{{ message.subject ?: '(no subject)' }}</h1>
+    <div>
+        <a href="{{ path('admin_imap_messages', {id: message.account.id, folder: message.folder}) }}" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left me-1"></i>Back
+        </a>
+        <a href="{{ path('admin_imap_messages', {id: message.account.id, folder: message.folder}) }}" class="btn btn-primary me-2">
+            <i class="fas fa-sync me-1"></i>Sync Folder
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Message Details</h6>
+                    <div>
+                        {% if not message.isRead %}
+                            <span class="badge bg-primary me-1"><i class="fas fa-envelope me-1"></i>Unread</span>
+                        {% endif %}
+                        {% if message.isFlagged %}<span class="badge bg-warning text-dark me-1"><i class="fas fa-flag"></i></span>{% endif %}
+                        {% if message.isAnswered %}<span class="badge bg-info me-1"><i class="fas fa-reply"></i></span>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>From:</strong> 
+                    {% if message.fromName %}
+                        {{ message.fromName }} <{{ message.fromAddress }}>
+                    {% else %}
+                        {{ message.fromAddress }}
+                    {% endif %}
+                </div>
+
+                {% if message.toAddresses %}
+                    <div class="mb-3">
+                        <strong>To:</strong> {{ message.toAddresses }}
+                    </div>
+                {% endif %}
+
+                {% if message.ccAddresses %}
+                    <div class="mb-3">
+                        <strong>CC:</strong> {{ message.ccAddresses }}
+                    </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <strong>Date:</strong> {{ message.receivedAt ? message.receivedAt|date('d M Y H:i') : 'Unknown' }}
+                    {% if message.sentAt %}
+                        (Sent: {{ message.sentAt|date('d M Y H:i') }})
+                    {% endif %}
+                </div>
+
+                {% if message.messageId %}
+                    <div class="mb-3">
+                        <strong>Message-ID:</strong> <code class="small">{{ message.messageId }}</code>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="bodyTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="html-tab" data-bs-toggle="tab" data-bs-target="#html-pane" type="button" role="tab">
+                            <i class="fas fa-code me-1"></i>HTML
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-pane" type="button" role="tab">
+                            <i class="fas fa-file-alt me-1"></i>Text
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body d-flex flex-column imap-message-body">
+                <div class="tab-content flex-grow-1 overflow-auto" id="bodyTabContent">
+                    <div class="tab-pane fade show active" id="html-pane" role="tabpanel">
+                        {% if message.bodyHtml %}
+                            <div class="border rounded p-3 bg-white">
+                                {{ message.bodyHtml|raw }}
+                            </div>
+                            <details class="mt-3">
+                                <summary class="text-muted small">View HTML Source</summary>
+                                <pre class="bg-light p-3 mt-2 rounded font-monospace small overflow-auto">{{ message.bodyHtml }}</pre>
+                            </details>
+                        {% else %}
+                            <div class="text-muted text-center py-4">No HTML content</div>
+                        {% endif %}
+                    </div>
+                    <div class="tab-pane fade" id="text-pane" role="tabpanel">
+                        <pre class="whitespace-pre-wrap font-monospace small m-0">{{ message.bodyText ?: '(empty)' }}</pre>
+                    </div>
+</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if not message.isRead %}
+                        <button type="button" class="btn btn-outline-primary mark-read" 
+                                data-id="{{ message.id }}" 
+                                data-csrf-token="{{ csrf_token('read' ~ message.id) }}">
+                            <i class="fas fa-envelope-open me-1"></i>Mark as Read
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn btn-outline-secondary mark-unread" 
+                                data-id="{{ message.id }}" 
+                                data-csrf-token="{{ csrf_token('unread' ~ message.id) }}">
+                            <i class="fas fa-envelope me-1"></i>Mark as Unread
+                        </button>
+                    {% endif %}
+                    
+                    <button type="button" class="btn btn-outline-warning" 
+                            data-bs-toggle="modal" data-bs-target="#moveModal">
+                        <i class="fas fa-folder-plus me-1"></i>Move to Folder
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-danger delete-msg" 
+                            data-id="{{ message.id }}" 
+                            data-subject="{{ message.subject|escape('html_attr') }}"
+                            data-csrf-token="{{ csrf_token('delete' ~ message.id) }}">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% if message.attachments and message.attachments|length > 0 %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Attachments</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for attachment in message.attachments %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-file me-2"></i>
+                                {{ attachment.name ?: 'attachment' }}
+                            </div>
+                            <a href="{{ path('admin_imap_attachment_download', {id: message.id, partNumber: loop.index}) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-download me-1"></i>Download
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Meta</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-bordered">
+                    <tr><th>UID</th><td><code>{{ message.uid }}</code></td></tr>
+                    <tr><th>Folder</th><td>{{ message.folder }}</td></tr>
+                    <tr><th>Account</th><td>{{ message.account.name }}</td></tr>
+                    <tr><th>Created in DB</th><td>{{ message.dateCreated|date('d M Y H:i') }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Move Modal -->
+<div class="modal fade" id="moveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Move to Folder</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="moveForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Target Folder</label>
+                        <select name="folder" class="form-select" required>
+                            {% for folder in folders %}
+                                <option value="{{ folder }}">{{ folder }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Move</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/imap/message.js') }}"
+            data-read-url="{{ path('admin_imap_message_read', {id: message.id}) }}"
+            data-unread-url="{{ path('admin_imap_message_unread', {id: message.id}) }}"
+            data-delete-url="{{ path('admin_imap_message_delete', {id: message.id}) }}"
+            data-move-url="{{ path('admin_imap_message_move', {id: message.id}) }}"
+            data-move-token="{{ csrf_token('move' ~ message.id) }}"
+            data-back-url="{{ path('admin_imap_messages', {id: message.account.id, folder: message.folder}) }}"></script>
+{% endblock %}

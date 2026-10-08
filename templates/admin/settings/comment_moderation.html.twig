@@ -1,0 +1,60 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Comment Moderation - Settings{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-comment me-2"></i>Comment Moderation</h1>
+    <a href="{{ path('admin_settings_index') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Settings
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                {{ form_start(form) }}
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            {{ form_widget(form.value, {'attr': {'class': 'form-check-input'}}) }}
+                            <label class="form-check-label fw-bold" for="{{ form.value.vars.id }}">
+                                Require comment approval
+                            </label>
+                            <div class="form-text ms-3">
+                                When enabled, comments must be approved by an admin before they appear on the blog.
+                                When disabled, comments from authenticated users are published immediately.
+                            </div>
+                        </div>
+                        {{ form_errors(form.value) }}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Changes
+                        </button>
+                        <a href="{{ path('admin_settings_index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Current Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-{{ setting.getBooleanValue() ? 'warning' : 'success' }}">
+                    <i class="fas fa-{{ setting.getBooleanValue() ? 'exclamation-triangle' : 'check-circle' }} me-2"></i>
+                    <strong>Comment moderation is {{ setting.getBooleanValue() ? 'ENABLED' : 'DISABLED' }}.</strong><br>
+                    {{ setting.getBooleanValue() 
+                        ? 'All comments require admin approval before being published.' 
+                        : 'Comments from authenticated users are published immediately.' }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,133 @@
+<ol class="dd-list">
+    {% for field in fields|filter(field => field.parent is null) %}
+        <li class="dd-item" data-id="{{ field.id }}" data-field-type="{{ field.fieldType.formType }}">
+            <div class="field-item p-3 border rounded-3 mb-2 bg-white shadow-sm hover-shadow-hover transition-shadow d-flex align-items-center gap-3">
+                <div class="dd-handle drag-handle text-muted">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                <div class="field-content flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 flex-wrap flex-md-nowrap overflow-auto">
+                        <span class="badge bg-info text-dark flex-shrink-0">#{{ field.order }}</span>
+                        <strong class="text-dark flex-shrink-0">{{ field.name }}</strong>
+                        {% if field.introText %}
+                            <span class="text-muted small">({{ field.introText|striptags|u.truncate(60) }})</span>
+                        {% endif %}
+                        <span class="badge bg-primary flex-shrink-0">{{ field.fieldType.name }}</span>
+                        <span class="badge bg-secondary text-muted flex-shrink-0">({{ field.formType }})</span>
+                        {% if field.required %}
+                            <span class="badge bg-warning text-dark"><i class="fas fa-asterisk me-1"></i>Required</span>
+                        {% endif %}
+                        {% if field.showInOverview %}
+                            <span class="badge bg-success"><i class="fas fa-eye me-1"></i>Overview</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="field-actions ms-3">
+                    <a href="{{ path('admin_checklist_field_edit', {id: field.id}) }}" class="btn btn-sm btn-outline-primary" title="Edit field">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-field" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#deleteModal"
+                            data-delete-url="{{ path('admin_checklist_field_delete', {id: field.id}) }}"
+                            data-csrf-token="{{ csrf_token('delete_field' ~ field.id) }}"
+                            data-delete-message="Are you sure you want to delete this field? This will also delete all answers given for this field."
+                            title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            
+            {% if field.children is not empty %}
+                <ol class="dd-list ms-4 border-start border-2 border-primary ps-3 mt-2">
+                    {% for child in field.children %}
+                        <li class="dd-item" data-id="{{ child.id }}" data-field-type="{{ child.fieldType.formType }}">
+                            <div class="field-item p-3 border rounded-3 mb-2 bg-light shadow-sm hover-shadow-hover transition-shadow d-flex align-items-center gap-3">
+                                <div class="dd-handle drag-handle text-muted">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </div>
+                                <div class="field-content flex-grow-1">
+                                    <div class="field-content flex-grow-1">
+<div class="d-flex align-items-center gap-2 flex-wrap flex-md-nowrap overflow-auto">
+                                            <span class="badge bg-info text-dark flex-shrink-0">#{{ child.order }}</span>
+                                            <strong class="text-dark flex-shrink-0">{{ child.name }}</strong>
+                        {% if child.introText %}
+                            <span class="text-muted small">({{ child.introText|striptags|u.truncate(60) }})</span>
+                        {% endif %}
+                        <span class="badge bg-primary flex-shrink-0">{{ child.fieldType.name }}</span>
+                        <span class="badge bg-secondary text-muted flex-shrink-0">({{ child.formType }})</span>
+                        {% if child.required %}
+                            <span class="badge bg-warning text-dark"><i class="fas fa-asterisk me-1"></i>Required</span>
+                        {% endif %}
+                        {% if child.showInOverview %}
+                            <span class="badge bg-success"><i class="fas fa-eye me-1"></i>Overview</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="field-actions ms-3">
+                    <a href="{{ path('admin_checklist_field_edit', {id: child.id}) }}" class="btn btn-sm btn-outline-primary" title="Edit field">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-field" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#deleteModal"
+                            data-delete-url="{{ path('admin_checklist_field_delete', {id: child.id}) }}"
+                            data-csrf-token="{{ csrf_token('delete_field' ~ child.id) }}"
+                            data-delete-message="Are you sure you want to delete this field? This will also delete all answers given for this field."
+                            title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+                            
+                            {% if child.children is not empty %}
+                                <ol class="dd-list ms-4 border-start border-2 border-info ps-3 mt-2">
+                                    {% for grandchild in child.children %}
+                                        <li class="dd-item" data-id="{{ grandchild.id }}" data-field-type="{{ grandchild.fieldType.formType }}">
+                                            <div class="field-item p-3 border rounded-3 mb-2 bg-light shadow-sm hover-shadow-hover transition-shadow d-flex align-items-center gap-3">
+                                                <div class="dd-handle drag-handle text-muted">
+                                                    <i class="fas fa-grip-vertical"></i>
+                                                </div>
+                                                <div class="field-content flex-grow-1">
+                                                    <div class="d-flex align-items-center gap-2 flex-wrap flex-md-nowrap overflow-auto">
+                                                        <span class="badge bg-info text-dark flex-shrink-0">#{{ grandchild.order }}</span>
+                                                        <strong class="text-dark flex-shrink-0">{{ grandchild.name }}</strong>
+                                                        {% if grandchild.introText %}
+                                                            <span class="text-muted small">({{ grandchild.introText|striptags|u.truncate(60) }})</span>
+                                                        {% endif %}
+                                                        <span class="badge bg-primary flex-shrink-0">{{ grandchild.fieldType.name }}</span>
+                                                        <span class="badge bg-secondary text-muted flex-shrink-0">({{ grandchild.formType }})</span>
+                                                        {% if grandchild.required %}
+                                                            <span class="badge bg-warning text-dark"><i class="fas fa-asterisk me-1"></i>Required</span>
+                                                        {% endif %}
+                                                        {% if grandchild.showInOverview %}
+                                                            <span class="badge bg-success"><i class="fas fa-eye me-1"></i>Overview</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="field-actions ms-3">
+                                                    <a href="{{ path('admin_checklist_field_edit', {id: grandchild.id}) }}" class="btn btn-sm btn-outline-primary" title="Edit field">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger delete-field" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#deleteModal"
+                                                            data-delete-url="{{ path('admin_checklist_field_delete', {id: grandchild.id}) }}"
+                                                            data-csrf-token="{{ csrf_token('delete_field' ~ grandchild.id) }}"
+                                                            data-delete-message="Are you sure you want to delete this field? This will also delete all answers given for this field."
+                                                            title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ol>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ol>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ol>

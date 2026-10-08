@@ -1,0 +1,202 @@
+{#
+    Shared month/week/day calendar for the admin and the site.
+    Variables: calendar (AgendaCalendar::build()), agendas, selectedIds, routeName, editable (bool)
+#}
+{% set view = calendar.view %}
+{% set baseQuery = {agendas: selectedIds|length < agendas|length ? selectedIds : []} %}
+{% set today = 'today'|date('Y-m-d') %}
+
+{% macro itemChip(item, editable, compact = false) %}
+    {% set agenda = item.agenda %}
+    {# Items of an agenda that follows Google Calendar are changed in Google, not here #}
+    {% set fromGoogle = agenda.googleLinked %}
+    {% set time = item.allDay ? '' : item.startAt|date('H:i') %}
+    <button type="button"
+            class="agenda-item btn btn-sm w-100 text-start text-truncate mb-1 py-0 px-1 border-0"
+            style="background: {{ agenda.color }}; color: {{ agenda.textColor }};"
+            data-bs-toggle="modal" data-bs-target="#agendaItemModal"
+            data-title="{{ item.title }}"
+            data-agenda="{{ agenda.title }}"
+            data-when="{{ item.allDay
+                ? (item.multiDay ? item.startAt|date('d-m-Y') ~ ' – ' ~ item.endAt|date('d-m-Y') : item.startAt|date('d-m-Y')) ~ ' (whole day)'
+                : item.startAt|date('d-m-Y H:i') ~ ' – ' ~ (item.multiDay ? item.endAt|date('d-m-Y H:i') : item.endAt|date('H:i')) }}"
+            data-location="{{ item.location }}"
+            data-description="{{ item.description }}"
+            {% if editable and fromGoogle %}
+                data-google="1"
+            {% elseif editable %}
+                data-edit-url="{{ path('admin_agenda_item_edit', {id: item.id}) }}"
+                data-delete-url="{{ path('admin_agenda_item_delete', {id: item.id}) }}"
+                data-csrf-token="{{ csrf_token('delete_agenda_item' ~ item.id) }}"
+            {% endif %}
+            title="{{ item.title }}">
+        {% if time and not compact %}<strong>{{ time }}</strong> {% endif %}{{ item.title }}
+    </button>
+{% endmacro %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div class="btn-group" role="group" aria-label="Navigate">
+        <a class="btn btn-outline-secondary" href="{{ path(routeName, baseQuery|merge({view: view, date: calendar.previous|date('Y-m-d')})) }}" title="Previous"><i class="fas fa-chevron-left"></i></a>
+        <a class="btn btn-outline-secondary" href="{{ path(routeName, baseQuery|merge({view: view, date: today})) }}">Today</a>
+        <a class="btn btn-outline-secondary" href="{{ path(routeName, baseQuery|merge({view: view, date: calendar.next|date('Y-m-d')})) }}" title="Next"><i class="fas fa-chevron-right"></i></a>
+    </div>
+
+    <h2 class="h4 mb-0">
+        {% if view == 'month' %}
+            {{ calendar.date|date('F Y') }}
+        {% elseif view == 'week' %}
+            Week {{ calendar.from|date('W') }} <small class="text-muted">{{ calendar.from|date('d M') }} – {{ calendar.to|date_modify('-1 day')|date('d M Y') }}</small>
+        {% else %}
+            {{ calendar.date|date('l j F Y') }}
+        {% endif %}
+    </h2>
+
+    <div class="btn-group" role="group" aria-label="View">
+        {% for option in ['month', 'week', 'day'] %}
+            <a class="btn {{ view == option ? 'btn-primary' : 'btn-outline-primary' }}"
+               href="{{ path(routeName, baseQuery|merge({view: option, date: calendar.date|date('Y-m-d')})) }}">{{ option|capitalize }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+{# Filter: which agendas are shown #}
+{% if agendas|length > 1 %}
+    <form method="get" action="{{ path(routeName) }}" class="d-flex flex-wrap gap-3 mb-3 js-agenda-filter">
+        <input type="hidden" name="view" value="{{ view }}">
+        <input type="hidden" name="date" value="{{ calendar.date|date('Y-m-d') }}">
+        {% for agenda in agendas %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="agendas[]" value="{{ agenda.id }}" id="agendaFilter{{ agenda.id }}" {{ agenda.id in selectedIds ? 'checked' }}
+                       style="background-color: {{ agenda.id in selectedIds ? agenda.color : 'transparent' }}; border-color: {{ agenda.color }};">
+                <label class="form-check-label" for="agendaFilter{{ agenda.id }}">{{ agenda.title }}</label>
+            </div>
+        {% endfor %}
+        <noscript><button type="submit" class="btn btn-sm btn-outline-secondary">Apply</button></noscript>
+    </form>
+{% endif %}
+
+{% if view == 'month' %}
+    <div class="table-responsive">
+        <table class="table table-bordered agenda-month mb-0">
+            <thead>
+                <tr class="text-center">
+                    <th class="text-muted small agenda-week-number">Wk</th>
+                    {% for label in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}<th>{{ label }}</th>{% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for week in calendar.weeks %}
+                    <tr>
+                        <th class="text-center text-muted small align-top">
+                            <a class="text-reset" href="{{ path(routeName, baseQuery|merge({view: 'week', date: week.days[0].date|date('Y-m-d')})) }}">{{ week.number }}</a>
+                        </th>
+                        {% for day in week.days %}
+                            {% set isToday = day.date|date('Y-m-d') == today %}
+                            <td class="align-top p-1 {{ day.inMonth ? '' : 'bg-body-tertiary text-muted' }}">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <a href="{{ path(routeName, baseQuery|merge({view: 'day', date: day.date|date('Y-m-d')})) }}"
+                                       class="small text-decoration-none {{ isToday ? 'badge rounded-pill text-bg-primary' : 'text-reset' }}">{{ day.date|date('j') }}</a>
+                                    {% if editable %}
+                                        <a href="{{ path('admin_agenda_item_new', {date: day.date|date('Y-m-d')}) }}" class="text-muted small agenda-add" title="Add an item on {{ day.date|date('d-m-Y') }}"><i class="fas fa-plus"></i></a>
+                                    {% endif %}
+                                </div>
+                                {% for item in day.items|slice(0, 3) %}
+                                    {{ _self.itemChip(item, editable) }}
+                                {% endfor %}
+                                {% if day.items|length > 3 %}
+                                    <a class="small" href="{{ path(routeName, baseQuery|merge({view: 'day', date: day.date|date('Y-m-d')})) }}">+{{ day.items|length - 3 }} more</a>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% elseif view == 'week' %}
+    <div class="row row-cols-1 row-cols-md-7 g-2 agenda-week">
+        {% for day in calendar.days %}
+            {% set isToday = day.date|date('Y-m-d') == today %}
+            <div class="col agenda-week-day">
+                <div class="card h-100 {{ isToday ? 'border-primary' : '' }}">
+                    <div class="card-header d-flex justify-content-between align-items-center py-1 px-2">
+                        <a class="text-reset text-decoration-none small fw-semibold" href="{{ path(routeName, baseQuery|merge({view: 'day', date: day.date|date('Y-m-d')})) }}">
+                            {{ day.date|date('D j M') }}
+                        </a>
+                        {% if editable %}
+                            <a href="{{ path('admin_agenda_item_new', {date: day.date|date('Y-m-d')}) }}" class="text-muted small" title="Add an item"><i class="fas fa-plus"></i></a>
+                        {% endif %}
+                    </div>
+                    <div class="card-body p-1">
+                        {% for item in day.items %}
+                            {{ _self.itemChip(item, editable) }}
+                        {% else %}
+                            <span class="text-muted small px-1">&ndash;</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    {# Day: whole-day items (and items that started earlier) on top, then a timeline per hour #}
+    {% set day = calendar.days[0] %}
+    {% set dayStart = day.date %}
+    {% set onTop = day.items|filter(item => item.allDay or item.startAt < dayStart) %}
+    <div class="card">
+        {% if onTop is not empty %}
+            <div class="card-header">
+                {% for item in onTop %}{{ _self.itemChip(item, editable) }}{% endfor %}
+            </div>
+        {% endif %}
+        <div class="list-group list-group-flush agenda-day">
+            {% for hour in 0..23 %}
+                {% set hourItems = day.items|filter(item => not item.allDay and item.startAt >= dayStart and item.startAt|date('G') == hour) %}
+                <div class="list-group-item d-flex gap-3 py-1 {{ hour < 7 and hourItems is empty ? 'd-none d-md-flex text-muted' : '' }}">
+                    <span class="text-muted small agenda-hour">{{ '%02d:00'|format(hour) }}</span>
+                    <div class="flex-grow-1">
+                        {% for item in hourItems %}{{ _self.itemChip(item, editable) }}{% endfor %}
+                    </div>
+                    {% if editable and hourItems is empty %}
+                        <a href="{{ path('admin_agenda_item_new', {date: day.date|date('Y-m-d')}) }}" class="text-muted small agenda-add" title="Add an item"><i class="fas fa-plus"></i></a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+{# Details of the clicked item #}
+<div class="modal fade" id="agendaItemModal" tabindex="-1" aria-labelledby="agendaItemModalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agendaItemModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-1"><i class="fas fa-calendar-alt me-2 text-muted"></i><span data-field="when"></span></p>
+                <p class="mb-1"><i class="fas fa-book me-2 text-muted"></i><span data-field="agenda"></span></p>
+                <p class="mb-1" data-wrapper="location"><i class="fas fa-map-marker-alt me-2 text-muted"></i><span data-field="location"></span></p>
+                {# Location on Google Maps: links always, the embedded map only with an API key #}
+                <div class="mt-2" data-wrapper="maps">
+                    {% if google_maps_api_key|default('') %}
+                        <div class="ratio ratio-16x9 mb-2 rounded overflow-hidden border">
+                            <iframe class="js-agenda-map" data-embed-url="https://www.google.com/maps/embed/v1/place?key={{ google_maps_api_key|default('')|url_encode }}" title="Map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+                        </div>
+                    {% endif %}
+                    <a class="btn btn-sm btn-outline-secondary js-agenda-maps-link" target="_blank" rel="noopener noreferrer"><i class="fas fa-map me-1"></i>Open in Google Maps</a>
+                    <a class="btn btn-sm btn-outline-secondary js-agenda-route-link" target="_blank" rel="noopener noreferrer"><i class="fas fa-route me-1"></i>Route</a>
+                </div>
+                <p class="mt-3 mb-0 pre-line" data-wrapper="description"><span data-field="description"></span></p>
+            </div>
+            {% if editable %}
+                <div class="modal-footer">
+                    <span class="text-muted small me-auto js-agenda-item-google"><i class="fab fa-google me-1"></i>From Google Calendar; change it there.</span>
+                    <button type="button" class="btn btn-outline-danger me-auto js-agenda-item-delete"><i class="fas fa-trash me-1"></i>Delete</button>
+                    <a href="#" class="btn btn-primary js-agenda-item-edit"><i class="fas fa-edit me-1"></i>Edit</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

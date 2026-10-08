@@ -1,0 +1,9 @@
+/* Blog: comments are indented per reply level (the depth is set inline as --depth) */
+.blog-comment {
+    max-width: calc(100% - var(--depth, 0) * 45px);
+}
+
+/* Admin comment list: one-line excerpt */
+.comment-excerpt {
+    max-width: 300px;
+}

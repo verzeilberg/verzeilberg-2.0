@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin - Verzeilberg.nl{% endblock %}</title>
+
+    {% block stylesheets %}
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
+        <link href="{{ asset('styles/admin.css') }}" rel="stylesheet">
+    {% endblock %}
+
+    {% block javascripts_head %}{% endblock %}
+</head>
+<body>
+    <div class="admin-wrapper">
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-brand">
+                <a href="{{ path('admin_dashboard') }}">
+                    <i class="fas fa-cog me-2"></i>Admin Panel
+                </a>
+            </div>
+            <nav class="nav flex-column mt-3">
+                <a class="nav-link {% if app.request.attributes.get('_route') == 'admin_dashboard' %}active{% endif %}" href="{{ path('admin_dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') == 'admin_menu_index' %}active{% endif %}" href="{{ path('admin_menu_index') }}">
+                    <i class="fas fa-bars"></i> Menu Management
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_blog_index', 'admin_blog_new', 'admin_blog_edit', 'admin_blog_show'] %}active{% endif %}" href="{{ path('admin_blog_index') }}">
+                    <i class="fas fa-blog"></i> Blog
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_event_index', 'admin_event_new', 'admin_event_edit'] %}active{% endif %}" href="{{ path('admin_event_index') }}">
+                    <i class="fas fa-calendar-alt"></i> Events
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') starts with 'admin_media' %}active{% endif %}" href="{{ path('admin_media_index') }}">
+                    <i class="fas fa-images"></i> Media
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['handbal_beheer_index', 'handbal_beheer_speler_new', 'handbal_beheer_speler_edit', 'handbal_beheer_keeper_new', 'handbal_beheer_keeper_edit', 'handbal_beheer_seizoenen', 'handbal_beheer_seizoen_new', 'handbal_beheer_seizoen_edit', 'handbal_beheer_ronde_new', 'handbal_beheer_scores', 'handbal_beheer_standings'] %}active{% endif %}" 
+                   href="{{ path('handbal_beheer_index') }}" data-bs-toggle="collapse" data-bs-target="#handbalSubmenu" aria-expanded="false" aria-controls="handbalSubmenu">
+                    <i class="fas fa-handshake"></i> Handbal <i class="fas fa-chevron-down ms-auto"></i>
+                </a>
+                <div class="collapse {% if app.request.attributes.get('_route') in ['handbal_beheer_index', 'handbal_beheer_speler_new', 'handbal_beheer_speler_edit', 'handbal_beheer_keeper_new', 'handbal_beheer_keeper_edit', 'handbal_beheer_seizoenen', 'handbal_beheer_seizoen_new', 'handbal_beheer_seizoen_edit', 'handbal_beheer_ronde_new', 'handbal_beheer_scores', 'handbal_beheer_standings'] %}show{% endif %}" id="handbalSubmenu">
+                    <nav class="nav flex-column ps-3">
+                        <a class="nav-link {% if app.request.attributes.get('_route') == 'handbal_beheer_standings' %}active{% endif %}" href="{{ path('handbal_beheer_standings') }}">
+                            <i class="fas fa-trophy me-2"></i>Stand / Ranking
+                        </a>
+                        <a class="nav-link {% if app.request.attributes.get('_route') in ['handbal_beheer_index', 'handbal_beheer_speler_new', 'handbal_beheer_speler_edit', 'handbal_beheer_keeper_new', 'handbal_beheer_keeper_edit'] %}active{% endif %}" href="{{ path('handbal_beheer_index') }}#spelers">
+                            <i class="fas fa-users me-2"></i>Spelers
+                        </a>
+                        <a class="nav-link {% if app.request.attributes.get('_route') in ['handbal_beheer_ronde_new', 'handbal_beheer_scores'] %}active{% endif %}" href="{{ path('handbal_beheer_scores') }}">
+                            <i class="fas fa-calendar-alt me-2"></i>Rondes
+                        </a>
+                        <a class="nav-link {% if app.request.attributes.get('_route') in ['handbal_beheer_seizoenen', 'handbal_beheer_seizoen_new', 'handbal_beheer_seizoen_edit'] %}active{% endif %}" href="{{ path('handbal_beheer_seizoenen') }}">
+                            <i class="fas fa-trophy me-2"></i>Seizoenen
+                        </a>
+                    </nav>
+                </div>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_contact_index', 'admin_contact_delete'] %}active{% endif %}" href="{{ path('admin_contact_index') }}">
+                    <i class="fas fa-envelope"></i> Contact
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_category_index', 'admin_category_new', 'admin_category_edit'] %}active{% endif %}" href="{{ path('admin_category_index') }}">
+                    <i class="fas fa-tags"></i> Categories
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') starts with 'admin_agenda' %}active{% endif %}" href="{{ path('admin_agenda_index') }}">
+                    <i class="fas fa-calendar-alt"></i> Agenda
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_checklist_index', 'admin_checklist_new', 'admin_checklist_edit', 'admin_checklist_show', 'admin_checklist_field_new', 'admin_checklist_field_edit', 'admin_checklist_item_new', 'admin_checklist_item_edit', 'admin_checklist_item_show', 'admin_checklist_archive', 'admin_checklist_field_types', 'admin_checklist_answers'] %}active{% endif %}" href="{{ path('admin_checklist_index') }}">
+                    <i class="fas fa-clipboard-list"></i> Checklists
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_search_index'] %}active{% endif %}" href="{{ path('admin_search_index') }}">
+                    <i class="fas fa-search"></i> Search Phrases
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_user_index', 'admin_user_new', 'admin_user_edit'] %}active{% endif %}" href="{{ path('admin_user_index') }}">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_role_index', 'admin_role_new', 'admin_role_edit'] %}active{% endif %}" href="{{ path('admin_role_index') }}">
+                    <i class="fas fa-user-shield"></i> Roles
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_route_permission_index', 'admin_route_permission_new', 'admin_route_permission_edit'] %}active{% endif %}" href="{{ path('admin_route_permission_index') }}">
+                    <i class="fas fa-route"></i> Route Permissions
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_imap_index', 'admin_imap_messages', 'admin_imap_message_show', 'admin_imap_compose', 'admin_imap_compose_account'] %}active{% endif %}" href="{{ path('admin_imap_index') }}">
+                    <i class="fas fa-inbox"></i> Inbox & Messages
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_strava_index', 'admin_strava_chart_data', 'admin_strava_detail', 'admin_strava_import', 'admin_strava_auth', 'admin_strava_stats'] %}active{% endif %}" href="{{ path('admin_strava_index') }}">
+                    <i class="fab fa-strava text-danger"></i> Strava
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') starts with 'admin_steam' %}active{% endif %}" href="{{ path('admin_steam_index') }}">
+                    <i class="fab fa-steam"></i> Steam
+                </a>
+                <div class="px-3 mt-3 text-uppercase text-muted small">System</div>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_email_account_index', 'admin_email_account_new', 'admin_email_account_edit'] %}active{% endif %}" href="{{ path('admin_email_account_index') }}">
+                    <i class="fas fa-mail-bulk"></i> Email Accounts
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_settings_index', 'admin_settings_comment_moderation'] %}active{% endif %}" href="{{ path('admin_settings_index') }}">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+                <a class="nav-link {% if app.request.attributes.get('_route') == 'admin_blog_comments' %}active{% endif %}" href="{{ path('admin_blog_comments') }}">
+                    <i class="fas fa-comments"></i> Comments
+                </a>
+                <a class="nav-link" href="{{ path('app_home') }}">
+                    <i class="fas fa-external-link-alt"></i> View Site
+                </a>
+                <a class="nav-link" href="{{ path('app_logout') }}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <div class="admin-content">
+            <header class="admin-topbar d-flex justify-content-between align-items-center">
+                <button class="btn btn-outline-secondary d-md-none" type="button" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted small">
+                        <i class="fas fa-user me-1"></i>{{ app.user.getFullName() ?? app.user.getUserIdentifier() }}
+                    </span>
+                </div>
+            </header>
+
+            <main class="admin-main">
+                {% for label, messages in app.flashes(['success', 'error', 'warning', 'info']) %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ label === 'error' ? 'danger' : label }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+
+                {% block body %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Global Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Error</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorModalMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i><span id="deleteModalTitle">Confirm Deletion</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteModalMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash me-1" id="confirmDeleteIcon"></i><span id="confirmDeleteLabel">Delete</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block javascripts %}
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <script src="{{ asset('js/core/common.js') }}"></script>
+        <script src="{{ asset('js/core/admin.js') }}"></script>
+    {% endblock %}
+</body>
+</html>

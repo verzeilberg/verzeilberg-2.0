@@ -1,0 +1,38 @@
+{# Read-only answer of one field for one item. A fieldset renders its children (recursively) inside a <fieldset>. #}
+{% set colClass = checkList.layoutColumns == 1 ? 'col-12' : 'col-md-6' %}
+{% if hiddenFieldIds[field.id] is defined %}
+    {# Not applicable: its "show only when" condition wasn't met #}
+{% elseif field.formType == 'fieldset' %}
+    <div class="col-12 mb-3">
+        <fieldset class="border rounded p-3">
+            <legend class="float-none w-auto px-2 mb-1 fs-6 fw-semibold">{{ field.name }}</legend>
+            <div class="row">
+                {% for child in field.children %}
+                    {% include 'admin/checklist/_answer_field.html.twig' with {field: child} %}
+                {% endfor %}
+            </div>
+        </fieldset>
+    </div>
+{% elseif field.formType != 'hidden' %}
+    {% set value = itemAnswers[field.id] ?? null %}
+    <div class="{{ colClass }} mb-3">
+        <div class="small text-muted">{{ field.name }}</div>
+        <div class="fw-medium text-break">
+            {% if value is null %}
+                <span class="text-muted fw-normal">&ndash;</span>
+            {% elseif field.formType == 'file' %}
+                <a href="{{ path('app_checklist_item_file', {id: item.id, field: field.formFieldName}) }}" target="_blank" rel="noopener"><i class="fas fa-paperclip me-1"></i>{{ value|split('/')|last }}</a>
+            {% elseif field.formType == 'url' %}
+                <a href="{{ value }}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt me-1"></i>{{ value }}</a>
+            {% elseif field.formType == 'email' %}
+                <a href="mailto:{{ value }}">{{ value }}</a>
+            {% else %}
+                {{ value|nl2br }}
+            {% endif %}
+        </div>
+    </div>
+    {# Fields nested under a non-fieldset field are shown at the same level, like in the item form #}
+    {% for child in field.children %}
+        {% include 'admin/checklist/_answer_field.html.twig' with {field: child} %}
+    {% endfor %}
+{% endif %}

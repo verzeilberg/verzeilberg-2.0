@@ -1,0 +1,17 @@
+/* Print (public site): only the page content, e.g. a checklist submission with its Print button */
+@media print {
+    body > header,
+    body > footer,
+    main > .alert {
+        display: none !important;
+    }
+
+    .card {
+        border: 0 !important;
+    }
+
+    fieldset,
+    .card-body .row > div {
+        break-inside: avoid;
+    }
+}

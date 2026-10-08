@@ -1,0 +1,22 @@
+/* Alerts, badges and modals */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+.modal-header.bg-dark {
+    background-color: #212529 !important;
+}
+
+.modal-body h6 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.modal-body p {
+    margin-bottom: 1rem;
+}

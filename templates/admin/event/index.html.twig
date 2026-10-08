@@ -1,0 +1,122 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Events - Admin{% endblock %}
+
+{% block body %}
+{% include 'admin/partials/delete_modal.html.twig' %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-calendar-alt me-2"></i>Events</h1>
+    <a href="{{ path('admin_event_new') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>New Event
+    </a>
+</div>
+
+<div class="mb-3">
+    <div class="btn-group" role="group">
+        <a href="{{ path('admin_event_index', {status: 'upcoming'}) }}" class="btn {% if currentStatus == 'upcoming' %}btn-success{% else %}btn-outline-success{% endif %}">
+            <i class="fas fa-calendar-plus me-1"></i>Upcoming ({{ upcomingCount }})
+        </a>
+        <a href="{{ path('admin_event_index', {status: 'ongoing'}) }}" class="btn {% if currentStatus == 'ongoing' %}btn-info{% else %}btn-outline-info{% endif %}">
+            <i class="fas fa-calendar-check me-1"></i>Ongoing ({{ ongoingCount }})
+        </a>
+        <a href="{{ path('admin_event_index', {status: 'past'}) }}" class="btn {% if currentStatus == 'past' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+            <i class="fas fa-calendar-minus me-1"></i>Past ({{ pastCount }})
+        </a>
+        <a href="{{ path('admin_event_index') }}" class="btn {% if currentStatus == 'all' or currentStatus is not defined %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            <i class="fas fa-list me-1"></i>All
+        </a>
+    </div>
+    <form method="GET" class="d-inline-flex">
+        <input type="text" name="search" class="form-control form-control-sm w-250px" placeholder="Search events..." value="{{ search }}">
+        <button type="submit" class="btn btn-outline-secondary btn-sm ms-2"><i class="fas fa-search"></i></button>
+    </form>
+</div>
+
+{% if pagination.getTotalItemCount() == 0 %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>No events found.
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Dates</th>
+                    <th>Image</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in pagination %}
+                <tr>
+                    <td>
+                        <strong>{{ event.title }}</strong>
+                    </td>
+                    <td>
+                        {% if event.category %}
+                            <span class="badge bg-info">{{ event.category.name }}</span>
+                        {% else %}
+                            <span class="text-muted">No category</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div>{{ event.eventStartDate|date('d M Y') }}</div>
+                        {% if event.eventEndDate != event.eventStartDate %}
+                            <div class="text-muted small">to {{ event.eventEndDate|date('d M Y') }}</div>
+                        {% endif %}
+                        {% if event.eventStartTime or event.eventEndTime %}
+                            <div class="small">
+                                {% if event.eventStartTime %}{{ event.eventStartTime|date('H:i') }}{% else %}00:00{% endif %}
+                                -
+                                {% if event.eventEndTime %}{{ event.eventEndTime|date('H:i') }}{% else %}23:59{% endif %}
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if event.eventImage %}
+                            <img src="{{ event.eventImage.getPublicPath() }}" alt="" class="thumb-sm">
+                        {% else %}
+                            <span class="text-muted">No image</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if event.isUpcoming() %}
+                            <span class="badge bg-primary"><i class="fas fa-clock me-1"></i>Upcoming</span>
+                        {% elseif event.isOngoing() %}
+                            <span class="badge bg-success"><i class="fas fa-play me-1"></i>Ongoing</span>
+                        {% else %}
+                            <span class="badge bg-secondary"><i class="fas fa-history me-1"></i>Past</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ path('admin_event_edit', {id: event.id}) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger delete-event" 
+                                data-event-id="{{ event.id }}" 
+                                data-event-title="{{ event.title }}"
+                                data-csrf-token="{{ csrf_token('delete' ~ event.id) }}"
+                                title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <nav aria-label="Events pagination">
+        {{ knp_pagination_render(pagination) }}
+    </nav>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/event/event-list.js') }}" data-delete-url="{{ path('admin_event_delete', {id: '__ID__'}) }}"></script>
+{% endblock %}

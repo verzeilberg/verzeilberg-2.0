@@ -1,0 +1,46 @@
+/* Flatpickr Calendar Fixes */
+/* Fix flatpickr calendar visibility */
+.flatpickr-calendar {
+    background: #fff !important;
+    color: #212529 !important;
+}
+.flatpickr-months .flatpickr-month {
+    color: #212529 !important;
+    fill: #212529 !important;
+}
+.flatpickr-weekday {
+    color: #212529 !important;
+}
+.flatpickr-day {
+    color: #212529 !important;
+}
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: #fff !important;
+}
+.flatpickr-day.inRange {
+    background: #cfe2ff !important;
+    border-color: #cfe2ff !important;
+    color: #212529 !important;
+}
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+    color: #adb5bd !important;
+}
+.flatpickr-day.today {
+    border-color: #0d6efd !important;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    background: #fff !important;
+    color: #212529 !important;
+}
+.flatpickr-time input,
+.flatpickr-time .flatpickr-am-pm {
+    color: #212529 !important;
+}
+.numInputWrapper span {
+    border-color: #0d6efd !important;
+}

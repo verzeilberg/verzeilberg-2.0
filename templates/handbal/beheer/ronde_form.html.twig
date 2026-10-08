@@ -1,0 +1,105 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}{{ action == 'new' ? 'Nieuwe ronde' : 'Ronde bewerken' }} - Handbal Beheer{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-{{ action == 'new' ? 'plus' : 'edit' }} me-2"></i>{{ action == 'new' ? 'Nieuwe ronde' : 'Ronde bewerken' }}</h1>
+    <a href="{{ path('handbal_beheer_index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Terug
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Ronde details</h5>
+    </div>
+    <div class="card-body">
+        {{ form_start(form) }}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form_label(form.datum) }}
+                        {{ form_widget(form.datum, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(form.datum) }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form_label(form.seizoen) }}
+                        {{ form_widget(form.seizoen, {'attr': {'class': 'form-select'}}) }}
+                        {{ form_errors(form.seizoen) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.keeper) }}
+                        {{ form_widget(form.keeper, {'attr': {'class': 'form-select'}}) }}
+                        {{ form_errors(form.keeper) }}
+                    </div>
+                </div>
+            </div>
+
+            {% if action == 'new' and spelers|length > 0 %}
+            <hr>
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Scores invullen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <strong>Keeper:</strong> De geselecteerde keeper wordt gebruikt voor alle scores.<br>
+                        Vink aan bij "Gescored" als de speler scoort, laat leeg voor redding keeper.
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="min-w-250px">Speler</th>
+                                    <th class="w-80px">Rugnr</th>
+                                    <th class="text-center w-100px">Gescored ✓</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for speler in spelers %}
+                                    <tr>
+                                        <td>{{ speler.naam }}</td>
+                                        <td class="text-center">{{ speler.rugnummer ?? '-' }}</td>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch">
+                                                <input type="hidden" name="scores[{{ speler.id }}]" value="0">
+                                                <input type="checkbox" class="form-check-input" name="scores[{{ speler.id }}]" value="1">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="d-flex gap-2">
+                {{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary mt-3'}}) }}
+                <a href="{{ path('handbal_beheer_index') }}" class="btn btn-secondary mt-3 px-3 d-inline-flex align-items-center">Annuleren</a>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/nl.js"></script>
+    {% set seasons = [] %}
+    {% for s in seizoenen %}
+        {% set seasons = seasons|merge([{id: s.id, start: s.startDatum|date('d-m-Y'), end: s.eindDatum|date('d-m-Y')}]) %}
+    {% endfor %}
+    <script src="{{ asset('js/modules/handbal/ronde-form.js') }}" data-seasons="{{ seasons|json_encode|e('html_attr') }}"></script>
+{% endblock %}

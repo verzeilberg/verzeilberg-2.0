@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contact - Verzeilberg{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0"><i class="fas fa-envelope me-2"></i>Contactformulier</h2>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <p class="lead mb-4">Heeft u vragen, opmerkingen of wilt u een afspraak maken? Vul het formulier in en wij nemen zo spoedig mogelijk contact met u op.</p>
+
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate', 'id': 'contact_form'}}) }}
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                {{ form_label(form.salutation, null, {'label_attr': {'class': 'form-label fw-bold'}}) }}
+                                <div class="salutation-radios d-flex flex-wrap gap-3">
+                                    {{ form_widget(form.salutation) }}
+                                </div>
+                                {{ form_errors(form.salutation) }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                {{ form_label(form.name) }}
+                                {{ form_widget(form.name) }}
+                                {{ form_errors(form.name) }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                {{ form_label(form.email) }}
+                                {{ form_widget(form.email) }}
+                                {{ form_errors(form.email) }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                {{ form_label(form.subject) }}
+                                {{ form_widget(form.subject) }}
+                                {{ form_errors(form.subject) }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                {{ form_label(form.message) }}
+                                {{ form_widget(form.message) }}
+                                {{ form_errors(form.message) }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            {{ form_widget(form.submit) }}
+                        </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted mb-1">Of neem direct contact op via:</p>
+                <p class="mb-1"><i class="fas fa-envelope me-2"></i><a href="mailto:info@verzeilberg.nl" class="text-decoration-none">info@verzeilberg.nl</a></p>
+                <p class="mb-0"><i class="fas fa-phone me-2"></i><a href="tel:+31612345678" class="text-decoration-none">06-12345678</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,115 @@
+{# Renders one checklist field. A fieldset renders its children (recursively) inside a <fieldset>. #}
+{% set fieldName = 'field_' ~ field.formFieldName %}
+{% set fieldType = field.formType %}
+{# "Show only when" condition, applied by _item_form_scripts.html.twig #}
+{% set condition = field.optionsAsArray.condition ?? null %}
+{% set wrapperAttrs %} data-field-wrapper{% if condition and condition.field is defined and condition.values is defined %} data-condition-field="{{ condition.field }}" data-condition-values="{{ condition.values|json_encode }}"{% endif %}{% endset %}
+{# Label text with the required asterisk inside the <label>, so it stays right behind the text #}
+{% set fieldLabel = field.name|e ~ (field.required ? '<span class="text-danger ms-1" aria-hidden="true">*</span>' : '') %}
+{# Info icon with what is allowed (set by CheckListItemType::finishView). app.js shows popovers as unsanitized HTML, so every line is escaped here. #}
+{% set restrictions = form[fieldName] is defined ? form[fieldName].vars.restrictions|default([]) : [] %}
+{% set infoButton %}
+    {%- if restrictions is not empty -%}
+        {%- set infoContent -%}
+            <ul class="mb-0 ps-3">{% for restriction in restrictions %}<li>{{ restriction }}</li>{% endfor %}</ul>
+        {%- endset -%}
+        {# Opens on click; item_form.html.twig closes it on a click elsewhere or Escape #}
+        <a tabindex="0" role="button" class="text-info lh-1 text-decoration-none js-field-info"
+                data-bs-toggle="popover" data-bs-trigger="click" data-bs-placement="right"
+                data-bs-title="Allowed" data-bs-content="{{ infoContent|e('html_attr') }}"
+                aria-label="What is allowed for {{ field.name }}">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+        </a>
+    {%- endif -%}
+{% endset %}
+{% if fieldType == 'fieldset' %}
+    <div class="col-12 mb-3"{{ wrapperAttrs }}>
+        <fieldset class="border rounded p-3">
+            <legend class="float-none w-auto px-2 mb-1 fs-6 fw-semibold">{{ field.name }}</legend>
+            {% if field.introText %}
+                <div class="form-text mt-0 mb-3">{{ field.introText }}</div>
+            {% endif %}
+            <div class="row">
+                {% for child in field.children %}
+                    {% include 'admin/checklist/_item_field.html.twig' with {field: child} %}
+                {% endfor %}
+            </div>
+        </fieldset>
+    </div>
+{% else %}
+    {% if form[fieldName] is defined and fieldType == 'hidden' %}
+        {{ form_widget(form[fieldName]) }}
+    {% elseif form[fieldName] is defined %}
+        {% set fieldErrors %}
+            {% for error in form[fieldName].vars.errors %}
+                <div class="invalid-feedback d-block">{{ error.message }}</div>
+            {% endfor %}
+        {% endset %}
+        <div class="{{ checkList.layoutColumns|default(2) == 1 ? 'col-12' : 'col-md-6' }} mb-3"{{ wrapperAttrs }}>
+            {% if fieldType == 'checkbox' %}
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        {{ form_label(form[fieldName], fieldLabel, {'label_attr': {'class': 'form-label mb-0'}, 'label_html': true}) }}
+                        {{ infoButton }}
+                    </div>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for child in form[fieldName] %}
+                            <div class="form-check form-check-inline">
+                                {{ form_widget(child, {'attr': {'class': 'form-check-input'}}) }}
+                                {{ form_label(child, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if field.introText %}
+                        <div class="form-text">{{ field.introText }}</div>
+                    {% endif %}
+                    {{ fieldErrors }}
+                </div>
+            {% elseif fieldType == 'radio' %}
+                <div class="d-flex flex-wrap gap-3 align-items-center">
+                    <div class="d-flex align-items-center gap-2 me-3">
+                        {{ form_label(form[fieldName], fieldLabel, {'label_attr': {'class': 'form-label mb-0'}, 'label_html': true}) }}
+                        {{ infoButton }}
+                    </div>
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for child in form[fieldName] %}
+                            <div class="form-check form-check-inline">
+                                {{ form_widget(child, {'attr': {'class': 'form-check-input'}}) }}
+                                {{ form_label(child, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if field.introText %}
+                        <div class="form-text w-100">{{ field.introText }}</div>
+                    {% endif %}
+                    <div class="w-100">{{ fieldErrors }}</div>
+                </div>
+            {% else %}
+                <div class="d-flex flex-column gap-1">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        {{ form_label(form[fieldName], fieldLabel, {'label_attr': {'class': 'form-label mb-0'}, 'label_html': true}) }}
+                        {{ infoButton }}
+                    </div>
+                    {{ form_widget(form[fieldName], {'attr': form[fieldName].vars.attr|merge({'class': (fieldType == 'date' ? 'form-control js-datepicker' : 'form-control') ~ (form[fieldName].vars.attr.readonly is defined ? ' bg-body-secondary' : '') ~ (form[fieldName].vars.errors|length ? ' is-invalid' : '')})}) }}
+                    {% set storedFile = fieldType == 'file' and item is defined ? item.itemContent[fieldName]|default(null) : null %}
+                    {% if storedFile %}
+                        <div class="form-text">
+                            <i class="fas fa-paperclip me-1"></i>Current file:
+                            <a href="{{ path('app_checklist_item_file', {id: item.id, field: field.formFieldName}) }}" target="_blank" rel="noopener">{{ storedFile|split('/')|last }}</a>
+                            <span class="text-muted">(choose a new file to replace it)</span>
+                        </div>
+                    {% endif %}
+                    {% if field.introText %}
+                        <div class="form-text">{{ field.introText }}</div>
+                    {% endif %}
+                    {{ fieldErrors }}
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {# Fields nested under a non-fieldset field are rendered at the same level #}
+    {% for child in field.children %}
+        {% include 'admin/checklist/_item_field.html.twig' with {field: child} %}
+    {% endfor %}
+{% endif %}

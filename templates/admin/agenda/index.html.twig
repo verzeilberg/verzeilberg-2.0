@@ -1,0 +1,33 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Agenda - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1><i class="fas fa-calendar-alt me-2"></i>Agenda</h1>
+    <div class="d-flex gap-2">
+        <a href="{{ path('admin_agenda_agendas') }}" class="btn btn-outline-secondary"><i class="fas fa-cog me-1"></i>Manage agendas</a>
+        {% if agendas is not empty %}
+            <a href="{{ path('admin_agenda_item_new', {date: calendar.date|date('Y-m-d')}) }}" class="btn btn-primary"><i class="fas fa-plus me-1"></i>New item</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if agendas is empty %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>There are no agendas yet. <a href="{{ path('admin_agenda_new') }}">Create the first agenda</a>.
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body">
+            {% include 'agenda/_calendar.html.twig' with {routeName: 'admin_agenda_index', editable: true} %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/delete-modal.js') }}"></script>
+    <script src="{{ asset('js/modules/agenda/calendar.js') }}"></script>
+{% endblock %}

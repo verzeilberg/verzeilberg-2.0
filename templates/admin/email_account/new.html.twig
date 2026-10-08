@@ -1,0 +1,174 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Add Email Account - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-plus me-2"></i>Add Email Account</h1>
+    <a href="{{ path('admin_email_account_index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {{ form_start(form) }}
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    {{ form_label(form.name) }}
+                    {{ form_widget(form.name, {'attr': {'class': 'form-control', 'placeholder': 'Personal Gmail'}}) }}
+                    {{ form_errors(form.name) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    {{ form_label(form.email) }}
+                    {{ form_widget(form.email, {'attr': {'class': 'form-control', 'placeholder': 'you@gmail.com'}}) }}
+                    {{ form_errors(form.email) }}
+                </div>
+            </div>
+        </div>
+
+        <h5 class="mt-4 mb-3">IMAP Settings</h5>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form_label(form.imapHost) }}
+                    {{ form_widget(form.imapHost, {'attr': {'class': 'form-control', 'placeholder': 'imap.gmail.com'}}) }}
+                    {{ form_errors(form.imapHost) }}
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="mb-3">
+                    {{ form_label(form.imapPort) }}
+                    {{ form_widget(form.imapPort, {'attr': {'class': 'form-control', 'placeholder': '993'}}) }}
+                    {{ form_errors(form.imapPort) }}
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="mb-3">
+                    {{ form_label(form.encryption) }}
+                    {{ form_widget(form.encryption, {'attr': {'class': 'form-control', 'placeholder': 'ssl'}}) }}
+                    {{ form_errors(form.encryption) }}
+                    <div class="form-text">ssl, tls, or none</div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    {{ form_label(form.username) }}
+                    {{ form_widget(form.username, {'attr': {'class': 'form-control', 'placeholder': 'you@gmail.com'}}) }}
+                    {{ form_errors(form.username) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    {{ form_label(form.password) }}
+                    {{ form_widget(form.password, {'attr': {'class': 'form-control', 'placeholder': 'App password', 'autocomplete': 'new-password'}}) }}
+                    {{ form_errors(form.password) }}
+                    <div class="form-text">App password for IMAP access.</div>
+                </div>
+            </div>
+        </div>
+
+        <h5 class="mt-4 mb-3">Folder Settings (Optional)</h5>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form_label(form.sentFolder) }}
+                    {{ form_widget(form.sentFolder, {'attr': {'class': 'form-control', 'placeholder': 'INBOX.Sent'}}) }}
+                    {{ form_errors(form.sentFolder) }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form_label(form.draftsFolder) }}
+                    {{ form_widget(form.draftsFolder, {'attr': {'class': 'form-control', 'placeholder': 'INBOX.Drafts'}}) }}
+                    {{ form_errors(form.draftsFolder) }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form_label(form.trashFolder) }}
+                    {{ form_widget(form.trashFolder, {'attr': {'class': 'form-control', 'placeholder': 'INBOX.Trash'}}) }}
+                    {{ form_errors(form.trashFolder) }}
+                </div>
+            </div>
+        </div>
+
+        <h5 class="mt-4 mb-3">SMTP Settings</h5>
+        <div class="mb-3 form-check">
+            {{ form_widget(form.useImapForSmtp, {'attr': {'class': 'form-check-input'}}) }}
+            {{ form_label(form.useImapForSmtp, null, {'label_attr': {'class': 'form-check-label'}}) }}
+            {{ form_errors(form.useImapForSmtp) }}
+            <div class="form-text">If checked, uses IMAP host/port/credentials for sending too.</div>
+        </div>
+
+        <div id="smtp-fields">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        {{ form_label(form.smtpHost) }}
+                        {{ form_widget(form.smtpHost, {'attr': {'class': 'form-control', 'placeholder': 'smtp.gmail.com'}}) }}
+                        {{ form_errors(form.smtpHost) }}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        {{ form_label(form.smtpPort) }}
+                        {{ form_widget(form.smtpPort, {'attr': {'class': 'form-control', 'placeholder': '587'}}) }}
+                        {{ form_errors(form.smtpPort) }}
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="mb-3">
+                        {{ form_label(form.smtpEncryption) }}
+                        {{ form_widget(form.smtpEncryption, {'attr': {'class': 'form-control', 'placeholder': 'tls'}}) }}
+                        {{ form_errors(form.smtpEncryption) }}
+                        <div class="form-text">tls, ssl, or none</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form_label(form.smtpUsername) }}
+                        {{ form_widget(form.smtpUsername, {'attr': {'class': 'form-control', 'placeholder': 'you@gmail.com'}}) }}
+                        {{ form_errors(form.smtpUsername) }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        {{ form_label(form.smtpPassword) }}
+                        {{ form_widget(form.smtpPassword, {'attr': {'class': 'form-control', 'placeholder': 'App password', 'autocomplete': 'new-password'}}) }}
+                        {{ form_errors(form.smtpPassword) }}
+                        <div class="form-text">Leave empty to keep current password.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3 form-check">
+            {{ form_widget(form.enabled, {'attr': {'class': 'form-check-input'}}) }}
+            {{ form_label(form.enabled, null, {'label_attr': {'class': 'form-check-label'}}) }}
+            {{ form_errors(form.enabled) }}
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save me-1"></i>Save Account
+            </button>
+            <a href="{{ path('admin_email_account_index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/email-account/form.js') }}"></script>
+{% endblock %}

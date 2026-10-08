@@ -13,6 +13,9 @@ doctrine:
         identity_generation_preferences:
             Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
         auto_mapping: true
+        dql:
+            datetime_functions:
+                YEAR: App\DQL\Year
         mappings:
             App:
                 type: attribute
@@ -24,8 +27,8 @@ doctrine:
 when@test:
     doctrine:
         dbal:
-            # "TEST_TOKEN" is typically set by ParaTest
-            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+            # Disable dbname suffix for tests
+            dbname_suffix: ''
 
 when@prod:
     doctrine:

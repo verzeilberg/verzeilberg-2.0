@@ -1,0 +1,39 @@
+/* Images, thumbnails and maps */
+.thumb-video {
+    width: 80px;
+    height: 45px;
+    object-fit: cover;
+}
+
+.thumb-sm {
+    max-width: 60px;
+    max-height: 40px;
+}
+
+.img-cover-250 {
+    object-fit: cover;
+    max-height: 250px;
+}
+
+.img-cover-200 {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Leaflet / Google maps */
+.map-canvas {
+    height: 300px;
+    width: 100%;
+    border-radius: 8px;
+}
+
+.map-canvas.map-canvas-bordered {
+    border: 1px solid #dee2e6;
+}
+
+.map-canvas.map-canvas-lg,
+#map {
+    height: 500px;
+    width: 100%;
+    border-radius: 8px;
+}

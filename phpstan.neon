@@ -1,0 +1,7 @@
+parameters:
+    paths:
+        - src
+    level: 5
+    excludePaths:
+        - src/Kernel.php
+        - src/Entity/Traits/*

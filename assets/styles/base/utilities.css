@@ -1,0 +1,46 @@
+/* Small helpers that Bootstrap doesn't provide */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.pre-line {
+    white-space: pre-line;
+}
+
+/* Hidden for people, still in the form (spam honeypot); display:none would be skipped by some bots */
+.visually-offscreen {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+/* Fixed widths for table columns, icons and narrow inputs */
+.w-20px { width: 20px; }
+.w-40px { width: 40px; }
+.w-60px { width: 60px; }
+.w-80px { width: 80px; }
+.w-100px { width: 100px; }
+.w-120px { width: 120px; }
+.w-130px { width: 130px; }
+.w-250px { width: 250px; }
+.min-w-150px { min-width: 150px; }
+.min-w-200px { min-width: 200px; }
+.min-w-250px { min-width: 250px; }
+
+/* Colour dot, e.g. for an agenda or calendar colour: style="--dot-color: …" */
+.color-dot {
+    display: inline-block;
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    background: var(--dot-color, var(--bs-secondary));
+    vertical-align: middle;
+}
+
+.color-dot-sm {
+    width: 0.7rem;
+    height: 0.7rem;
+}

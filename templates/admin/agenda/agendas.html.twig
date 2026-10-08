@@ -1,0 +1,196 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Agendas - Admin{% endblock %}
+
+{% macro agendaRow(agenda, archived) %}
+    {% set feedUrl = url('app_agenda_feed', {token: agenda.feedToken}) %}
+    <tr>
+        <td><span class="color-dot me-2" style="--dot-color: {{ agenda.color }};"></span><strong>{{ agenda.title }}</strong></td>
+        <td>
+            {% if agenda.public %}
+                <span class="badge bg-success"><i class="fas fa-globe me-1"></i>On the site</span>
+            {% else %}
+                <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i>Admin only</span>
+            {% endif %}
+            {% if agenda.googleLinked %}
+                <div class="mt-1 small">
+                    <span class="badge bg-light text-dark border"><i class="fab fa-google me-1"></i>{{ agenda.googleAccount.email }}</span>
+                    {% if agenda.lastSyncError %}
+                        <div class="text-danger" title="{{ agenda.lastSyncError }}"><i class="fas fa-exclamation-triangle me-1"></i>Update failed</div>
+                    {% elseif agenda.lastSyncedAt %}
+                        <div class="text-muted">Updated {{ agenda.lastSyncedAt|date('d-m-Y H:i') }}</div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </td>
+        <td>{{ agenda.items|length }}</td>
+        <td>
+            {% if not archived %}
+                <div class="input-group input-group-sm agenda-feed-url">
+                    <input type="text" class="form-control" value="{{ feedUrl }}" readonly aria-label="iCal feed of {{ agenda.title }}" data-select-on-click>
+                    <button type="button" class="btn btn-outline-secondary js-copy" data-copy="{{ feedUrl }}" title="Copy link"><i class="fas fa-copy"></i></button>
+                    <button type="button" class="btn btn-outline-secondary" title="Renew link (the old link stops working)"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                            data-delete-url="{{ path('admin_agenda_feed_token', {id: agenda.id}) }}"
+                            data-csrf-token="{{ csrf_token('feed_token' ~ agenda.id) }}"
+                            data-delete-message="Renew the iCal link of this agenda? Calendars subscribed with the current link stop receiving updates."
+                            data-confirm-title="Renew feed link" data-confirm-label="Renew" data-confirm-icon="fa-sync" data-confirm-class="btn-warning">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+            {% else %}
+                <span class="text-muted small">not while archived</span>
+            {% endif %}
+        </td>
+        <td class="text-center text-nowrap">
+            <div class="btn-group btn-group-sm">
+                {% if not archived %}
+                    <a href="{{ path('admin_agenda_index', {agendas: [agenda.id]}) }}" class="btn btn-outline-primary" title="Calendar"><i class="fas fa-calendar-alt"></i></a>
+                    <a href="{{ path('admin_agenda_edit', {id: agenda.id}) }}" class="btn btn-outline-secondary" title="Edit"><i class="fas fa-edit"></i></a>
+                    {% if agenda.googleLinked %}
+                        <button type="button" class="btn btn-outline-secondary" title="Update from Google now"
+                                data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                data-delete-url="{{ path('admin_agenda_google_sync', {id: agenda.id}) }}"
+                                data-csrf-token="{{ csrf_token('google_sync' ~ agenda.id) }}"
+                                data-delete-message="Fetch the latest appointments of this agenda from Google Calendar now?"
+                                data-confirm-title="Update from Google" data-confirm-label="Update" data-confirm-icon="fa-sync" data-confirm-class="btn-primary">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                    {% else %}
+                        <a href="{{ path('admin_agenda_import', {id: agenda.id}) }}" class="btn btn-outline-secondary" title="Import iCal"><i class="fas fa-file-import"></i></a>
+                    {% endif %}
+                    <button type="button" class="btn btn-outline-secondary" title="Archive"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                            data-delete-url="{{ path('admin_agenda_archive', {id: agenda.id}) }}"
+                            data-csrf-token="{{ csrf_token('archive_agenda' ~ agenda.id) }}"
+                            data-delete-message="Archive this agenda? It is hidden from the calendar and the site, and its feed stops; you can restore it later."
+                            data-confirm-title="Confirm Archive" data-confirm-label="Archive" data-confirm-icon="fa-archive" data-confirm-class="btn-warning">
+                        <i class="fas fa-archive"></i>
+                    </button>
+                {% else %}
+                    <button type="button" class="btn btn-outline-success" title="Unarchive"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                            data-delete-url="{{ path('admin_agenda_unarchive', {id: agenda.id}) }}"
+                            data-csrf-token="{{ csrf_token('unarchive_agenda' ~ agenda.id) }}"
+                            data-delete-message="Restore this agenda?"
+                            data-confirm-title="Confirm Unarchive" data-confirm-label="Unarchive" data-confirm-icon="fa-undo" data-confirm-class="btn-success">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                {% endif %}
+                <button type="button" class="btn btn-outline-danger" title="Delete"
+                        data-bs-toggle="modal" data-bs-target="#deleteModal"
+                        data-delete-url="{{ path('admin_agenda_delete', {id: agenda.id}) }}"
+                        data-csrf-token="{{ csrf_token('delete_agenda' ~ agenda.id) }}"
+                        data-delete-message="Permanently delete this agenda and all its items? This cannot be undone.">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+{% endmacro %}
+
+{% block body %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1><i class="fas fa-cog me-2"></i>Agendas</h1>
+    <div class="d-flex gap-2">
+        <a href="{{ path('admin_agenda_index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Agenda</a>
+        <a href="{{ path('admin_agenda_new') }}" class="btn btn-primary"><i class="fas fa-plus me-1"></i>New agenda</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        {% if agendas is empty %}
+            <p class="text-muted mb-0">No agendas yet.</p>
+        {% else %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Agenda</th><th>Visibility</th><th>Items</th><th>iCal feed</th><th class="text-center"><i class="fas fa-cogs"></i></th></tr></thead>
+                    <tbody>{% for agenda in agendas %}{{ _self.agendaRow(agenda, false) }}{% endfor %}</tbody>
+                </table>
+            </div>
+            <p class="text-muted small mt-3 mb-0"><i class="fas fa-info-circle me-1"></i>Subscribe to the iCal feed in Google Calendar, Apple Calendar or Outlook. Anyone with the link can see the agenda, also when it is not shown on the site.</p>
+        {% endif %}
+    </div>
+</div>
+
+<h2 class="h5"><i class="fab fa-google me-2"></i>Google Calendar</h2>
+<div class="card mb-4">
+    <div class="card-body">
+        {% if not googleConfigured %}
+            <p>Show the appointments of a Google Calendar in the agenda. This needs a (free) Google Cloud project once:</p>
+            <ol class="mb-3">
+                <li>Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">console.cloud.google.com</a>, create a project and enable the <strong>Google Calendar API</strong> (APIs &amp; Services → Library).</li>
+                <li>Set up the <strong>OAuth consent screen</strong> (type "External"), add the scope <code>…/auth/calendar.readonly</code> and add your Google account as test user. Then choose <strong>Publish app</strong>: in "Testing" Google stops the access after 7 days.</li>
+                <li>Create <strong>Credentials → OAuth client ID</strong> of type "Web application" with this authorised redirect URI:<br>
+                    <code>{{ url('admin_agenda_google_callback') }}</code></li>
+                <li>Put the client ID and secret in <code>.env.local</code>:<br><code>GOOGLE_CLIENT_ID=…</code><br><code>GOOGLE_CLIENT_SECRET=…</code></li>
+                <li>For automatic updates, add a cronjob: <code>*/15 * * * * php {{ projectDir }}/bin/console app:agenda:sync-google --quiet</code></li>
+            </ol>
+            <p class="text-muted small mb-0">After that, a "Connect Google account" button appears here.</p>
+        {% else %}
+            {% for account in googleAccounts %}
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 {{ not loop.last ? 'border-bottom' : '' }}">
+                    <div>
+                        <i class="fab fa-google me-2 text-muted"></i><strong>{{ account.email }}</strong>
+                        <span class="text-muted small ms-2">connected {{ account.connectedAt|date('d-m-Y') }}</span>
+                        {% if account.lastError %}
+                            <div class="text-danger small"><i class="fas fa-exclamation-triangle me-1"></i>{{ account.lastError }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if account.lastError %}
+                            <a href="{{ path('admin_agenda_google_connect') }}" class="btn btn-sm btn-warning"><i class="fas fa-plug me-1"></i>Connect again</a>
+                        {% endif %}
+                        <a href="{{ path('admin_agenda_google_calendars', {id: account.id}) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-list-check me-1"></i>Choose calendars</a>
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                data-delete-url="{{ path('admin_agenda_google_disconnect', {id: account.id}) }}"
+                                data-csrf-token="{{ csrf_token('google_disconnect' ~ account.id) }}"
+                                data-delete-message="Disconnect {{ account.email }}? Its agendas stop updating and become normal agendas (their appointments stay). The site's access is also withdrawn at Google."
+                                data-confirm-title="Disconnect Google" data-confirm-label="Disconnect" data-confirm-icon="fa-unlink" data-confirm-class="btn-danger">
+                            <i class="fas fa-unlink me-1"></i>Disconnect
+                        </button>
+                    </div>
+                </div>
+            {% else %}
+                <p class="text-muted">No Google account connected yet.</p>
+            {% endfor %}
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <a href="{{ path('admin_agenda_google_connect') }}" class="btn btn-primary"><i class="fab fa-google me-1"></i>Connect Google account</a>
+                {% if agendas|filter(agenda => agenda.googleLinked) is not empty %}
+                    <button type="button" class="btn btn-outline-secondary"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                            data-delete-url="{{ path('admin_agenda_google_sync') }}"
+                            data-csrf-token="{{ csrf_token('google_sync') }}"
+                            data-delete-message="Fetch the latest appointments of all Google agendas now?"
+                            data-confirm-title="Update from Google" data-confirm-label="Update all" data-confirm-icon="fa-sync" data-confirm-class="btn-primary">
+                        <i class="fas fa-sync me-1"></i>Update all now
+                    </button>
+                {% endif %}
+            </div>
+            <p class="text-muted small mt-3 mb-0"><i class="fas fa-info-circle me-1"></i>Google agendas are updated automatically by the cronjob <code>app:agenda:sync-google</code>. Their appointments are read-only here: change them in Google Calendar.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if archived is not empty %}
+    <h2 class="h5"><i class="fas fa-archive me-2"></i>Archived</h2>
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Agenda</th><th>Visibility</th><th>Items</th><th>iCal feed</th><th class="text-center"><i class="fas fa-cogs"></i></th></tr></thead>
+                    <tbody>{% for agenda in archived %}{{ _self.agendaRow(agenda, true) }}{% endfor %}</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/delete-modal.js') }}"></script>
+    <script src="{{ asset('js/modules/agenda/agendas.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profile - Verzeilberg.nl{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-user me-2"></i>Profile</h3>
+            </div>
+            <div class="card-body text-center">
+                {% if user.details and user.details.avatar %}
+                    <img src="{{ asset(user.details.avatar) }}" alt="{{ user.fullName }}" class="rounded-circle mb-3 profile-avatar">
+                {% else %}
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 profile-avatar">
+                        {{ user.initials }}
+                    </div>
+                {% endif %}
+
+                <h4>{{ user.fullName }}</h4>
+                <p class="text-muted">{{ user.email }}</p>
+
+                {% if user.details %}
+                    {% if user.details.catchLine %}
+                        <p class="fst-italic text-muted">"{{ user.details.catchLine }}"</p>
+                    {% endif %}
+
+                    {% if user.details.bio %}
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <h6>Bio</h6>
+                            <p class="mb-0">{{ user.details.bio|nl2br }}</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="row mt-3 text-start">
+                        {% if user.details.location %}
+                            <div class="col-md-6 mb-2">
+                                <i class="fas fa-map-marker-alt text-muted me-2"></i>{{ user.details.location }}
+                            </div>
+                        {% endif %}
+                        {% if user.details.phone %}
+                            <div class="col-md-6 mb-2">
+                                <i class="fas fa-phone text-muted me-2"></i>{{ user.details.phone }}
+                            </div>
+                        {% endif %}
+                        {% if user.details.website %}
+                            <div class="col-md-6 mb-2">
+                                <i class="fas fa-globe text-muted me-2"></i><a href="{{ user.details.website }}" target="_blank">{{ user.details.website }}</a>
+                            </div>
+                        {% endif %}
+                        {% if user.details.age %}
+                            <div class="col-md-6 mb-2">
+                                <i class="fas fa-birthday-cake text-muted me-2"></i>Age: {{ user.details.age }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if user.details.hasSocialLinks %}
+                        <div class="mt-3">
+                            <h6>Social Links</h6>
+                            <div class="d-flex gap-2">
+                                {% for platform, url in user.details.socialLinks %}
+                                    <a href="{{ url }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fab fa-{{ platform }}"></i>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Account</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="#" class="btn btn-outline-primary">Edit Profile</a>
+                    <a href="#" class="btn btn-outline-secondary">Change Password</a>
+                    <a href="#" class="btn btn-outline-secondary">Email Preferences</a>
+                    <hr>
+                    <form action="{{ path('app_logout') }}" method="post">
+                        <button type="submit" class="btn btn-outline-danger">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

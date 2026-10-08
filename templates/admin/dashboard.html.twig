@@ -1,0 +1,199 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Dashboard - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Dashboard</h1>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Menus</h6>
+                        <h2 class="mb-0">{{ menus|length|default(0) }}</h2>
+                    </div>
+                    <i class="fas fa-bars fa-3x opacity-50"></i>
+                </div>
+                <a href="{{ path('admin_menu_index') }}" class="text-white text-decoration-none small">
+                    View all <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Blog Posts</h6>
+                        <h2 class="mb-0">{{ blogPosts|length|default(0) }}</h2>
+                    </div>
+                    <i class="fas fa-blog fa-3x opacity-50"></i>
+                </div>
+                <a href="{{ path('admin_blog_index') }}" class="text-white text-decoration-none small">
+                    View all <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Categories</h6>
+                        <h2 class="mb-0">{{ blogCategories|length|default(0) }}</h2>
+                    </div>
+                    <i class="fas fa-tags fa-3x opacity-50"></i>
+                </div>
+                <a href="{{ path('admin_category_index') }}" class="text-white text-decoration-none small">
+                    View all <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Events</h6>
+                        <h2 class="mb-0">{{ events|length|default(0) }}</h2>
+                    </div>
+                    <i class="fas fa-calendar-alt fa-3x opacity-50"></i>
+                </div>
+                <a href="{{ path('admin_event_index') }}" class="text-white text-decoration-none small">
+                    View all <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Events</h5>
+                <a href="{{ path('admin_event_index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if events is not empty %}
+                    <ul class="list-group list-group-flush">
+                        {% for event in events|slice(0, 5) %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{{ path('admin_event_edit', {id: event.id}) }}">{{ event.title }}</a>
+                                <small class="text-muted">{{ event.eventStartDate|date('Y-m-d') }}</small>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0">No events yet. <a href="{{ path('admin_event_new') }}">Create one</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Blog Posts</h5>
+                <a href="{{ path('admin_blog_index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if blogPosts is not empty %}
+                    <ul class="list-group list-group-flush">
+                        {% for post in blogPosts|slice(0, 5) %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{{ path('admin_blog_edit', {id: post.id}) }}">{{ post.title }}</a>
+                                <small class="text-muted">{{ post.dateCreated|date('Y-m-d') }}</small>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0">No posts yet. <a href="{{ path('admin_blog_new') }}">Create one</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Comments</h5>
+                <a href="{{ path('admin_blog_comments') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recentComments is not empty %}
+                    <ul class="list-group list-group-flush">
+                        {% for comment in recentComments|slice(0, 5) %}
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{{ comment.author.getFullName() ?? comment.author.getUserIdentifier() }}</strong>
+                                        <small class="text-muted ms-2">on "{{ comment.blogPost.title|u.truncate(40) }}"</small>
+                                        <br>
+                                        <small class="text-muted">{{ comment.content|striptags|u.truncate(80) }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted d-block">{{ comment.dateCreated|date('Y-m-d H:i') }}</small>
+                                        {% if not comment.isApproved %}
+                                            <button type="button" class="btn btn-success btn-sm mt-1 approve-comment" data-comment-id="{{ comment.id }}" title="Approve">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm mt-1 ms-1 reject-comment" data-comment-id="{{ comment.id }}" title="Reject">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0">No comments yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Menus</h5>
+                <a href="{{ path('admin_menu_index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if menus is not empty %}
+                    <ul class="list-group list-group-flush">
+                        {% for menu in menus|slice(0, 5) %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{{ path('admin_menu_show', {id: menu.id}) }}">{{ menu.name }}</a>
+                                <span class="badge bg-secondary">{{ menu.menuItemCount }} items</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0">No menus yet. <a href="{{ path('admin_menu_new') }}">Create one</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/blog/comment-moderation.js') }}"
+            data-approve-url="{{ path('admin_blog_comment_approve', {id: '__ID__'}) }}"
+            data-reject-url="{{ path('admin_blog_comment_reject', {id: '__ID__'}) }}"></script>
+{% endblock %}

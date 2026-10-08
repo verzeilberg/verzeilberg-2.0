@@ -1,0 +1,205 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Edit Checklist: {{ checkList.name }} - Admin{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css" rel="stylesheet">
+{% endblock %}
+
+{% block javascripts_head %}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nestable@0.2.0/jquery.nestable.js"></script>
+{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit me-2"></i>Edit Checklist: {{ checkList.name }}</h1>
+    <a href="{{ path('admin_checklist_index') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Checklists
+    </a>
+</div>
+
+<ul class="nav nav-tabs mb-4" id="checklistTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">
+            <i class="fas fa-info-circle me-1"></i>General
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="fields-tab" data-bs-toggle="tab" data-bs-target="#fields" type="button" role="tab">
+            <i class="fas fa-columns me-1"></i>Fields ({{ fields|filter(field => field.formType != 'fieldset')|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="items-tab" data-bs-toggle="tab" data-bs-target="#items" type="button" role="tab">
+            <i class="fas fa-list me-1"></i>Items
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="checklistTabsContent">
+    <div class="tab-pane fade show active" id="general" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': 'novalidate'}}) }}
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            {{ form_row(form.name, {
+                                'label': 'Name',
+                                'label_attr': {'class': 'form-label'},
+                                'attr': {'class': 'form-control'}
+                            }) }}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            {{ form_row(form.access, {
+                                'label': 'Access',
+                                'label_attr': {'class': 'form-label'}
+                            }) }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form_row(form.layoutColumns, {
+                                'label': 'Layout',
+                                'label_attr': {'class': 'form-label'}
+                            }) }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form_row(form.itemsPerPage, {
+                                'label': 'Items per page',
+                                'label_attr': {'class': 'form-label'}
+                            }) }}
+                        </div>
+                    </div>
+                    {% if checkList.access != 'admin' %}
+                        {% set publicUrl = url('app_checklist_fill', {id: checkList.id}) %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-link me-1"></i>
+                            {{ checkList.access == 'public' ? 'Everyone' : 'Logged-in users' }} can fill in this checklist at:
+                            <a href="{{ publicUrl }}" target="_blank" rel="noopener">{{ publicUrl }}</a>
+                            {% if checkList.deleted %}<br><small>(not while the checklist is archived)</small>{% endif %}
+                        </div>
+                    {% endif %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Changes
+                        </button>
+                        <a href="{{ path('admin_checklist_index') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="fields" role="tabpanel">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Fields (drag to reorder)</h5>
+                <a href="{{ path('admin_checklist_field_new', {id: checkList.id}) }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Add Field
+                </a>
+            </div>
+            <div class="card-body">
+                {% if fields is empty %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No fields defined yet. <a href="{{ path('admin_checklist_field_new', {id: checkList.id}) }}">Add your first field</a>.
+                    </div>
+                {% else %}
+                    <div id="field-nestable" class="dd">
+                        {% include 'admin/checklist/_field_tree.html.twig' with {fields: fields} %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="items" role="tabpanel">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Items</h5>
+                <a href="{{ path('admin_checklist_item_new', {id: checkList.id}) }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Add Item
+                </a>
+            </div>
+            <div class="card-body">
+                {% if pagination is defined and pagination.getTotalItemCount() > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Created</th>
+                                {% for field in overviewFields %}
+                                    <th>{{ field.name }}</th>
+                                {% else %}
+                                    <th class="text-muted fw-normal">No fields marked "Show in overview"</th>
+                                {% endfor %}
+                                <th class="text-center"><i class="fas fa-cogs"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in pagination %}
+                            <tr>
+                                <td>{{ item.id }}</td>
+                                <td>{{ item.dateCreated|date('M d, Y H:i') }}</td>
+                                {% for field in overviewFields %}
+                                    {% set value = overviewValues[item.id][field.id] ?? null %}
+                                    <td>
+                                        {% if value is null %}
+                                            <span class="text-muted">&ndash;</span>
+                                        {% elseif field.formType == 'file' %}
+                                            <a href="{{ path('app_checklist_item_file', {id: item.id, field: field.formFieldName}) }}" target="_blank" rel="noopener"><i class="fas fa-paperclip me-1"></i>{{ value|split('/')|last }}</a>
+                                        {% elseif field.formType == 'url' %}
+                                            <a href="{{ value }}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt me-1"></i>{{ value|u.truncate(40, '…') }}</a>
+                                        {% else %}
+                                            {{ value|u.truncate(60, '…') }}
+                                        {% endif %}
+                                    </td>
+                                {% else %}
+                                    <td></td>
+                                {% endfor %}
+                                <td class="text-center">
+                                    <a href="{{ path('admin_checklist_item_edit', {id: item.id}) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteModal"
+                                            data-delete-url="{{ path('admin_checklist_item_delete', {id: item.id}) }}"
+                                            data-csrf-token="{{ csrf_token('delete_item' ~ item.id) }}"
+                                            data-delete-message="Are you sure you want to delete this item? This will also delete all answers given for this item."
+                                            title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav aria-label="Items pagination">
+                    {{ knp_pagination_render(pagination) }}
+                </nav>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>No items found. <a href="{{ path('admin_checklist_item_new', {id: checkList.id}) }}">Create the first item</a>.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="checklistToasts" aria-live="polite"></div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/delete-modal.js') }}"></script>
+    <script src="{{ asset('js/modules/checklist/edit.js') }}"
+            data-reorder-url="{{ path('admin_checklist_edit_reorder', {id: checkList.id}) }}"
+            data-reorder-token="{{ csrf_token('reorder_fields' ~ checkList.id) }}"></script>
+{% endblock %}

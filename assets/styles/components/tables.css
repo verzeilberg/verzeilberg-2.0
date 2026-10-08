@@ -1,0 +1,19 @@
+/* Tables */
+
+/* Let an action dropdown escape the table cell */
+.table-responsive .btn-group .dropdown-menu {
+    z-index: 1050;
+}
+
+.dropdown-menu.dropdown-menu-over-table {
+    z-index: 9999;
+    min-width: 180px;
+}
+
+/* Action column that stays visible while the table scrolls sideways */
+.table .col-sticky-end {
+    position: sticky;
+    right: 0;
+    background: inherit;
+    z-index: 1;
+}

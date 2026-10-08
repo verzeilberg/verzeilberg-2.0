@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Agenda - Verzeilberg.nl{% endblock %}
+
+{% block body %}
+<h1 class="mb-4"><i class="fas fa-calendar-alt me-2"></i>Agenda</h1>
+
+{% if agendas is empty %}
+    <div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>There is nothing in the agenda yet.</div>
+{% else %}
+    {% include 'agenda/_calendar.html.twig' with {routeName: 'app_agenda', editable: false} %}
+
+    {# Subscribe in a calendar app #}
+    <div class="mt-4">
+        <h2 class="h6 text-muted"><i class="fas fa-rss me-1"></i>Subscribe in your calendar app</h2>
+        <ul class="list-inline mb-0">
+            {% for agenda in agendas %}
+                <li class="list-inline-item">
+                    <a href="{{ url('app_agenda_feed', {token: agenda.feedToken})|replace({'https://': 'webcal://', 'http://': 'webcal://'}) }}" class="btn btn-sm btn-outline-secondary mb-1">
+                        <span class="color-dot color-dot-sm me-1" style="--dot-color: {{ agenda.color }};"></span>{{ agenda.title }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/agenda/calendar.js') }}"></script>
+{% endblock %}

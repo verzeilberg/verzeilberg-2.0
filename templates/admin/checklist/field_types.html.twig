@@ -1,0 +1,45 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Field Types - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-tags me-2"></i>Field Types</h1>
+    <a href="{{ path('admin_checklist_field_type_new') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>New Field Type
+    </a>
+</div>
+
+{% if fieldTypes is empty %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>No field types defined. <a href="{{ path('admin_checklist_field_type_new') }}">Create the first one</a>.
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Form Type</th>
+                    <th>Fields Using</th>
+                    <th class="text-center"><i class="fas fa-cogs"></i></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fieldType in fieldTypes %}
+                <tr>
+                    <td><strong>{{ fieldType.name }}</strong></td>
+                    <td><span class="badge bg-info text-dark">{{ fieldType.formType }}</span></td>
+                    <td>{{ fieldType.checkListFields|length }}</td>
+                    <td class="text-center">
+                        <a href="{{ path('admin_checklist_field_type_edit', {id: fieldType.id}) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}

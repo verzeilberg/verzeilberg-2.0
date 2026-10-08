@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Search Results for "{{ searchTerm }}" - Blog - Verzeilberg.nl{% endblock %}
+
+{% block hero_section %}{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-lg-8">
+        <h1 class="mb-4">Search Results for "{{ searchTerm }}"</h1>
+
+        {% if pagination.getTotalItemCount() == 0 %}
+            <div class="alert alert-info">
+                No posts found matching "{{ searchTerm }}".
+            </div>
+        {% else %}
+            <p class="text-muted mb-4">{{ pagination.getTotalItemCount() }} result{{ pagination.getTotalItemCount() != 1 ? 's' : '' }} found.</p>
+
+            {% for post in pagination %}
+                <article class="card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                {% for category in post.categories %}
+                                    <span class="badge bg-info text-dark me-1">{{ category.name }}</span>
+                                {% endfor %}
+                            </div>
+                            <small class="text-muted">
+                                {{ post.dateCreated|date('M d, Y') }}
+                            </small>
+                        </div>
+
+                        <h2 class="card-title h4">
+                            <a href="{{ path('blog_detail', {slug: post.slug}) }}" class="text-dark text-decoration-none">
+                                {{ post.title }}
+                            </a>
+                        </h2>
+
+                        <p class="card-text">{{ post.introText|striptags|u.truncate(200) }}</p>
+
+                        <a href="{{ path('blog_detail', {slug: post.slug}) }}" class="btn btn-outline-primary btn-sm">
+                            Read More
+                        </a>
+                    </div>
+                </article>
+            {% endfor %}
+
+            <nav aria-label="Search pagination">
+                {{ knp_pagination_render(pagination) }}
+            </nav>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Refine Search</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ path('blog_search') }}" method="GET">
+                    <div class="input-group">
+                        <input type="text" name="q" class="form-control" value="{{ searchTerm }}" placeholder="Search...">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Categories</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for category in categories %}
+                    <li class="list-group-item px-0">
+                        <a href="{{ path('blog_category', {slug: category.slug}) }}" class="text-decoration-none">
+                            {{ category.name }}
+                            <span class="badge bg-secondary float-end">{{ category.getOnlinePostCount() }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

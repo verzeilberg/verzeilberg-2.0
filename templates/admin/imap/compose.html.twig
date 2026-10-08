@@ -1,0 +1,91 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Compose Email - Admin{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit me-2"></i>Compose Email</h1>
+    <a href="{{ path('admin_imap_index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+        
+        <div class="mb-3">
+            {{ form_label(form.account) }}
+            {{ form_widget(form.account, {'attr': {'class': 'form-select'}}) }}
+            {{ form_errors(form.account) }}
+            <div class="form-text">Select the account to send from.</div>
+        </div>
+
+        <div class="mb-3">
+            {{ form_label(form.to) }}
+            {{ form_widget(form.to, {'attr': {'class': 'form-control'}}) }}
+            {{ form_errors(form.to) }}
+            <div class="form-text">Comma-separated email addresses.</div>
+        </div>
+
+        <div class="mb-3">
+            {{ form_label(form.cc) }}
+            {{ form_widget(form.cc, {'attr': {'class': 'form-control'}}) }}
+            {{ form_errors(form.cc) }}
+        </div>
+
+        <div class="mb-3">
+            {{ form_label(form.bcc) }}
+            {{ form_widget(form.bcc, {'attr': {'class': 'form-control'}}) }}
+            {{ form_errors(form.bcc) }}
+        </div>
+
+        <div class="mb-3">
+            {{ form_label(form.subject) }}
+            {{ form_widget(form.subject, {'attr': {'class': 'form-control'}}) }}
+            {{ form_errors(form.subject) }}
+        </div>
+
+        <div class="mb-3">
+            {{ form_label(form.bodyText) }}
+            {{ form_widget(form.bodyText, {'attr': {'class': 'form-control font-monospace', 'rows': 12}}) }}
+            {{ form_errors(form.bodyText) }}
+            <div class="form-text">Plain text version (required).</div>
+        </div>
+
+        <div class="mb-3">
+            {{ form_label(form.bodyHtml) }}
+            {{ form_widget(form.bodyHtml, {'attr': {'class': 'form-control font-monospace d-none', 'rows': 15}}) }}
+            {{ form_errors(form.bodyHtml) }}
+            <div id="editor" class="imap-editor"></div>
+            <div class="form-text">HTML version (optional).</div>
+        </div>
+
+        <div class="mb-3">
+            {{ form_label(form.attachments) }}
+            {{ form_widget(form.attachments, {'attr': {'class': 'form-control', 'multiple': true}}) }}
+            {{ form_errors(form.attachments) }}
+            <div class="form-text">Hold Ctrl/Cmd to select multiple files.</div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane me-1"></i>Send Email
+            </button>
+            <a href="{{ path('admin_imap_index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+    <script src="{{ asset('js/modules/imap/compose.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,26 @@
+/* Agenda calendar (public and admin) */
+.agenda-month td {
+    width: 13.5%;
+    height: 7rem;
+}
+
+.agenda-month .agenda-week-number {
+    width: 3rem;
+}
+
+.agenda-week-day {
+    flex: 1 0 0%;
+    min-width: 9rem;
+}
+
+.agenda-week-day .card-body {
+    min-height: 10rem;
+}
+
+.agenda-hour {
+    width: 3rem;
+}
+
+.agenda-feed-url {
+    min-width: 16rem;
+}

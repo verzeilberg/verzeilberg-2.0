@@ -1,0 +1,100 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Roles - Admin{% endblock %}
+
+{% block body %}
+{% include 'admin/partials/delete_modal.html.twig' %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-user-shield me-2"></i>Roles</h1>
+    <a href="{{ path('admin_role_new') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>New Role
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Search roles..." value="{{ search }}">
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <a href="{{ path('admin_role_index') }}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if pagination.getTotalItemCount() == 0 %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>No roles found.
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Parent Roles</th>
+                    <th>Permissions</th>
+                    <th>Created</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for role in pagination %}
+                <tr>
+                    <td>
+                        <strong>{{ role.name }}</strong>
+                    </td>
+                    <td>
+                        {{ role.description|slice(0, 80) }}{% if role.description and role.description|length > 80 %}...{% endif %}
+                    </td>
+                    <td>
+                        {% for parent in role.parentRoles %}
+                            <span class="badge bg-info me-1">{{ parent.name }}</span>
+                        {% else %}
+                            <span class="text-muted">None</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for permission in role.permissions %}
+                            <span class="badge bg-secondary me-1">{{ permission.name }}</span>
+                        {% else %}
+                            <span class="text-muted">None</span>
+                        {% endfor %}
+                    </td>
+                    <td>{{ role.dateCreated|date('d M Y H:i') }}</td>
+                    <td class="text-end">
+                        <a href="{{ path('admin_role_edit', {id: role.id}) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-danger js-ajax-delete"
+                                data-delete-url="{{ path('admin_role_delete', {id: role.id}) }}"
+                                data-delete-message="Are you sure you want to delete the role &quot;{{ role.name }}&quot;? This action cannot be undone."
+                                data-error-message="Failed to delete role"
+                                data-csrf-token="{{ csrf_token('delete' ~ role.id) }}"
+                                title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <nav aria-label="Roles pagination">
+        {{ knp_pagination_render(pagination) }}
+    </nav>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/ajax-delete.js') }}"></script>
+{% endblock %}

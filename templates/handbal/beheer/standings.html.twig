@@ -1,0 +1,182 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Stand - Handbal Beheer{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-trophy me-2"></i>Stand</h1>
+    <div class="d-flex gap-2">
+        <a href="{{ path('handbal_beheer_scores') }}" class="btn btn-outline-primary">
+            <i class="fas fa-calendar-alt me-1"></i>Rondes
+        </a>
+        <a href="{{ path('handbal_public') }}" class="btn btn-outline-success" target="_blank">
+            <i class="fas fa-eye me-1"></i>Publieke weergave
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Seizoen</label>
+                <select name="seizoen_id" class="form-select" data-auto-submit>
+                    {% for s in seizoenen %}
+                        <option value="{{ s.id }}" {% if currentSeizoen and currentSeizoen.id == s.id %}selected{% endif %}>
+                            {{ s.naam }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if currentSeizoen %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        Bezig met stand voor <strong>{{ currentSeizoen.naam }}</strong> ({{ currentSeizoen.startDatum|date('d-m-Y') }} t/m {{ currentSeizoen.eindDatum|date('d-m-Y') }})
+    </div>
+{% endif %}
+
+{% if standings.spelers|length > 0 %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-running me-2"></i>Spelers & Keepers</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover standings-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th rowspan="2" class="min-w-200px">Naam</th>
+                            {% for ronde in rondes %}
+                                <th class="score-header">
+                                    <span class="date">{{ ronde.datum|date('d-m') }}</span>
+                                </th>
+                            {% endfor %}
+                            <th rowspan="2">Doelpunten</th>
+                            <th rowspan="2">Gemiddelde</th>
+                        </tr>
+                        <tr class="table-dark">
+                            {% for ronde in rondes %}
+                                <th></th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in standings.spelers %}
+                            <tr class="{{ item.is_keeper ? 'keeper-row' : '' }}">
+                                <td class="align-middle">
+                                    <strong>{{ item.speler.naam }}</strong>
+                                    {% if item.speler.rugnummer %}
+                                        <span class="badge bg-secondary ms-1">#{{ item.speler.rugnummer }}</span>
+                                    {% endif %}
+                                    {% if item.is_keeper %}
+                                        <span class="badge bg-warning text-dark ms-1">Keeper</span>
+                                    {% endif %}
+                                </td>
+                                {% for ronde in rondes %}
+                                    <td class="score-cell align-middle">
+                                        {% set score = scoresBySpelerAndRonde[item.speler.id][ronde.id] ?? null %}
+                                        {% if score %}
+                                            {% if score.gescored %}
+                                                <span class="score-goal"><i class="fas fa-futbol"></i></span>
+                                            {% else %}
+                                                <span class="score-save"><i class="fas fa-shield-alt"></i></span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="score-empty">-</span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                                <td class="align-middle fw-bold">{{ item.doelpunten }}</td>
+                                <td class="align-middle fw-bold">{{ item.gemiddelde }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Keepers overzicht (Reddingen)</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover standings-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th rowspan="2" class="min-w-200px">Keeper</th>
+                            {% for ronde in rondes %}
+                                <th class="score-header">
+                                    <span class="date">{{ ronde.datum|date('d-m') }}</span>
+                                </th>
+                            {% endfor %}
+                            <th rowspan="2">Reddingen</th>
+                            <th rowspan="2">Max mogelijk</th>
+                            <th rowspan="2">Gemiddelde</th>
+                        </tr>
+                        <tr class="table-dark">
+                            {% for ronde in rondes %}
+                                <th></th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in standings.keepers %}
+                            <tr>
+                                <td class="align-middle">
+                                    <strong>{{ item.keeper.naam }}</strong>
+                                    {% if item.keeper.rugnummer %}
+                                        <span class="badge bg-secondary ms-1">#{{ item.keeper.rugnummer }}</span>
+                                    {% endif %}
+                                </td>
+                                {% for ronde in rondes %}
+                                    <td class="score-cell align-middle">
+                                        {% set reddingen = keeperScoresByRonde[item.keeper.id][ronde.id] ?? 0 %}
+                                        {% if reddingen > 0 %}
+                                            <span class="score-save">{{ reddingen }}</span>
+                                        {% else %}
+                                            <span class="score-empty">-</span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                                <td class="align-middle fw-bold">{{ item.reddingen }}</td>
+                                <td class="align-middle">{{ item.maxMogelijk }}</td>
+                                <td class="align-middle fw-bold">{{ item.gemiddelde }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-secondary">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Totaal aantal speeldagen:</strong> {{ standings.aantalMaandagen }} |
+        <strong>Totaal aantal spelers:</strong> {{ standings.aantalSpelers }}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-trophy fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">Geen stand beschikbaar</h4>
+        <p class="text-muted">Er zijn nog geen rondes of spelers om een stand te berekenen.</p>
+        <div class="d-flex gap-2 justify-content-center">
+            <a href="{{ path('handbal_beheer_speler_new') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Spelers toevoegen
+            </a>
+            <a href="{{ path('handbal_beheer_ronde_new') }}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i>Ronde toevoegen
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

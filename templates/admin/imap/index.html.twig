@@ -1,0 +1,90 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Inbox & Messages - Admin{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-inbox me-2"></i>Inbox & Messages</h1>
+    <a href="{{ path('admin_imap_compose') }}" class="btn btn-primary">
+        <i class="fas fa-edit me-1"></i>Compose
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-8">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" placeholder="Search accounts..." value="{{ search }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <a href="{{ path('admin_imap_index') }}" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if pagination.getTotalItemCount() == 0 %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>No email accounts configured. <a href="{{ path('admin_email_account_new') }}">Add one</a> in Email Accounts.
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Account</th>
+                    <th>Email</th>
+                    <th>Messages</th>
+                    <th>Unread</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for account in pagination %}
+                <tr>
+                    <td><strong>{{ account.name }}</strong></td>
+                    <td>{{ account.email }}</td>
+                    <td>{{ account.totalMessages }}</td>
+                    <td>
+                        {% if account.unreadMessages > 0 %}
+                            <span class="badge bg-warning">{{ account.unreadMessages }}</span>
+                        {% else %}
+                            <span class="text-muted">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{{ path('admin_imap_messages', {id: account.id}) }}" class="btn btn-outline-primary" title="View Messages">
+                                <i class="fas fa-envelope"></i> Inbox
+                            </a>
+                            <a href="{{ path('admin_imap_compose_account', {id: account.id}) }}" class="btn btn-outline-secondary" title="Compose">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-outline-success sync-account" 
+                                    data-id="{{ account.id }}" 
+                                    data-csrf-token="{{ csrf_token('sync' ~ account.id) }}"
+                                    title="Sync INBOX">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <nav aria-label="Accounts pagination">
+        {{ knp_pagination_render(pagination) }}
+    </nav>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/imap/accounts.js') }}"
+            data-sync-url="{{ path('admin_imap_sync', {id: '__ID__'}) }}"></script>
+{% endblock %}

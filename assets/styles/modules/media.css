@@ -1,0 +1,15 @@
+/* Media manager (admin): thumbnails in the file lists */
+.media-thumb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 48px;
+}
+
+.media-thumb img {
+    max-width: 64px;
+    max-height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+}

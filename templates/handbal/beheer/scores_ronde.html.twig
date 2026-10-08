@@ -1,0 +1,98 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Scores voor ronde - Handbal Beheer{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit me-2"></i>Scores voor: {{ ronde.datum|date('d-m-Y') }}</h1>
+    <a href="{{ path('handbal_beheer_scores') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Terug
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Instructie</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info mb-0">
+            <strong>Keeper:</strong> Selecteer de keeper voor deze ronde.<br>
+            Vink aan bij "Gescored" als de speler scoort, laat leeg voor redding keeper.
+        </div>
+    </div>
+</div>
+
+<form method="post">
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Keeper voor deze ronde</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <select name="keeper_id" class="form-select" required>
+                        <option value="">Kies keeper...</option>
+                        {% for keeper in keepers %}
+                            <option value="{{ keeper.id }}"
+                                {% if ronde.keeper and ronde.keeper.id == keeper.id %}selected{% endif %}>
+                                {{ keeper.naam }}{% if keeper.rugnummer %} (#{{ keeper.rugnummer }}){% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-running me-2"></i>Spelers & Scores</h5>
+        </div>
+        <div class="card-body">
+            {% if spelers|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="min-w-250px">Speler</th>
+                                <th class="w-80px">Rugnr</th>
+                                <th class="text-center w-100px">Gescored ✓</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for speler in spelers %}
+                                {% set existingScore = existingScores[speler.id] ?? null %}
+                                <tr>
+                                    <td>{{ speler.naam }}</td>
+                                    <td class="text-center">{{ speler.rugnummer ?? '-' }}</td>
+                                    <td class="text-center">
+                                        <div class="form-check form-switch">
+                                            <input type="hidden" name="scores[{{ speler.id }}]" value="0">
+                                            <input type="checkbox" class="form-check-input" name="scores[{{ speler.id }}]" value="1"
+                                                {% if existingScore and existingScore.gescored %}checked{% endif %}>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="fas fa-running fa-3x mb-3"></i>
+                    <p>Er zijn nog geen actieve spelers. <a href="{{ path('handbal_beheer_speler_new') }}">Voeg spelers toe</a>.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{{ path('handbal_beheer_scores') }}" class="btn btn-secondary">
+            <i class="fas fa-times me-1"></i>Annuleren
+        </a>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i>Alle scores opslaan
+        </button>
+    </div>
+</form>
+{% endblock %}

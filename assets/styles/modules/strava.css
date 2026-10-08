@@ -1,0 +1,44 @@
+/* Strava (public and admin): stat cards, charts, activity detail; the route map uses #map from components/media.css */
+
+.stat-card {
+    transition: transform 0.2s;
+}
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--vz-shadow-lg);
+}
+.year-stat-row:hover {
+    background-color: var(--vz-surface-muted);
+}
+.chart-container {
+    position: relative;
+    height: 350px;
+}
+
+.type-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Round Table (strava detail) */
+.round-table th,
+.round-table td {
+    vertical-align: middle;
+}
+
+/* Stat Items (strava detail) */
+.stat-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+.stat-item:last-child {
+    border-bottom: none;
+}
+.stat-label {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+.stat-value {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
