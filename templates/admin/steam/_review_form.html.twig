@@ -1,0 +1,57 @@
+{# My review of the game (admin game page). The rating radios are shown as clickable stars (5 first in the HTML,
+   reversed by CSS, so hovering/checking a star also lights up the ones before it). #}
+{% import 'games/_macros.html.twig' as steam %}
+<div class="card mb-4" id="review">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h2 class="h5 mb-0"><i class="fas fa-pen me-2"></i>Mijn review</h2>
+        {% if review.id %}
+            <div class="d-flex align-items-center gap-2">
+                {% if review.published %}
+                    <a href="{{ path('app_game', {appId: game.appId}) }}" target="_blank" class="badge text-bg-success text-decoration-none">Gepubliceerd <i class="fas fa-external-link-alt ms-1"></i></a>
+                {% else %}
+                    <span class="badge text-bg-secondary">Concept</span>
+                {% endif %}
+                <small class="text-muted">{{ review.updatedAt ? 'Gewijzigd ' ~ review.updatedAt|date('d-m-Y H:i') : 'Geschreven ' ~ review.createdAt|date('d-m-Y H:i') }}</small>
+            </div>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {{ form_start(reviewForm, {action: path('admin_steam_game', {id: game.id}) ~ '#review', attr: {novalidate: 'novalidate'}}) }}
+            <fieldset class="mb-3">
+                <legend class="form-label fs-6 mb-1">Beoordeling <span class="text-muted small">(1 = slecht, 5 = uitstekend)</span></legend>
+                <div class="star-rating">
+                    {% for child in reviewForm.rating|reverse %}
+                        {{ form_widget(child, {attr: {class: 'visually-hidden'}}) }}
+                        <label for="{{ child.vars.id }}" title="{{ child.vars.label }}"><i class="fas fa-star"></i><span class="visually-hidden">{{ child.vars.label }}</span></label>
+                    {% endfor %}
+                </div>
+                {% if reviewForm.rating.vars.errors|length %}
+                    <div class="invalid-feedback d-block">{% for error in reviewForm.rating.vars.errors %}{{ error.message }} {% endfor %}</div>
+                {% endif %}
+                {% do reviewForm.rating.setRendered %}
+            </fieldset>
+            <div class="mb-3">
+                {{ form_label(reviewForm.body, null, {label_attr: {class: 'form-label'}}) }}
+                {{ form_widget(reviewForm.body, {attr: {class: 'form-control' ~ (reviewForm.body.vars.errors|length ? ' is-invalid' : '')}}) }}
+                {{ form_errors(reviewForm.body) }}
+                <div class="form-text">Platte tekst; een lege regel begint een nieuwe alinea.</div>
+            </div>
+            <div class="form-check form-switch mb-3">
+                {{ form_widget(reviewForm.published) }}
+                {{ form_label(reviewForm.published) }}
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Review opslaan</button>
+                {% if review.id %}
+                    <button type="button" class="btn btn-outline-danger ms-auto"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                            data-delete-url="{{ path('admin_steam_review_delete', {id: game.id}) }}"
+                            data-csrf-token="{{ csrf_token('steam_review_delete' ~ game.id) }}"
+                            data-delete-message="Je review van &quot;{{ game.name }}&quot; verwijderen?">
+                        <i class="fas fa-trash me-1"></i>Verwijderen
+                    </button>
+                {% endif %}
+            </div>
+        {{ form_end(reviewForm) }}
+    </div>
+</div>

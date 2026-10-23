@@ -21,6 +21,8 @@ class StravaExtension extends AbstractExtension
     {
         return [
             new TwigFilter('format_time', [$this, 'formatTime']),
+            // {{ 5288|run_time }}: a race time or pace, "1:28:08" or "5:27"
+            new TwigFilter('run_time', [$this, 'runTime']),
         ];
     }
 
@@ -34,5 +36,15 @@ class StravaExtension extends AbstractExtension
         }
         
         return sprintf('%dm', $minutes);
+    }
+
+    public function runTime(int|float $seconds): string
+    {
+        $seconds = (int) round($seconds);
+        $hours = intdiv($seconds, 3600);
+
+        return $hours > 0
+            ? sprintf('%d:%02d:%02d', $hours, intdiv($seconds % 3600, 60), $seconds % 60)
+            : sprintf('%d:%02d', intdiv($seconds, 60), $seconds % 60);
     }
 }

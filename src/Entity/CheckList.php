@@ -10,10 +10,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: CheckListRepository::class)]
 #[ORM\Table(name: 'checklists')]
-#[UniqueEntity(fields: ['name'], message: 'A checklist with this name already exists')]
+#[UniqueEntity(fields: ['name'], message: 'Er bestaat al een checklist met deze naam')]
 #[ORM\HasLifecycleCallbacks]
 class CheckList
 {
@@ -31,9 +33,16 @@ class CheckList
     public const ACCESS_ADMIN = 'admin';
     public const ACCESS_USER = 'user';
     public const ACCESS_PUBLIC = 'public';
+    /** Only the owner's friends (see Friendship) */
+    public const ACCESS_FRIENDS = 'friends';
 
     #[ORM\Column(length: 10, options: ['default' => self::ACCESS_ADMIN])]
     private string $access = self::ACCESS_ADMIN;
+
+    /** The user who made it and manages it; null for site checklists that only admins manage */
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $owner = null;
 
     /** Number of columns the item form is shown in: 1 or 2 */
     #[ORM\Column(name: 'layout_columns', type: 'smallint', options: ['default' => 2])]
@@ -42,6 +51,17 @@ class CheckList
     /** Number of items per page in the item lists (Items tab and the answers overview) */
     #[ORM\Column(name: 'items_per_page', type: 'smallint', options: ['default' => 20])]
     private int $itemsPerPage = 20;
+
+    /**
+     * How the item lists are sorted until someone clicks a column: levels of ['by' => ..., 'dir' => 'asc'|'desc'],
+     * the second deciding when the first is equal, and so on. "by" is 'created', 'id' (the order the items were
+     * added, as on the old site), 'createdBy' or the id of a field; see CheckListService::findItemsForList().
+     * Null: on creation date.
+     *
+     * @var list<array{by: string, dir: string}>|null
+     */
+    #[ORM\Column(name: 'default_order', type: 'json', nullable: true)]
+    private ?array $defaultOrder = null;
 
     /** @var Collection<int, CheckListItem> */
     #[ORM\OneToMany(mappedBy: 'checkList', targetEntity: CheckListItem::class, cascade: ['remove'], orphanRemoval: true)]
@@ -87,14 +107,41 @@ class CheckList
 
     public function setAccess(string $access): self
     {
-        if (!in_array($access, [self::ACCESS_ADMIN, self::ACCESS_USER, self::ACCESS_PUBLIC], true)) {
+        if (!in_array($access, [self::ACCESS_ADMIN, self::ACCESS_USER, self::ACCESS_PUBLIC, self::ACCESS_FRIENDS], true)) {
             throw new \InvalidArgumentException(sprintf('Unknown checklist access "%s".', $access));
         }
         $this->access = $access;
         return $this;
     }
 
-    /** Can be filled in outside the admin (by logged-in users or by everyone) */
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?User $owner): self
+    {
+        $this->owner = $owner;
+        return $this;
+    }
+
+    public function isOwnedBy(?User $user): bool
+    {
+        return $user !== null && $this->owner !== null && $this->owner->getId() === $user->getId();
+    }
+
+    /** A site checklist has no owner, so no friends to share it with (a new checklist gets its owner on save) */
+    #[Assert\Callback]
+    public function validateFriendsAccess(ExecutionContextInterface $context): void
+    {
+        if ($this->access === self::ACCESS_FRIENDS && $this->owner === null && $this->id !== null) {
+            $context->buildViolation('A site checklist has no owner, so it can\'t be shared with friends.')
+                ->atPath('access')
+                ->addViolation();
+        }
+    }
+
+    /** Can be filled in outside the admin (by everyone, logged-in users or the owner's friends) */
     public function isOpenForSubmissions(): bool
     {
         return $this->access !== self::ACCESS_ADMIN && !$this->isDeleted();
@@ -119,6 +166,38 @@ class CheckList
     public function setItemsPerPage(int $itemsPerPage): self
     {
         $this->itemsPerPage = $itemsPerPage;
+        return $this;
+    }
+
+    /** @return non-empty-list<array{by: string, dir: string}> the order to sort by: when none is set, on creation date */
+    public function getDefaultOrder(): array
+    {
+        return $this->defaultOrder ?: [['by' => 'created', 'dir' => 'asc']];
+    }
+
+    /** @return list<array{by: string, dir: string}> the levels that have been chosen (empty: none) */
+    public function getChosenOrder(): array
+    {
+        return $this->defaultOrder ?? [];
+    }
+
+    /**
+     * Levels without "by" are left out, as is a field that is already used by an earlier level.
+     *
+     * @param iterable<array{by?: ?string, dir?: ?string}> $levels
+     */
+    public function setDefaultOrder(iterable $levels): self
+    {
+        $order = [];
+        foreach ($levels as $level) {
+            $by = (string) ($level['by'] ?? '');
+            if ($by === '' || in_array($by, array_column($order, 'by'), true)) {
+                continue;
+            }
+            $order[] = ['by' => $by, 'dir' => ($level['dir'] ?? '') === 'desc' ? 'desc' : 'asc'];
+        }
+        $this->defaultOrder = $order ?: null;
+
         return $this;
     }
 

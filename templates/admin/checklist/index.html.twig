@@ -1,34 +1,34 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Checklists - Admin{% endblock %}
+{% block title %}Checklists - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="fas fa-clipboard-list me-2"></i>Checklists</h1>
     <div class="d-flex gap-2">
         <a href="{{ path('admin_checklist_archive') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-archive me-1"></i>Archived
+            <i class="fas fa-archive me-1"></i>Gearchiveerd
         </a>
         <a href="{{ path('admin_checklist_new') }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i>New Checklist
+            <i class="fas fa-plus me-1"></i>Nieuwe checklist
         </a>
     </div>
 </div>
 
 {% if pagination.getTotalItemCount() == 0 %}
     <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>No checklists found. <a href="{{ path('admin_checklist_new') }}">Create your first checklist</a>.
+        <i class="fas fa-info-circle me-2"></i>Geen checklists gevonden. <a href="{{ path('admin_checklist_new') }}">Maak je eerste checklist aan</a>.
     </div>
 {% else %}
     <div class="table-responsive">
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Access</th>
-                    <th>Fields</th>
+                    <th>Naam</th>
+                    <th>Toegang</th>
+                    <th>Velden</th>
                     <th>Items</th>
-                    <th>Created</th>
+                    <th>Aangemaakt</th>
                     <th class="text-center"><i class="fas fa-cogs"></i></th>
                 </tr>
             </thead>
@@ -37,26 +37,31 @@
                 <tr>
                     <td>
                         <strong>{{ checkList.name }}</strong>
+                        {% if is_granted('PERM_checklist.manage') %}
+                            <div class="small text-muted">{{ checkList.owner ? checkList.owner.fullName : 'Sitechecklist' }}</div>
+                        {% endif %}
                     </td>
                     <td>
                         {% if checkList.access == 'public' %}
-                            <span class="badge bg-success"><i class="fas fa-globe me-1"></i>Public</span>
+                            <span class="badge bg-success"><i class="fas fa-globe me-1"></i>Openbaar</span>
                         {% elseif checkList.access == 'user' %}
-                            <span class="badge bg-info text-dark"><i class="fas fa-user me-1"></i>Logged-in</span>
+                            <span class="badge bg-info text-dark"><i class="fas fa-user me-1"></i>Ingelogd</span>
+                        {% elseif checkList.access == 'friends' %}
+                            <span class="badge bg-warning text-dark"><i class="fas fa-user-friends me-1"></i>Vrienden</span>
                         {% else %}
-                            <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i>Admin only</span>
+                            <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i>Privé</span>
                         {% endif %}
                     </td>
                     {# All fields that hold an answer, including those inside fieldsets (a fieldset itself is not counted) #}
                     <td>{{ checkList.allCheckListFields|filter(field => field.formType != 'fieldset')|length }}</td>
                     <td>{{ checkList.checkListItems|length }}</td>
-                    <td>{{ checkList.dateCreated|date('M d, Y H:i') }}</td>
+                    <td>{{ checkList.dateCreated|nl_date('j M Y H:i') }}</td>
                     <td class="text-center">
                         <div class="btn-group btn-group-sm">
-                            <a href="{{ path('admin_checklist_show', {id: checkList.id}) }}" class="btn btn-outline-primary" title="View">
+                            <a href="{{ path('admin_checklist_show', {id: checkList.id}) }}" class="btn btn-outline-primary" title="Bekijken">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{{ path('admin_checklist_edit', {id: checkList.id}) }}" class="btn btn-outline-secondary" title="Edit">
+                            <a href="{{ path('admin_checklist_edit', {id: checkList.id}) }}" class="btn btn-outline-secondary" title="Bewerken">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <button type="button" class="btn btn-outline-secondary"
@@ -64,12 +69,12 @@
                                     data-bs-target="#deleteModal"
                                     data-delete-url="{{ path('admin_checklist_duplicate', {id: checkList.id}) }}"
                                     data-csrf-token="{{ csrf_token('duplicate' ~ checkList.id) }}"
-                                    data-delete-message="Make a copy of this checklist with all its fields? Items are not copied."
-                                    data-confirm-title="Confirm Duplicate"
-                                    data-confirm-label="Duplicate"
+                                    data-delete-message="Een kopie van deze checklist maken met al zijn velden? Items worden niet gekopieerd."
+                                    data-confirm-title="Dupliceren bevestigen"
+                                    data-confirm-label="Dupliceren"
                                     data-confirm-icon="fa-copy"
                                     data-confirm-class="btn-primary"
-                                    title="Duplicate">
+                                    title="Dupliceren">
                                 <i class="fas fa-copy"></i>
                             </button>
                             {% if checkList.deleted %}
@@ -78,12 +83,12 @@
                                         data-bs-target="#deleteModal"
                                         data-delete-url="{{ path('admin_checklist_unarchive', {id: checkList.id}) }}"
                                         data-csrf-token="{{ csrf_token('unarchive' ~ checkList.id) }}"
-                                        data-delete-message="Are you sure you want to unarchive this checklist?"
-                                        data-confirm-title="Confirm Unarchive"
-                                        data-confirm-label="Unarchive"
+                                        data-delete-message="Weet je zeker dat je deze checklist uit het archief wilt halen?"
+                                        data-confirm-title="Terugzetten bevestigen"
+                                        data-confirm-label="Terugzetten"
                                         data-confirm-icon="fa-undo"
                                         data-confirm-class="btn-primary"
-                                        title="Unarchive">
+                                        title="Terugzetten">
                                     <i class="fas fa-undo"></i>
                                 </button>
                             {% else %}
@@ -92,12 +97,12 @@
                                         data-bs-target="#deleteModal"
                                         data-delete-url="{{ path('admin_checklist_archive_item', {id: checkList.id}) }}"
                                         data-csrf-token="{{ csrf_token('archive' ~ checkList.id) }}"
-                                        data-delete-message="Are you sure you want to archive this checklist? You can unarchive it later."
-                                        data-confirm-title="Confirm Archive"
-                                        data-confirm-label="Archive"
+                                        data-delete-message="Weet je zeker dat je deze checklist wilt archiveren? Je kunt hem later terugzetten."
+                                        data-confirm-title="Archiveren bevestigen"
+                                        data-confirm-label="Archiveren"
                                         data-confirm-icon="fa-archive"
                                         data-confirm-class="btn-warning"
-                                        title="Archive">
+                                        title="Archiveren">
                                     <i class="fas fa-archive"></i>
                                 </button>
                             {% endif %}
@@ -106,8 +111,8 @@
                                     data-bs-target="#deleteModal"
                                     data-delete-url="{{ path('admin_checklist_delete', {id: checkList.id}) }}"
                                     data-csrf-token="{{ csrf_token('delete' ~ checkList.id) }}"
-                                    data-delete-message="Are you sure you want to permanently delete this checklist? All its fields, items and uploaded files will be deleted. This cannot be undone."
-                                    title="Delete">
+                                    data-delete-message="Weet je zeker dat je deze checklist definitief wilt verwijderen? Alle velden, items en geüploade bestanden worden verwijderd. Dit kan niet ongedaan worden gemaakt."
+                                    title="Verwijderen">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -118,8 +123,8 @@
         </table>
     </div>
 
-    <nav aria-label="Checklists pagination">
-        {{ knp_pagination_render(pagination) }}
+    <nav aria-label="Paginering checklists">
+        {{ knp_pagination_render(pagination, '_partials/pagination.html.twig', {}, {label: 'checklists'}) }}
     </nav>
 {% endif %}
 

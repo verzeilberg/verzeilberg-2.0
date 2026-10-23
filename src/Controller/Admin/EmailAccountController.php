@@ -15,10 +15,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/email-accounts')]
-#[IsGranted('ROLE_ADMIN')]
 class EmailAccountController extends AbstractController
 {
     public function __construct(
@@ -65,7 +63,7 @@ class EmailAccountController extends AbstractController
             $this->em->persist($account);
             $this->em->flush();
 
-            $this->addFlash('success', 'Email account created successfully.');
+            $this->addFlash('success', 'E-mailaccount aangemaakt.');
 
             return $this->redirectToRoute('admin_email_account_edit', ['id' => $account->getId()]);
         }
@@ -85,7 +83,7 @@ class EmailAccountController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
 
-            $this->addFlash('success', 'Email account updated successfully.');
+            $this->addFlash('success', 'E-mailaccount opgeslagen.');
 
             return $this->redirectToRoute('admin_email_account_edit', ['id' => $account->getId()]);
         }
@@ -102,7 +100,7 @@ class EmailAccountController extends AbstractController
         if ($this->isCsrfTokenValid('delete' . $account->getId(), $request->request->get('_token'))) {
             $this->em->remove($account);
             $this->em->flush();
-            $this->addFlash('success', 'Email account deleted successfully.');
+            $this->addFlash('success', 'E-mailaccount verwijderd.');
         }
 
         if ($request->isXmlHttpRequest()) {
@@ -116,7 +114,7 @@ class EmailAccountController extends AbstractController
     public function test(Request $request, EmailAccount $account): JsonResponse
     {
         if (!$this->isCsrfTokenValid('test' . $account->getId(), $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $result = $this->imapService->testConnection($account);
@@ -128,7 +126,7 @@ class EmailAccountController extends AbstractController
     public function testSmtp(Request $request, EmailAccount $account): JsonResponse
     {
         if (!$this->isCsrfTokenValid('test_smtp' . $account->getId(), $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         try {
@@ -145,7 +143,7 @@ class EmailAccountController extends AbstractController
                 $smtpUsername = $account->getSmtpUsername();
                 $smtpPassword = $account->getSmtpPassword();
             } else {
-                return new JsonResponse(['success' => false, 'message' => 'SMTP not configured. Enable "Use IMAP for SMTP" or configure dedicated SMTP settings.']);
+                return new JsonResponse(['success' => false, 'message' => 'SMTP is niet ingesteld. Zet "IMAP gebruiken voor SMTP" aan of vul aparte SMTP-instellingen in.']);
             }
 
             $tls = match ($smtpEncryption) {
@@ -167,12 +165,12 @@ class EmailAccountController extends AbstractController
             $email = (new \Symfony\Component\Mime\Email())
                 ->from(new \Symfony\Component\Mime\Address($account->getEmail(), $account->getName()))
                 ->to(new \Symfony\Component\Mime\Address($account->getEmail()))
-                ->subject('SMTP Test from Verzeilberg')
-                ->text('This is a test email to verify SMTP configuration.');
+                ->subject('SMTP-test van Verzeilberg')
+                ->text('Dit is een testmail om de SMTP-instellingen te controleren.');
 
             $mailer->send($email);
 
-            return new JsonResponse(['success' => true, 'message' => 'Test email sent successfully']);
+            return new JsonResponse(['success' => true, 'message' => 'Testmail verstuurd']);
         } catch (\Throwable $e) {
             return new JsonResponse(['success' => false, 'message' => $e->getMessage()]);
         }

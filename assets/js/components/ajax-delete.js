@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert(data.message || button.dataset.errorMessage || 'Failed to delete');
+                    AppDialog.alert(data.message || button.dataset.errorMessage || 'Verwijderen mislukt');
                 }
             });
     });

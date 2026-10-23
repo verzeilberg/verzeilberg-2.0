@@ -15,37 +15,53 @@ class RoutePermissionRepository extends ServiceEntityRepository
         parent::__construct($registry, RoutePermission::class);
     }
 
+    /** @return list<RoutePermission> most specific rule first (see RoutePermission::getSpecificity()) */
     public function findAllEnabled(): array
     {
-        return $this->createQueryBuilder('rp')
+        return $this->sortBySpecificity($this->createQueryBuilder('rp')
+            ->join('rp.permission', 'p')
+            ->addSelect('p')
             ->andWhere('rp.enabled = true')
-            ->orderBy('rp.priority', 'DESC')
-            ->addOrderBy('rp.routePattern', 'ASC')
+            ->andWhere('rp.deleted = false')
             ->getQuery()
-            ->getResult();
+            ->getResult());
+    }
+
+    /** @return list<RoutePermission> */
+    public function findAllForOverview(string $search = ''): array
+    {
+        $qb = $this->createQueryBuilder('rp')
+            ->join('rp.permission', 'p')
+            ->addSelect('p')
+            ->andWhere('rp.deleted = false');
+
+        if ($search !== '') {
+            $qb->andWhere('rp.routePattern LIKE :search OR p.name LIKE :search OR rp.description LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        return $this->sortBySpecificity($qb->getQuery()->getResult());
     }
 
     public function findByRoute(string $route, ?string $method = null): ?RoutePermission
     {
-        $permissions = $this->findAllEnabled();
-
-        foreach ($permissions as $permission) {
-            if ($permission->matches($route, $method)) {
-                return $permission;
+        foreach ($this->findAllEnabled() as $rule) {
+            if ($rule->matches($route, $method)) {
+                return $rule;
             }
         }
 
         return null;
     }
 
-    public function findByPermissionName(string $permissionName): array
+    /**
+     * @param list<RoutePermission> $rules
+     * @return list<RoutePermission>
+     */
+    private function sortBySpecificity(array $rules): array
     {
-        return $this->createQueryBuilder('rp')
-            ->andWhere('rp.permissionName = :name')
-            ->andWhere('rp.enabled = true')
-            ->orderBy('rp.priority', 'DESC')
-            ->setParameter('name', $permissionName)
-            ->getQuery()
-            ->getResult();
+        usort($rules, fn(RoutePermission $a, RoutePermission $b) => [$b->getSpecificity(), $a->getRoutePattern()] <=> [$a->getSpecificity(), $b->getRoutePattern()]);
+
+        return $rules;
     }
 }

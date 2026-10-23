@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ searchTerm ? 'Gebruikers voor "' ~ searchTerm ~ '"' : 'Gebruikers' }} - Verzeilberg.nl{% endblock %}
+
+{% block page_title %}Gebruikers{% endblock %}
+{% block page_lead %}
+    {% if searchTerm %}
+        {{ pagination.getTotalItemCount() }} {{ pagination.getTotalItemCount() == 1 ? 'gebruiker' : 'gebruikers' }} gevonden voor “{{ searchTerm }}”
+    {% else %}
+        Iedereen die zijn of haar pagina openbaar heeft gemaakt.
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+<form class="d-flex gap-2 mb-4" action="{{ path('app_users') }}" method="GET" role="search">
+    <input class="form-control" type="search" name="q" value="{{ searchTerm }}" placeholder="Zoek op naam, woonplaats of slogan" aria-label="Gebruikers zoeken">
+    <button class="btn btn-primary" type="submit"><i class="fas fa-search me-1"></i>Zoeken</button>
+    {% if searchTerm %}
+        <a href="{{ path('app_users') }}" class="btn btn-outline-primary">Wissen</a>
+    {% endif %}
+</form>
+
+{% if pagination.getTotalItemCount() == 0 %}
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        {% if searchTerm %}
+            <p>Geen gebruikers gevonden voor “{{ searchTerm }}”. Probeer een kortere zoekterm of <a href="{{ path('app_users') }}">bekijk iedereen</a>.</p>
+        {% else %}
+            <p>Nog niemand heeft een openbare pagina.</p>
+        {% endif %}
+    </div>
+{% else %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for user in pagination %}
+            <div class="col">
+                <article class="card h-100 card-link-cover">
+                    <div class="card-body d-flex gap-3 align-items-start">
+                        {{ include('user/_avatar.html.twig', {avatarClass: 'directory-avatar'}) }}
+                        <div class="text-break">
+                            <h2 class="card-title h5 mb-1"><a href="{{ path('app_user_show', {id: user.id}) }}">{{ user.fullName }}</a></h2>
+                            {% if user.details and user.details.catchLine %}
+                                <p class="text-muted fst-italic mb-1">{{ user.details.catchLine|u.truncate(80, '…') }}</p>
+                            {% endif %}
+                            {% if user.details and user.details.location %}
+                                <div class="card-meta"><span><i class="fas fa-map-marker-alt"></i>{{ user.details.location }}</span></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+            </div>
+        {% endfor %}
+    </div>
+
+    <nav aria-label="Gebruikerspagina's">
+        {{ knp_pagination_render(pagination, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
+    </nav>
+{% endif %}
+{% endblock %}

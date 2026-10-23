@@ -1,0 +1,8 @@
+{# A user's avatar, or their initials on a circle; pass `user` and the size class in `avatarClass` #}
+{% if user.details and user.details.avatar %}
+    <img src="{{ asset(user.details.avatar) }}" alt="" class="rounded-circle {{ avatarClass }}">
+{% else %}
+    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center {{ avatarClass }}" aria-hidden="true">
+        {{ user.initials }}
+    </div>
+{% endif %}

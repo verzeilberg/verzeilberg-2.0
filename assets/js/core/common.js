@@ -26,10 +26,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Declarative helpers, so templates need no inline event handlers:
-    //   <select data-auto-submit>        submits its form on change
+    //   <select data-auto-submit>        submits its form on change (also for a checkbox)
     //   <button data-print>              prints the page
     //   <input data-select-on-click>     selects its text on click (e.g. a feed URL)
-    //   <form data-confirm="Sure?">      asks before submitting
+    //   <form data-confirm="Sure?">      asks before submitting, in AppDialog (core/dialog.js);
+    //                                    optional data-confirm-title and data-confirm-label
     //   <tr class="js-row-link" data-href="…">  the whole row is a link (inner links/buttons keep working)
     document.addEventListener('change', function (event) {
         const field = event.target.closest('[data-auto-submit]');
@@ -58,8 +59,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.addEventListener('submit', function (event) {
         const form = event.target.closest('form[data-confirm]');
-        if (form && !window.confirm(form.dataset.confirm)) {
-            event.preventDefault();
+        if (!form) {
+            return;
         }
+        // The second time (after "yes") the form is really sent
+        if (form.dataset.confirmed) {
+            delete form.dataset.confirmed;
+            return;
+        }
+        event.preventDefault();
+        const submitter = event.submitter;
+        AppDialog.confirm(form.dataset.confirm, {
+            title: form.dataset.confirmTitle,
+            confirmLabel: form.dataset.confirmLabel,
+        }).then(function (ok) {
+            if (ok) {
+                form.dataset.confirmed = '1';
+                // Like the original click: the pressed button's name/value is sent along
+                form.requestSubmit(submitter && submitter.form === form ? submitter : undefined);
+            }
+        });
     });
 });

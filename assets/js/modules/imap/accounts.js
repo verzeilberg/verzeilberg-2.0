@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-sync"></i>';
                     if (data.success) {
-                        alert('Synced: ' + data.synced + ' messages, ' + data.new + ' new');
-                        location.reload();
+                        AppDialog.alert('Gesynchroniseerd: ' + data.synced + ' berichten, ' + data.new + ' nieuw', { type: 'success' })
+                            .then(() => location.reload());
                     } else {
-                        alert('Sync failed: ' + data.message);
+                        AppDialog.alert('Synchroniseren mislukt: ' + data.message);
                     }
                 });
         });

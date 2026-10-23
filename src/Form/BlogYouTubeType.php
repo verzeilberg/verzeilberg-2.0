@@ -18,35 +18,35 @@ class BlogYouTubeType extends AbstractType
     {
         $builder
             ->add('title', TextType::class, [
-                'label' => 'Title',
+                'label' => 'Titel',
                 'required' => false,
             ])
             ->add('videoId', TextType::class, [
-                'label' => 'Video ID',
-                'attr' => ['placeholder' => 'e.g., dQw4w9WgXcQ'],
+                'label' => 'Video-ID',
+                'attr' => ['placeholder' => 'bijv. dQw4w9WgXcQ'],
             ])
             ->add('playlistId', TextType::class, [
-                'label' => 'Playlist ID (optional)',
+                'label' => 'Playlist-ID (optioneel)',
                 'required' => false,
             ])
             ->add('sortOrder', IntegerType::class, [
-                'label' => 'Sort Order',
+                'label' => 'Volgorde',
                 'required' => false,
             ])
             ->add('autoPlay', CheckboxType::class, [
-                'label' => 'Auto Play',
+                'label' => 'Automatisch afspelen',
                 'required' => false,
             ])
             ->add('showControls', CheckboxType::class, [
-                'label' => 'Show Controls',
+                'label' => 'Bediening tonen',
                 'required' => false,
             ])
             ->add('showInfo', CheckboxType::class, [
-                'label' => 'Show Info',
+                'label' => 'Info tonen',
                 'required' => false,
             ])
             ->add('modestBranding', CheckboxType::class, [
-                'label' => 'Modest Branding',
+                'label' => 'Beperkte YouTube-branding',
                 'required' => false,
             ]);
     }

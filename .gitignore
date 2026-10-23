@@ -18,3 +18,12 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+# Uploaded photos, files and avatars: copied to production over FTP, not kept in git (avatars are personal data)
+/public/uploads/
+
+# Cached link-preview copies of photos (App\Service\ShareImage), recreated on demand
+/public/share-images/
+
+# FTP release built by bin/build-release.sh
+/release/

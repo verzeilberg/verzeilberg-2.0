@@ -137,6 +137,33 @@ class BlogComment
         return $this;
     }
 
+    /**
+     * Shown to everyone: approved, not deleted, and so is every comment it replies to.
+     */
+    public function isPublished(): bool
+    {
+        return $this->isApproved
+            && !$this->isDeleted()
+            && ($this->parent === null || $this->parent->isPublished());
+    }
+
+    /**
+     * Published, or the viewer's own comment that still waits for moderation (under a comment they can see).
+     */
+    public function isVisibleTo(?User $viewer): bool
+    {
+        if ($this->isDeleted() || ($this->parent !== null && !$this->parent->isVisibleTo($viewer))) {
+            return false;
+        }
+
+        return $this->isApproved || $this->isWrittenBy($viewer);
+    }
+
+    public function isWrittenBy(?User $user): bool
+    {
+        return $user !== null && $this->author !== null && $this->author->getId() === $user->getId();
+    }
+
     public function isRoot(): bool
     {
         return $this->parent === null;

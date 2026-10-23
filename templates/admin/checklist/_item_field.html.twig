@@ -16,8 +16,8 @@
         {# Opens on click; item_form.html.twig closes it on a click elsewhere or Escape #}
         <a tabindex="0" role="button" class="text-info lh-1 text-decoration-none js-field-info"
                 data-bs-toggle="popover" data-bs-trigger="click" data-bs-placement="right"
-                data-bs-title="Allowed" data-bs-content="{{ infoContent|e('html_attr') }}"
-                aria-label="What is allowed for {{ field.name }}">
+                data-bs-title="Toegestaan" data-bs-content="{{ infoContent|e('html_attr') }}"
+                aria-label="Wat is toegestaan voor {{ field.name }}">
             <i class="fas fa-info-circle" aria-hidden="true"></i>
         </a>
     {%- endif -%}
@@ -94,9 +94,9 @@
                     {% set storedFile = fieldType == 'file' and item is defined ? item.itemContent[fieldName]|default(null) : null %}
                     {% if storedFile %}
                         <div class="form-text">
-                            <i class="fas fa-paperclip me-1"></i>Current file:
+                            <i class="fas fa-paperclip me-1"></i>Huidig bestand:
                             <a href="{{ path('app_checklist_item_file', {id: item.id, field: field.formFieldName}) }}" target="_blank" rel="noopener">{{ storedFile|split('/')|last }}</a>
-                            <span class="text-muted">(choose a new file to replace it)</span>
+                            <span class="text-muted">(kies een nieuw bestand om het te vervangen)</span>
                         </div>
                     {% endif %}
                     {% if field.introText %}

@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Bevestigingsmail opnieuw sturen - Verzeilberg.nl{% endblock %}
+
+{% block page_title %}Bevestigingsmail opnieuw sturen{% endblock %}
+{% block page_lead %}Geen mail gekregen na je registratie? Kijk ook in je spammap, of vraag hier een nieuwe link aan.{% endblock %}
+
+{% block body %}
+{# Success and error messages are shown by base.html.twig #}
+<div class="form-page">
+    <div class="card">
+        <div class="card-body article-body">
+            <form method="post">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('register_resend') }}">
+
+                <div class="mb-4">
+                    <label for="email" class="form-label">E-mailadres</label>
+                    <input type="email" id="email" name="email" class="form-control" required autocomplete="email" placeholder="jij@voorbeeld.nl" value="{{ email }}">
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Stuur bevestigingslink</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <p class="text-center mt-3">
+        <a href="{{ path('app_login') }}">Terug naar inloggen</a>
+    </p>
+</div>
+{% endblock %}

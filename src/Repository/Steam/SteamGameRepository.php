@@ -15,13 +15,34 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class SteamGameRepository extends ServiceEntityRepository
 {
-    /** Sort options of the library: key => [field, direction] */
+    /**
+     * Sort options: key => [DQL expression, direction when first chosen, condition for "no value"].
+     * Games without a value (never played, achievements unknown or private, ...) always go last; the expression
+     * gives them all the same value (NULL or 0), so among themselves they're in name order.
+     */
     public const SORTS = [
-        'recent' => ['g.lastPlayedAt', 'DESC'],
-        'playtime' => ['g.playtimeForever', 'DESC'],
-        'name' => ['g.name', 'ASC'],
-        'achievements' => ['g.achievementsUnlocked', 'DESC'],
+        'recent' => ['g.lastPlayedAt', 'DESC', 'g.lastPlayedAt IS NULL'],
+        'playtime' => ['g.playtimeForever', 'DESC', null],
+        'name' => ['g.name', 'ASC', null],
+        'achievements' => [
+            'CASE WHEN g.achievementsPrivate = false THEN COALESCE(g.achievementsUnlocked, 0) ELSE 0 END',
+            'DESC',
+            'g.achievementsPrivate = true OR g.achievementsUnlocked IS NULL',
+        ],
+        // Percentage unlocked; games without (known) achievements have no percentage
+        'completion' => [
+            'CASE WHEN g.achievementsPrivate = false AND g.achievementsTotal > 0 THEN (COALESCE(g.achievementsUnlocked, 0) * 100.0) / g.achievementsTotal ELSE 0 END',
+            'DESC',
+            'g.achievementsPrivate = true OR g.achievementsUnlocked IS NULL OR g.achievementsTotal IS NULL OR g.achievementsTotal = 0',
+        ],
+        'details' => ['g.detailsFetchedAt', 'DESC', 'g.detailsFetchedAt IS NULL'],
+        // My review (r: joined in createLibraryQuery; on the public page only published reviews)
+        'rating' => ['COALESCE(r.rating, 0)', 'DESC', 'r.id IS NULL'],
+        'visibility' => ['g.hidden', 'ASC', null],
     ];
+
+    /** The sort options of the public page (the admin sorts on every column) */
+    public const PUBLIC_SORTS = ['recent', 'playtime', 'name', 'achievements', 'rating'];
 
     public function __construct(ManagerRegistry $registry)
     {
@@ -37,11 +58,20 @@ class SteamGameRepository extends ServiceEntityRepository
     /**
      * The library for the public page or the admin, filtered and sorted (for the paginator).
      *
-     * @param array{q?: string, genre?: string, sort?: string, played?: bool} $filters
+     * @param array{q?: string, genre?: string, sort?: string, dir?: string, played?: bool, reviewed?: bool} $filters dir: "asc"/"desc", or empty for the sort's own direction
      */
     public function createLibraryQuery(array $filters, bool $includeHidden = false): QueryBuilder
     {
-        $qb = $this->createQueryBuilder('g');
+        // The review comes along in the same query; visitors (not $includeHidden) only get published ones
+        $qb = $this->createQueryBuilder('g')->addSelect('r');
+        if ($includeHidden) {
+            $qb->leftJoin('g.review', 'r');
+        } else {
+            $qb->leftJoin('g.review', 'r', 'WITH', 'r.published = true');
+        }
+        if ($filters['reviewed'] ?? false) {
+            $qb->andWhere('r.id IS NOT NULL');
+        }
         if (!$includeHidden) {
             $qb->andWhere('g.hidden = false');
         }
@@ -57,14 +87,42 @@ class SteamGameRepository extends ServiceEntityRepository
             $qb->andWhere('g.playtimeForever > 0');
         }
 
-        [$field, $direction] = self::SORTS[$filters['sort'] ?? 'recent'] ?? self::SORTS['recent'];
-        // Games without a value (never played, achievements unknown) go last
-        $qb->addSelect(sprintf('CASE WHEN %s IS NULL THEN 1 ELSE 0 END AS HIDDEN emptyLast', $field))
-            ->orderBy('emptyLast', 'ASC')
-            ->addOrderBy($field, $direction)
-            ->addOrderBy('g.name', 'ASC');
+        [$expression, $direction, $empty] = self::SORTS[$filters['sort'] ?? 'recent'] ?? self::SORTS['recent'];
+        if (in_array(strtolower($filters['dir'] ?? ''), ['asc', 'desc'], true)) {
+            $direction = strtoupper((string) $filters['dir']);
+        }
+        // Games without a value go last, in both directions; then by name, so pages don't shuffle
+        if ($empty !== null) {
+            $qb->addSelect(sprintf('CASE WHEN %s THEN 1 ELSE 0 END AS HIDDEN emptyLast', $empty))->addOrderBy('emptyLast', 'ASC');
+        }
+        $qb->addSelect($expression . ' AS HIDDEN sortValue')
+            ->addOrderBy('sortValue', $direction)
+            ->addOrderBy('g.name', 'ASC')
+            ->addOrderBy('g.id', 'ASC');
 
         return $qb;
+    }
+
+    /**
+     * Site search: visible games whose name or published review contains the term.
+     *
+     * @return list<SteamGame>
+     */
+    public function searchPublic(string $term, int $limit = 100): array
+    {
+        return $this->createQueryBuilder('g')
+            ->addSelect('r')
+            ->leftJoin('g.review', 'r', 'WITH', 'r.published = true')
+            ->andWhere('g.hidden = false')
+            ->andWhere('g.name LIKE :term OR r.body LIKE :term')
+            ->setParameter('term', '%' . $this->escapeLike(trim($term)) . '%')
+            // Reviewed games first, then by name
+            ->addSelect('CASE WHEN r.id IS NULL THEN 1 ELSE 0 END AS HIDDEN unreviewed')
+            ->orderBy('unreviewed', 'ASC')
+            ->addOrderBy('g.name', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 
     /** @return list<SteamGame> the most recently played games */

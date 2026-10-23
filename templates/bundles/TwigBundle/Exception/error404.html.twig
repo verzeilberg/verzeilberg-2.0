@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Pagina niet gevonden - Verzeilberg.nl{% endblock %}
+{% block page_title %}Pagina niet gevonden{% endblock %}
+{% block page_lead %}Deze pagina bestaat niet (meer).{% endblock %}
+
+{% block body %}
+<div class="empty-state">
+    <i class="fas fa-route"></i>
+    <p class="mb-3">Misschien is de link verouderd of is de pagina verplaatst. Probeer te zoeken, of begin bij een van deze pagina's.</p>
+    <form class="d-flex justify-content-center gap-2 mb-3" action="{{ path('app_search') }}" method="GET" role="search">
+        <input class="form-control" style="max-width: 20rem" type="search" name="q" placeholder="Doorzoek de site" aria-label="Doorzoek de site">
+        <button class="btn btn-primary" type="submit" title="Zoeken"><i class="fas fa-search d-inline m-0 fs-6 text-reset"></i></button>
+    </form>
+    <p>
+        <a href="{{ path('app_home') }}">Home</a> &middot;
+        <a href="{{ path('blog_index') }}">Blog</a> &middot;
+        <a href="{{ path('app_events') }}">Events</a> &middot;
+        <a href="{{ path('app_contact') }}">Contact</a>
+    </p>
+</div>
+{% endblock %}

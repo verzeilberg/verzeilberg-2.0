@@ -11,7 +11,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: SettingRepository::class)]
 #[ORM\Table(name: 'setting')]
-#[UniqueEntity(fields: ['key'], message: 'This setting key already exists')]
+#[UniqueEntity(fields: ['key'], message: 'Deze instellingssleutel bestaat al')]
 class Setting
 {
     use TrackableTrait;
@@ -23,7 +23,8 @@ class Setting
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\Column(length: 100, unique: true)]
+    // Quoted: KEY is a reserved word in MySQL, so inserting a new setting failed without it
+    #[ORM\Column(name: '`key`', length: 100, unique: true)]
     private string $key;
 
     #[ORM\Column(type: 'text', nullable: true)]

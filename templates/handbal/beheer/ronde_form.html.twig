@@ -52,7 +52,7 @@
                 <div class="card-body">
                     <div class="alert alert-info mb-4">
                         <strong>Keeper:</strong> De geselecteerde keeper wordt gebruikt voor alle scores.<br>
-                        Vink aan bij "Gescored" als de speler scoort, laat leeg voor redding keeper.
+                        Vink aan bij "Gescoord" als de speler scoort, laat leeg voor redding keeper.
                     </div>
 
                     <div class="table-responsive">
@@ -61,7 +61,7 @@
                                 <tr>
                                     <th class="min-w-250px">Speler</th>
                                     <th class="w-80px">Rugnr</th>
-                                    <th class="text-center w-100px">Gescored ✓</th>
+                                    <th class="text-center w-100px">Gescoord ✓</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -84,7 +84,7 @@
             </div>
             {% endif %}
 
-            <div class="d-flex gap-2">
+            <div class="form-actions-bar">
                 {{ form_widget(form.submit, {'attr': {'class': 'btn btn-primary mt-3'}}) }}
                 <a href="{{ path('handbal_beheer_index') }}" class="btn btn-secondary mt-3 px-3 d-inline-flex align-items-center">Annuleren</a>
             </div>

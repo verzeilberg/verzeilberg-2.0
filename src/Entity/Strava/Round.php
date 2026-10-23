@@ -178,10 +178,8 @@ class Round
     public function getPace(): string
     {
         if ($this->distance > 0 && $this->averageSpeed > 0) {
-            $paceSeconds = 1000 / $this->averageSpeed;
-            $paceMinutes = floor($paceSeconds / 60);
-            $paceSecs = floor($paceSeconds % 60);
-            return sprintf('%d:%02d', $paceMinutes, $paceSecs);
+            $paceSeconds = (int) floor(1000 / $this->averageSpeed);
+            return sprintf('%d:%02d', intdiv($paceSeconds, 60), $paceSeconds % 60);
         }
         return '0:00';
     }

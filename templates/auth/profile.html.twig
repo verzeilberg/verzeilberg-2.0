@@ -1,14 +1,14 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Profile - Verzeilberg.nl{% endblock %}
+{% block title %}Profiel - Verzeilberg.nl{% endblock %}
+
+{% block page_title %}Profiel{% endblock %}
+{% block page_lead %}Je accountgegevens en de checklists die je beheert.{% endblock %}
 
 {% block body %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h3 class="mb-0"><i class="fas fa-user me-2"></i>Profile</h3>
-            </div>
+<div class="row g-4">
+    <aside class="col-lg-4">
+        <div class="card">
             <div class="card-body text-center">
                 {% if user.details and user.details.avatar %}
                     <img src="{{ asset(user.details.avatar) }}" alt="{{ user.fullName }}" class="rounded-circle mb-3 profile-avatar">
@@ -18,7 +18,7 @@
                     </div>
                 {% endif %}
 
-                <h4>{{ user.fullName }}</h4>
+                <h2 class="h3 mb-1">{{ user.fullName }}</h2>
                 <p class="text-muted">{{ user.email }}</p>
 
                 {% if user.details %}
@@ -27,41 +27,35 @@
                     {% endif %}
 
                     {% if user.details.bio %}
-                        <div class="mt-3 p-3 bg-light rounded">
-                            <h6>Bio</h6>
+                        <div class="text-start mt-3">
+                            <h3 class="h5">Bio</h3>
                             <p class="mb-0">{{ user.details.bio|nl2br }}</p>
                         </div>
                     {% endif %}
 
-                    <div class="row mt-3 text-start">
-                        {% if user.details.location %}
-                            <div class="col-md-6 mb-2">
-                                <i class="fas fa-map-marker-alt text-muted me-2"></i>{{ user.details.location }}
-                            </div>
-                        {% endif %}
-                        {% if user.details.phone %}
-                            <div class="col-md-6 mb-2">
-                                <i class="fas fa-phone text-muted me-2"></i>{{ user.details.phone }}
-                            </div>
-                        {% endif %}
-                        {% if user.details.website %}
-                            <div class="col-md-6 mb-2">
-                                <i class="fas fa-globe text-muted me-2"></i><a href="{{ user.details.website }}" target="_blank">{{ user.details.website }}</a>
-                            </div>
-                        {% endif %}
-                        {% if user.details.age %}
-                            <div class="col-md-6 mb-2">
-                                <i class="fas fa-birthday-cake text-muted me-2"></i>Age: {{ user.details.age }}
-                            </div>
-                        {% endif %}
-                    </div>
+                    {% if user.details.location or user.details.phone or user.details.website or user.details.age %}
+                        <div class="card-meta flex-column text-start mt-3">
+                            {% if user.details.location %}
+                                <span><i class="fas fa-map-marker-alt"></i>{{ user.details.location }}</span>
+                            {% endif %}
+                            {% if user.details.phone %}
+                                <span><i class="fas fa-phone"></i>{{ user.details.phone }}</span>
+                            {% endif %}
+                            {% if user.details.website %}
+                                <span><i class="fas fa-globe"></i><a href="{{ user.details.website }}" target="_blank">{{ user.details.website }}</a></span>
+                            {% endif %}
+                            {% if user.details.age %}
+                                <span><i class="fas fa-birthday-cake"></i>Leeftijd: {{ user.details.age }}</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
 
                     {% if user.details.hasSocialLinks %}
                         <div class="mt-3">
-                            <h6>Social Links</h6>
-                            <div class="d-flex gap-2">
+                            <h3 class="h5">Sociale links</h3>
+                            <div class="d-flex justify-content-center gap-2">
                                 {% for platform, url in user.details.socialLinks %}
-                                    <a href="{{ url }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                    <a href="{{ url }}" target="_blank" class="btn btn-outline-primary btn-sm" aria-label="{{ platform|capitalize }}">
                                         <i class="fab fa-{{ platform }}"></i>
                                     </a>
                                 {% endfor %}
@@ -71,23 +65,113 @@
                 {% endif %}
             </div>
         </div>
+    </aside>
 
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Account</h5>
+    <div class="col-lg-8">
+        {% if is_granted('PERM_checklist.own') %}
+        <section class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center gap-2">
+                <h2>Mijn checklists</h2>
+                {% if can_access('admin_checklist_new') %}
+                    <a href="{{ path('admin_checklist_new') }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>Nieuwe checklist
+                    </a>
+                {% endif %}
             </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="#" class="btn btn-outline-primary">Edit Profile</a>
-                    <a href="#" class="btn btn-outline-secondary">Change Password</a>
-                    <a href="#" class="btn btn-outline-secondary">Email Preferences</a>
-                    <hr>
-                    <form action="{{ path('app_logout') }}" method="post">
-                        <button type="submit" class="btn btn-outline-danger">Logout</button>
-                    </form>
+            {% if not can_access('admin_checklist_new') %}
+                <div class="card-body">
+                    <p class="text-muted mb-0">
+                        Je mag checklists maken, maar je account kan de checklistbouwer nog niet openen.
+                        Vraag een beheerder om een van je rollen het recht <code>admin.access</code> te geven.
+                    </p>
                 </div>
+            {% elseif checkLists is empty %}
+                <div class="card-body">
+                    <p class="text-muted mb-0">Je hebt nog geen checklist gemaakt. Klik op <strong>Nieuwe checklist</strong> om te beginnen.</p>
+                </div>
+            {% else %}
+                <ul class="list-group list-group-flush">
+                    {% for checkList in checkLists %}
+                        <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div>
+                                <strong>{{ checkList.name }}</strong>
+                                <div class="card-meta">
+                                    {% if checkList.access == 'public' %}
+                                        <span><i class="fas fa-globe"></i>Openbaar</span>
+                                    {% elseif checkList.access == 'user' %}
+                                        <span><i class="fas fa-user"></i>Ingelogde gebruikers</span>
+                                    {% elseif checkList.access == 'friends' %}
+                                        <span><i class="fas fa-user-friends"></i>Vrienden</span>
+                                    {% else %}
+                                        <span><i class="fas fa-lock"></i>Privé</span>
+                                    {% endif %}
+                                    <span><i class="fas fa-list"></i>{{ checkList.checkListItems|length }} {{ checkList.checkListItems|length == 1 ? 'inzending' : 'inzendingen' }}</span>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ path('admin_checklist_edit', {id: checkList.id}) }}" class="btn btn-sm btn-outline-primary" title="Velden en instellingen bewerken">
+                                    <i class="fas fa-edit me-1"></i>Bewerken
+                                </a>
+                                <a href="{{ path('admin_checklist_show', {id: checkList.id}) }}" class="btn btn-sm btn-outline-primary" title="Alle inzendingen">
+                                    <i class="fas fa-list me-1"></i>Inzendingen
+                                </a>
+                                {% if checkList.openForSubmissions %}
+                                    <a href="{{ path('app_checklist_fill', {id: checkList.id}) }}" class="btn btn-sm btn-primary" title="Het formulier dat anderen invullen">
+                                        <i class="fas fa-pen me-1"></i>Invullen
+                                    </a>
+                                {% else %}
+                                    <a href="{{ path('admin_checklist_item_new', {id: checkList.id}) }}" class="btn btn-sm btn-primary" title="Inzending toevoegen">
+                                        <i class="fas fa-plus me-1"></i>Inzending toevoegen
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <section class="card mb-4">
+            <div class="card-header"><h2>Openbare pagina</h2></div>
+            <div class="card-body">
+                <form action="{{ path('app_profile_visibility') }}" method="post">
+                    <input type="hidden" name="_token" value="{{ csrf_token('profile_visibility') }}">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="profilePublic" name="profilePublic" value="1" {{ user.profilePublic ? 'checked' }} data-auto-submit>
+                        <label class="form-check-label" for="profilePublic">Toon mijn pagina in het <a href="{{ path('app_users') }}">gebruikersoverzicht</a></label>
+                    </div>
+                    <p class="text-muted small mb-2">
+                        Je openbare pagina toont je naam, avatar, slogan, bio, woonplaats, website en sociale links.
+                        Je e-mailadres, telefoonnummer en leeftijd worden nooit getoond.
+                        Je <a href="{{ path('app_friends') }}">vrienden</a> kunnen je pagina altijd zien, ook als die privé is.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <noscript><button type="submit" class="btn btn-sm btn-primary">Opslaan</button></noscript>
+                        <a href="{{ path('app_user_show', {id: user.id}) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye me-1"></i>Bekijk mijn pagina</a>
+                    </div>
+                </form>
             </div>
-        </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header"><h2>Account</h2></div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ path('app_profile_edit') }}" class="btn btn-outline-primary">Profiel bewerken</a>
+                    <a href="{{ path('app_profile_password') }}" class="btn btn-outline-primary">Wachtwoord wijzigen</a>
+                    <a href="{{ path('app_two_factor') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-shield-alt me-1"></i>Tweestapsverificatie
+                        <span class="badge bg-success ms-1">{{ user.totpAuthenticationEnabled ? 'App' : 'E-mail' }}</span>
+                    </a>
+                    <a href="#" class="btn btn-outline-primary">E-mailvoorkeuren</a>
+                </div>
+                <hr>
+                <form action="{{ path('app_logout') }}" method="post">
+                    <button type="submit" class="btn btn-outline-primary"><i class="fas fa-sign-out-alt me-2"></i>Uitloggen</button>
+                </form>
+            </div>
+        </section>
     </div>
 </div>
 {% endblock %}

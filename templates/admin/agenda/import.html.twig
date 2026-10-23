@@ -1,11 +1,11 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Import iCal - {{ agenda.title }} - Admin{% endblock %}
+{% block title %}iCal importeren - {{ agenda.title }} - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="fas fa-file-import me-2"></i>Import into "{{ agenda.title }}"</h1>
-    <a href="{{ path('admin_agenda_agendas') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Back to Agendas</a>
+    <h1><i class="fas fa-file-import me-2"></i>Importeren in "{{ agenda.title }}"</h1>
+    <a href="{{ path('admin_agenda_agendas') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Terug naar agenda's</a>
 </div>
 
 <div class="card">
@@ -13,21 +13,21 @@
         <form method="post" enctype="multipart/form-data">
             <input type="hidden" name="_token" value="{{ csrf_token('import_agenda' ~ agenda.id) }}">
             <div class="mb-3">
-                <label for="importUrl" class="form-label">iCal link</label>
-                <input type="url" id="importUrl" name="url" class="form-control" placeholder="https://… or webcal://…">
-                <div class="form-text">For example the "secret address in iCal format" of a Google Calendar, or a competition schedule.</div>
+                <label for="importUrl" class="form-label">iCal-link</label>
+                <input type="url" id="importUrl" name="url" class="form-control" placeholder="https://… of webcal://…">
+                <div class="form-text">Bijvoorbeeld het "geheime adres in iCal-indeling" van een Google Calendar, of een wedstrijdschema.</div>
             </div>
-            <p class="text-muted">or</p>
+            <p class="text-muted">of</p>
             <div class="mb-3">
-                <label for="importFile" class="form-label">.ics file</label>
+                <label for="importFile" class="form-label">.ics-bestand</label>
                 <input type="file" id="importFile" name="file" class="form-control" accept=".ics,text/calendar">
             </div>
             <div class="alert alert-info small">
                 <i class="fas fa-info-circle me-1"></i>
-                Importing the same calendar again updates the items instead of adding them twice.
-                Recurring events are added as separate items, from one year ago until two years ahead.
+                Importeer je dezelfde agenda opnieuw, dan worden de items bijgewerkt in plaats van dubbel toegevoegd.
+                Terugkerende afspraken worden als losse items toegevoegd, van een jaar terug tot twee jaar vooruit.
             </div>
-            <button type="submit" class="btn btn-primary"><i class="fas fa-file-import me-1"></i>Import</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-file-import me-1"></i>Importeren</button>
         </form>
     </div>
 </div>

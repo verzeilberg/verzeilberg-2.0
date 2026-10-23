@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+
+{% set byApp = user.totpAuthenticationEnabled %}
+
+{% block title %}Tweestapsverificatie - Verzeilberg.nl{% endblock %}
+
+{% block page_title %}Tweestapsverificatie{% endblock %}
+{% block page_lead %}Na je wachtwoord vul je ook een code in, zodat een gestolen wachtwoord alleen niet genoeg is om in te loggen.{% endblock %}
+{% block page_actions %}
+    <a href="{{ path('app_profile') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Profiel</a>
+{% endblock %}
+
+{% block body %}
+<div class="form-page">
+    {% if newCodes %}
+        <div class="card mb-4 border-warning">
+            <div class="card-body article-body">
+                <h2 class="h4"><i class="fas fa-key me-2"></i>Je back-upcodes</h2>
+                <p>Ben je je telefoon kwijt, dan kun je inloggen met een van deze codes in plaats van de code uit je app. Elke code werkt één keer.
+                    <strong>Bewaar ze nu</strong> (print ze of zet ze in je wachtwoordmanager): ze worden niet nog eens getoond.</p>
+                <ul class="two-factor-codes list-unstyled">
+                    {% for code in newCodes %}<li><code>{{ code }}</code></li>{% endfor %}
+                </ul>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-print><i class="fas fa-print me-1"></i>Afdrukken</button>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="card mb-4">
+        <div class="card-body article-body">
+            <h2 class="h5">Zo log je in</h2>
+            {% if byApp %}
+                <p class="mb-2"><span class="badge bg-success"><i class="fas fa-mobile-alt me-1"></i>Authenticator-app</span>
+                    Na je wachtwoord vul je de code uit je authenticator-app in.</p>
+                <p class="mb-0">Resterende back-upcodes: <strong>{{ user.backupCodeCount }}</strong> van 10.
+                    {% if user.backupCodeCount <= 3 %}<span class="text-danger">Maak binnenkort nieuwe aan.</span>{% endif %}</p>
+            {% else %}
+                <p class="mb-0"><span class="badge bg-primary"><i class="fas fa-envelope me-1"></i>Code per e-mail</span>
+                    Na je wachtwoord mailen we een code naar <strong>{{ user.email }}</strong>.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if byApp %}
+        <div class="card mb-4">
+            <div class="card-body article-body">
+                <h2 class="h5">Back-upcodes</h2>
+                <p>Nieuwe codes vervangen alle oude.</p>
+                <form method="post" action="{{ path('app_two_factor_backup_codes') }}" data-confirm="Nieuwe back-upcodes maken? De oude werken dan niet meer.">
+                    <input type="hidden" name="_token" value="{{ csrf_token('two_factor_backup_codes') }}">
+                    <button type="submit" class="btn btn-outline-primary">Nieuwe back-upcodes maken</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body article-body">
+                <h2 class="h5">Terug naar codes per e-mail</h2>
+                <p>Vul een actuele code uit je app (of een back-upcode) in om terug te gaan naar codes per e-mail.</p>
+                <form method="post" action="{{ path('app_two_factor_use_email') }}" class="row g-2 align-items-end">
+                    <input type="hidden" name="_token" value="{{ csrf_token('two_factor_use_email') }}">
+                    <div class="col-sm-6">
+                        <label for="use_email_code" class="form-label">Code</label>
+                        <input type="text" id="use_email_code" name="code" class="form-control" autocomplete="one-time-code" maxlength="20" required>
+                    </div>
+                    <div class="col-sm-6">
+                        <button type="submit" class="btn btn-outline-primary">Codes per e-mail gebruiken</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <div class="card mb-4">
+            <div class="card-body article-body">
+                <h2 class="h5">Gebruik liever een authenticator-app</h2>
+                <p>Een app op je telefoon maakt de code zelf: geen wachten op een e-mail, en het werkt zonder internet. Het is ook veiliger dan e-mail.</p>
+                <ol class="two-factor-steps">
+                    <li>Installeer een authenticator-app op je telefoon, bijvoorbeeld Google Authenticator, Microsoft Authenticator of die van je wachtwoordmanager.</li>
+                    <li>Voeg in de app een account toe en scan deze code:
+                        <div class="two-factor-qr my-3">
+                            <img src="{{ qrCode }}" width="220" height="220" alt="QR-code om Verzeilberg.nl aan je authenticator-app toe te voegen">
+                        </div>
+                        <details class="mb-2">
+                            <summary>Lukt scannen niet? Vul deze sleutel met de hand in</summary>
+                            <p class="mt-2 mb-0"><code class="two-factor-secret">{{ secret }}</code><br>
+                                <small class="text-muted">Account: {{ user.email }} &middot; op tijd gebaseerd &middot; 6 cijfers</small></p>
+                        </details>
+                    </li>
+                    <li>Vul de code van 6 cijfers in die de app toont:
+                        <form method="post" action="{{ path('app_two_factor_enable') }}" class="row g-2 mt-1">
+                            <input type="hidden" name="_token" value="{{ csrf_token('two_factor_enable') }}">
+                            <div class="col-sm-6">
+                                <label for="code" class="visually-hidden">Code</label>
+                                <input type="text" id="code" name="code" class="form-control form-control-lg text-center two-factor-code"
+                                       inputmode="numeric" pattern="[0-9 ]{6,7}" autocomplete="one-time-code" maxlength="7" required>
+                            </div>
+                            <div class="col-sm-6">
+                                <button type="submit" class="btn btn-primary btn-lg w-100">App gebruiken</button>
+                            </div>
+                        </form>
+                    </li>
+                </ol>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body article-body">
+            <h2 class="h5">Vertrouwde apparaten</h2>
+            <p>Op apparaten waar je "Dit apparaat vertrouwen" hebt aangevinkt, hoef je 30 dagen geen code in te vullen.</p>
+            <form method="post" action="{{ path('app_two_factor_forget_devices') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('two_factor_forget_devices') }}">
+                <button type="submit" class="btn btn-outline-primary">Vraag weer op elk apparaat om een code</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

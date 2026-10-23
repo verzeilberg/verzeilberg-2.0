@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository\Strava;
 
+use App\Entity\Event;
 use App\Entity\Strava\Activity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -110,5 +111,22 @@ class ActivityRepository extends ServiceEntityRepository
             'totalElevation' => round($totalElevation, 2),
             'byType' => $byType,
         ];
+    }
+
+    /**
+     * The race run or ridden on the event's days: an activity marked "Race" in Strava (workout type 1 for a run,
+     * 11 for a ride), the longest when there are several. Only races: a training run may start at home.
+     */
+    public function findRaceForEvent(Event $event): ?Activity
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.startDateLocal >= :from AND a.startDateLocal < :until')
+            ->andWhere("(a.type = 'Run' AND a.workoutType = 1) OR (a.type = 'Ride' AND a.workoutType = 11)")
+            ->setParameter('from', $event->getEventStartDate()->setTime(0, 0))
+            ->setParameter('until', $event->getEventEndDate()->setTime(0, 0)->modify('+1 day'))
+            ->orderBy('a.distance', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }

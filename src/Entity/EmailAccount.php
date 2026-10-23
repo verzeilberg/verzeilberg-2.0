@@ -63,7 +63,8 @@ class EmailAccount
     #[Assert\NotBlank]
     private string $username;
 
-    #[ORM\Column(length: 255)]
+    /** Stored encrypted, see EncryptedStringType */
+    #[ORM\Column(type: 'encrypted_string')]
     #[Assert\NotBlank]
     private string $password;
 
@@ -88,7 +89,8 @@ class EmailAccount
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $smtpUsername = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    /** Stored encrypted, see EncryptedStringType */
+    #[ORM\Column(type: 'encrypted_string', nullable: true)]
     private ?string $smtpPassword = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]

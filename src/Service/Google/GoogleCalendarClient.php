@@ -70,13 +70,13 @@ class GoogleCalendarClient
             'redirect_uri' => $redirectUri,
         ]);
         if (empty($tokens['refresh_token'])) {
-            throw new GoogleApiException('Google did not return a refresh token. Remove the site\'s access in your Google account settings and connect again.');
+            throw new GoogleApiException('Google gaf geen refresh-token terug. Trek de toegang van de site in via je Google-accountinstellingen en koppel opnieuw.');
         }
 
         $userInfo = $this->get(self::USERINFO_URL, (string) $tokens['access_token']);
         $email = (string) ($userInfo['email'] ?? '');
         if ($email === '') {
-            throw new GoogleApiException('Google did not return the e-mail address of the account.');
+            throw new GoogleApiException('Google gaf het e-mailadres van het account niet terug.');
         }
 
         $accessToken = $this->encryptor->encrypt((string) $tokens['access_token']);
@@ -165,7 +165,7 @@ class GoogleCalendarClient
                 'refresh_token' => $this->encryptor->decrypt($account->getEncryptedRefreshToken()),
             ]);
         } catch (GoogleApiException $e) {
-            $account->setLastError('Access was refused by Google; connect the account again. (' . $e->getMessage() . ')');
+            $account->setLastError('Google weigerde de toegang; koppel het account opnieuw. (' . $e->getMessage() . ')');
             $this->em->flush();
             throw $e;
         }
@@ -217,7 +217,7 @@ class GoogleCalendarClient
             'client_secret' => $this->clientSecret,
         ]]);
         if (empty($tokens['access_token'])) {
-            throw new GoogleApiException('Google did not return an access token.');
+            throw new GoogleApiException('Google gaf geen toegangstoken terug.');
         }
 
         return $tokens;
@@ -235,12 +235,12 @@ class GoogleCalendarClient
             $status = $response->getStatusCode();
             $data = $response->toArray(false);
         } catch (HttpExceptionInterface $e) {
-            throw new GoogleApiException('Google could not be reached: ' . $e->getMessage(), 0, $e);
+            throw new GoogleApiException('Google was niet bereikbaar: ' . $e->getMessage(), 0, $e);
         }
 
         if ($status >= 400) {
             $message = is_array($data['error'] ?? null) ? ($data['error']['message'] ?? '') : ($data['error_description'] ?? $data['error'] ?? '');
-            throw new GoogleApiException(sprintf('Google returned an error (HTTP %d): %s', $status, (string) $message));
+            throw new GoogleApiException(sprintf('Google gaf een fout (HTTP %d): %s', $status, (string) $message));
         }
 
         return $data;

@@ -1,0 +1,9 @@
+{#
+    A friend action as a small POST form. Pass: route (app_friend_add / _accept / _remove), other (the user),
+    label, icon, and optionally style (button classes) and confirm (asks before submitting).
+#}
+<form action="{{ path(route, {id: other.id}) }}" method="post" class="d-inline"{% if confirm is defined %} data-confirm="{{ confirm }}"{% endif %}>
+    <input type="hidden" name="_token" value="{{ csrf_token('friend' ~ other.id) }}">
+    <input type="hidden" name="back" value="{{ app.request.requestUri }}">
+    <button type="submit" class="btn btn-sm {{ style ?? 'btn-outline-primary' }}"><i class="fas fa-{{ icon }} me-1"></i>{{ label }}</button>
+</form>

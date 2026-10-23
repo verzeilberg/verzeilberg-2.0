@@ -24,14 +24,14 @@ class HandbalSeizoenType extends AbstractType
                 'attr' => ['class' => 'form-control', 'placeholder' => 'Bijv. Seizoen 2024-2025'],
             ])
             ->add('startDatum', DateType::class, [
-                'label' => 'Start datum',
+                'label' => 'Startdatum',
                 'required' => true,
                 'widget' => 'single_text',
                 'html5' => true,
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('eindDatum', DateType::class, [
-                'label' => 'Eind datum',
+                'label' => 'Einddatum',
                 'required' => true,
                 'widget' => 'single_text',
                 'html5' => true,

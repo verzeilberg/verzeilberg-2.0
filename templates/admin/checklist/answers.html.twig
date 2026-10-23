@@ -1,18 +1,18 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Answers - Admin{% endblock %}
+{% block title %}Antwoorden - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="fas fa-list-ol me-2"></i>Answers</h1>
+    <h1><i class="fas fa-list-ol me-2"></i>Antwoorden</h1>
     <a href="{{ path('admin_checklist_answer_new') }}" class="btn btn-primary">
-        <i class="fas fa-plus me-1"></i>New Answer
+        <i class="fas fa-plus me-1"></i>Nieuw antwoord
     </a>
 </div>
 
 {% if answers is empty %}
     <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>No answers defined. <a href="{{ path('admin_checklist_answer_new') }}">Create the first one</a>.
+        <i class="fas fa-info-circle me-2"></i>Nog geen antwoorden. <a href="{{ path('admin_checklist_answer_new') }}">Maak het eerste aan</a>.
     </div>
 {% else %}
     <div class="table-responsive">
@@ -20,8 +20,8 @@
             <thead>
                 <tr>
                     <th>Label</th>
-                    <th>Value</th>
-                    <th>Fields Using</th>
+                    <th>Waarde</th>
+                    <th>Gebruikt door velden</th>
                     <th class="text-center"><i class="fas fa-cogs"></i></th>
                 </tr>
             </thead>
@@ -32,12 +32,16 @@
                     <td><code>{{ answer.value }}</code></td>
                     <td>{{ answer.checkListFields|length }}</td>
                     <td class="text-center">
-                        <a href="{{ path('admin_checklist_answer_edit', {id: answer.id}) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                        {% if is_granted('PERM_checklist.manage') %}
+                        <a href="{{ path('admin_checklist_answer_edit', {id: answer.id}) }}" class="btn btn-sm btn-outline-secondary" title="Bewerken">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <button type="button" class="btn btn-sm btn-outline-danger delete-answer" data-id="{{ answer.id }}" data-csrf-token="{{ csrf_token('delete_answer' ~ answer.id) }}" title="Delete">
+                        <button type="button" class="btn btn-sm btn-outline-danger delete-answer" data-id="{{ answer.id }}" data-csrf-token="{{ csrf_token('delete_answer' ~ answer.id) }}" title="Verwijderen">
                             <i class="fas fa-trash"></i>
                         </button>
+                        {% else %}
+                        <span class="text-muted small" title="Antwoorden worden door alle checklists gedeeld">gedeeld</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

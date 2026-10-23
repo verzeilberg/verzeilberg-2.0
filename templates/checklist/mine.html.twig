@@ -1,38 +1,42 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}My submissions - {{ checkList.name }} - Verzeilberg.nl{% endblock %}
+{% block title %}Mijn inzendingen - {{ checkList.name }} - Verzeilberg.nl{% endblock %}
+
+{% block page_title %}Mijn inzendingen{% endblock %}
+{% block page_lead %}Je antwoorden voor {{ checkList.name }}.{% endblock %}
+{% block page_actions %}
+    <a href="{{ path('app_checklists') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Alle checklists</a>
+    <a href="{{ path('app_checklist_fill', {id: checkList.id}) }}" class="btn btn-primary"><i class="fas fa-pen me-2"></i>Invullen</a>
+{% endblock %}
 
 {% block body %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-    <h1 class="mb-0"><i class="fas fa-list me-2"></i>My submissions <small class="text-muted fs-5">{{ checkList.name }}</small></h1>
-    <div class="d-flex gap-2">
-        <a href="{{ path('app_checklist_fill', {id: checkList.id}) }}" class="btn btn-primary">
-            <i class="fas fa-pen me-1"></i>Fill in
-        </a>
-        <a href="{{ path('app_checklists') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-1"></i>Back to Checklists
-        </a>
-    </div>
-</div>
-
 {% if items is empty %}
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>You haven't filled in this checklist yet.
+    <div class="empty-state">
+        <i class="fas fa-list" aria-hidden="true"></i>
+        <p>Je hebt deze checklist nog niet ingevuld. <a href="{{ path('app_checklist_fill', {id: checkList.id}) }}">Vul hem nu in</a>.</p>
     </div>
 {% else %}
-    <div class="list-group">
-        {% for item in items %}
-            <a href="{{ path('app_checklist_item', {id: item.id}) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
-                <span>
-                    <strong>Submission #{{ item.id }}</strong>
-                    <small class="text-muted d-block">
-                        {{ item.dateCreated|date('d-m-Y H:i') }}
-                        {% if item.dateChanged %}&middot; changed {{ item.dateChanged|date('d-m-Y H:i') }}{% endif %}
-                    </small>
-                </span>
-                <i class="fas fa-chevron-right text-muted" aria-hidden="true"></i>
-            </a>
-        {% endfor %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Inzending</th>
+                        <th>Ingestuurd</th>
+                        <th>Gewijzigd</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        <tr class="js-row-link" data-href="{{ path('app_checklist_item', {id: item.id}) }}">
+                            <td><a href="{{ path('app_checklist_item', {id: item.id}) }}">Inzending #{{ item.id }}</a></td>
+                            <td>{{ item.dateCreated|date('d-m-Y H:i') }}</td>
+                            <td>{{ item.dateChanged ? item.dateChanged|date('d-m-Y H:i') : '-' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 {% endif %}
 {% endblock %}

@@ -1,93 +1,119 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Search Results for "{{ searchTerm }}" - Verzeilberg.nl{% endblock %}
+{% block title %}Zoekresultaten voor "{{ searchTerm }}" - Verzeilberg.nl{% endblock %}
 
-{% block hero_section %}{% endblock %}
+{% import 'games/_macros.html.twig' as steam %}
+
+{% block page_title %}Zoekresultaten{% endblock %}
+{% block page_lead %}
+    {%- if results and results.totalItems > 0 -%}
+        {{ results.totalItems }} {{ results.totalItems == 1 ? 'resultaat' : 'resultaten' }} voor “{{ searchTerm }}”.
+    {%- else -%}
+        Niets gevonden voor “{{ searchTerm }}”.
+    {%- endif -%}
+{% endblock %}
 
 {% block body %}
-<div class="row">
-    <div class="col-lg-8">
-        <h1 class="mb-4">Search Results for "{{ searchTerm }}"</h1>
+<div class="row g-4">
+    <div class="col-lg-3">
+        <aside class="filter-panel">
+            <div class="filter-group">
+                <h2 class="filter-heading"><label for="searchAgain">Opnieuw zoeken</label></h2>
+                <form action="{{ path('app_search') }}" method="GET" role="search">
+                    <div class="input-group">
+                        <input type="search" id="searchAgain" name="q" class="form-control" value="{{ searchTerm }}" placeholder="Doorzoek de site">
+                        <button class="btn btn-primary" type="submit" title="Zoeken"><i class="fas fa-search"></i></button>
+                    </div>
+                </form>
+            </div>
 
+            <div class="filter-group">
+                <h2 class="filter-heading">Bladeren</h2>
+                <ul class="filter-list">
+                    <li><a href="{{ path('blog_index') }}">Alle blogberichten</a></li>
+                    <li><a href="{{ path('app_events') }}">Alle events</a></li>
+                    <li><a href="{{ path('app_games') }}">Alle games</a></li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <div class="col-lg-9">
         {% if not results or results.totalItems == 0 %}
-            <div class="alert alert-info">
-                No results found matching "{{ searchTerm }}".
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <p>Geen resultaten voor “{{ searchTerm }}”. Probeer een korter of ander woord, of blader door de blog, events of games.</p>
             </div>
         {% else %}
-            <p class="text-muted mb-4">{{ results.totalItems }} result{{ results.totalItems != 1 ? 's' : '' }} found.</p>
-
-            {% for item in results.items %}
-                {% if item.type == 'blog' %}
-                    <article class="card mb-4">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <span class="badge bg-primary me-1">Blog</span>
-                                    {% for category in item.entity.categories %}
-                                        <span class="badge bg-info text-dark me-1">{{ category.name }}</span>
-                                    {% endfor %}
+            <div class="d-flex flex-column gap-3">
+                {% for item in results.items %}
+                    {% if item.type == 'blog' %}
+                        {% set url = path('blog_detail', {slug: item.entity.slug}) %}
+                        <article class="card card-link-cover">
+                            <div class="card-body">
+                                <div class="d-flex flex-wrap gap-1 mb-2">
+                                    <span class="tag"><i class="fas fa-newspaper me-1"></i>Blog</span>
+                                    {% for category in item.entity.categories %}<span class="tag">{{ category.name }}</span>{% endfor %}
                                 </div>
-                                <small class="text-muted">
-                                    {{ item.entity.dateCreated|date('M d, Y') }}
-                                </small>
-                            </div>
-
-                            <h2 class="card-title h4">
-                                <a href="{{ path('blog_detail', {slug: item.entity.slug}) }}" class="text-dark text-decoration-none">
-                                    {{ item.entity.title }}
-                                </a>
-                            </h2>
-
-                            <p class="card-text">{{ item.entity.introText|striptags|u.truncate(200) }}</p>
-
-                            <a href="{{ path('blog_detail', {slug: item.entity.slug}) }}" class="btn btn-outline-primary btn-sm">
-                                Read More
-                            </a>
-                        </div>
-                    </article>
-                {% elseif item.type == 'event' %}
-                    <article class="card mb-4">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <span class="badge bg-success me-1">Event</span>
-                                    {% if item.entity.category %}
-                                        <span class="badge bg-info text-dark me-1">{{ item.entity.category.name }}</span>
-                                    {% endif %}
+                                <h2 class="card-title"><a href="{{ url }}">{{ item.entity.title }}</a></h2>
+                                {% if item.entity.introText %}
+                                    <p class="card-text text-muted">{{ item.entity.introText|striptags|u.truncate(200, '…') }}</p>
+                                {% endif %}
+                                <div class="card-meta">
+                                    <span><i class="fas fa-calendar-day"></i>{{ item.entity.dateCreated|nl_date('j M Y') }}</span>
                                 </div>
-                                <small class="text-muted">
-                                    {{ item.entity.eventStartDate|date('M d, Y') }}
-                                </small>
                             </div>
-
-                            <h2 class="card-title h4">
-                                <a href="{{ path('app_event_show', {id: item.entity.id}) }}" class="text-dark text-decoration-none">
-                                    {{ item.entity.title }}
-                                </a>
-                            </h2>
-
-                            {% if item.entity.text %}
-                                <p class="card-text">{{ item.entity.text|striptags|u.truncate(200) }}</p>
-                            {% endif %}
-
-                            <a href="{{ path('app_event_show', {id: item.entity.id}) }}" class="btn btn-outline-success btn-sm">
-                                View Event
-                            </a>
-                        </div>
-                    </article>
-                {% endif %}
-            {% endfor %}
+                        </article>
+                    {% elseif item.type == 'event' %}
+                        {% set url = path('app_event_show', {slug: item.entity.slug}) %}
+                        <article class="card card-link-cover">
+                            <div class="card-body">
+                                <div class="d-flex flex-wrap gap-1 mb-2">
+                                    <span class="tag"><i class="fas fa-calendar-alt me-1"></i>Event</span>
+                                    {% if item.entity.category %}<span class="tag">{{ item.entity.category.name }}</span>{% endif %}
+                                </div>
+                                <h2 class="card-title"><a href="{{ url }}">{{ item.entity.title }}</a></h2>
+                                {% if item.entity.text %}
+                                    <p class="card-text text-muted">{{ item.entity.text|striptags|u.truncate(200, '…') }}</p>
+                                {% endif %}
+                                <div class="card-meta">
+                                    <span><i class="fas fa-calendar-day"></i>{{ item.entity.eventStartDate|nl_date('j M Y') }}</span>
+                                </div>
+                            </div>
+                        </article>
+                    {% elseif item.type == 'game' %}
+                        {% set game = item.entity %}
+                        {% set review = game.publishedReview %}
+                        {% set url = path('app_game', {appId: game.appId}) %}
+                        <article class="card card-link-cover">
+                            <div class="card-body">
+                                <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+                                    <span class="tag"><i class="fab fa-steam me-1"></i>Game</span>
+                                    {% for genre in game.genres|slice(0, 3) %}<span class="tag">{{ genre }}</span>{% endfor %}
+                                    {% if review %}<span class="ms-auto">{{ steam.stars(review) }}</span>{% endif %}
+                                </div>
+                                <h2 class="card-title"><a href="{{ url }}">{{ game.name }}</a></h2>
+                                {% if review %}
+                                    <p class="card-text text-muted mb-0"><strong>Mijn review:</strong> {{ review.body|u.truncate(200, '…') }}</p>
+                                {% elseif game.shortDescription %}
+                                    <p class="card-text text-muted mb-0">{{ game.shortDescription|u.truncate(200, '…') }}</p>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endif %}
+                {% endfor %}
+            </div>
 
             {% if results.totalPages > 1 %}
-                <nav aria-label="Search pagination" class="mt-4">
-                    <ul class="pagination justify-content-center">
+                <nav aria-label="Pagina's met zoekresultaten">
+                    <ul class="pagination">
                         {% if results.hasPreviousPage %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ path('app_search_paginated', {page: results.previousPage, q: searchTerm}) }}">&laquo; Previous</a>
+                                <a class="page-link" href="{{ path('app_search_paginated', {page: results.previousPage, q: searchTerm}) }}">&laquo; Vorige</a>
                             </li>
                         {% else %}
                             <li class="page-item disabled">
-                                <span class="page-link">&laquo; Previous</span>
+                                <span class="page-link">&laquo; Vorige</span>
                             </li>
                         {% endif %}
 
@@ -109,53 +135,17 @@
 
                         {% if results.hasNextPage %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ path('app_search_paginated', {page: results.nextPage, q: searchTerm}) }}">Next &raquo;</a>
+                                <a class="page-link" href="{{ path('app_search_paginated', {page: results.nextPage, q: searchTerm}) }}">Volgende &raquo;</a>
                             </li>
                         {% else %}
                             <li class="page-item disabled">
-                                <span class="page-link">Next &raquo;</span>
+                                <span class="page-link">Volgende &raquo;</span>
                             </li>
                         {% endif %}
                     </ul>
                 </nav>
             {% endif %}
         {% endif %}
-    </div>
-
-    <div class="col-lg-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Refine Search</h5>
-            </div>
-            <div class="card-body">
-                <form action="{{ path('app_search') }}" method="GET">
-                    <div class="input-group">
-                        <input type="text" name="q" class="form-control" value="{{ searchTerm }}" placeholder="Search...">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Quick Links</h5>
-            </div>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item px-0">
-                    <a href="{{ path('blog_index') }}" class="text-decoration-none">
-                        <i class="fas fa-blog me-2"></i>All Blog Posts
-                    </a>
-                </li>
-                <li class="list-group-item px-0">
-                    <a href="{{ path('app_events') }}" class="text-decoration-none">
-                        <i class="fas fa-calendar-alt me-2"></i>All Events
-                    </a>
-                </li>
-            </ul>
-        </div>
     </div>
 </div>
 {% endblock %}

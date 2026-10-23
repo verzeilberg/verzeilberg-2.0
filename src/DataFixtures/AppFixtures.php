@@ -14,6 +14,7 @@ use App\Entity\Event;
 use App\Entity\Menu;
 use App\Entity\MenuItem;
 use App\Entity\Permission;
+use App\Entity\RoutePermission;
 use App\Entity\Role;
 use App\Entity\User;
 use App\Entity\UserDetails;
@@ -38,6 +39,9 @@ class AppFixtures extends Fixture
 
         // Create roles
         $roles = $this->createRoles($manager, $permissions);
+
+        // Let editors manage the blog and events in the admin
+        $this->createRoutePermissions($manager, $permissions);
 
         // Create admin user
         $admin = $this->createAdminUser($manager, $roles['admin']);
@@ -80,6 +84,8 @@ class AppFixtures extends Fixture
             'user.delete' => 'Delete users',
             'admin.access' => 'Access admin panel',
             'menu.manage' => 'Manage menus',
+            'checklist.own' => 'Make checklists and manage your own (from the profile page)',
+            'checklist.manage' => 'Manage every checklist, the field types and the shared answers',
         ];
 
         $permissions = [];
@@ -93,6 +99,24 @@ class AppFixtures extends Fixture
 
         $manager->flush();
         return $permissions;
+    }
+
+    /** @param array<string, Permission> $permissions */
+    private function createRoutePermissions(ObjectManager $manager, array $permissions): void
+    {
+        $rules = [
+            'admin_blog_*' => ['blog.edit', 'Blog posts and comments'],
+            'admin_event_*' => ['event.edit', 'Events'],
+            'admin_checklist_*' => ['checklist.own', 'Own checklists (only their own; checklist.manage for all)'],
+        ];
+
+        foreach ($rules as $pattern => [$permissionName, $description]) {
+            $rule = (new RoutePermission())
+                ->setRoutePattern($pattern)
+                ->setPermission($permissions[$permissionName])
+                ->setDescription($description);
+            $manager->persist($rule);
+        }
     }
 
     private function createRoles(ObjectManager $manager, array $permissions): array
@@ -111,6 +135,8 @@ class AppFixtures extends Fixture
         $editorRole->setName('ROLE_EDITOR');
         $editorRole->setDescription('Content editor');
         $editorPermissions = [
+            'admin.access',
+            'checklist.own',
             'blog.view', 'blog.create', 'blog.edit', 'blog.publish',
             'event.view', 'event.create', 'event.edit',
             'user.view',

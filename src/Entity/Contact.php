@@ -49,6 +49,10 @@ class Contact
     #[Assert\NotBlank]
     private string $message;
 
+    /** When an admin first opened the message; null = unread (counted in the admin menu) */
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $readAt = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -70,7 +74,7 @@ class Contact
         return match ($this->salutation) {
             self::SALUTATION_MR => 'De heer',
             self::SALUTATION_MRS => 'Mevrouw',
-            self::SALUTATION_UND => 'Undefined',
+            self::SALUTATION_UND => 'Geen voorkeur',
             default => 'Onbekend',
         };
     }
@@ -122,5 +126,21 @@ class Contact
     public function __toString(): string
     {
         return $this->subject;
+    }
+
+    public function getReadAt(): ?\DateTimeImmutable
+    {
+        return $this->readAt;
+    }
+
+    public function isRead(): bool
+    {
+        return $this->readAt !== null;
+    }
+
+    public function markRead(): self
+    {
+        $this->readAt ??= new \DateTimeImmutable();
+        return $this;
     }
 }

@@ -143,12 +143,12 @@ class AgendaControllerTest extends WebTestCase
         $form['agenda_item[endTime]'] = '19:00';
         $this->client->submit($form);
         $this->assertResponseStatusCodeSame(422);
-        $this->assertStringContainsString('The end must be after the start.', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('Het einde moet na het begin liggen.', $this->client->getResponse()->getContent());
 
         $form['agenda_item[startTime]'] = '';
         $this->client->submit($form);
         $this->assertResponseStatusCodeSame(422);
-        $this->assertStringContainsString('Enter a start time', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('Vul een starttijd in', $this->client->getResponse()->getContent());
     }
 
     public function testDeletingAnItemNeedsAValidToken(): void

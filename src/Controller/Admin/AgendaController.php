@@ -75,7 +75,7 @@ class AgendaController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->persist($agenda);
             $this->em->flush();
-            $this->addFlash('success', sprintf('Agenda "%s" created.', $agenda->getTitle()));
+            $this->addFlash('success', sprintf('Agenda "%s" aangemaakt.', $agenda->getTitle()));
 
             return $this->redirectToRoute('admin_agenda_agendas');
         }
@@ -93,7 +93,7 @@ class AgendaController extends AbstractController
             $agenda->setDateChanged(new \DateTimeImmutable());
             $agenda->setChangedBy($this->getAppUser());
             $this->em->flush();
-            $this->addFlash('success', sprintf('Agenda "%s" saved.', $agenda->getTitle()));
+            $this->addFlash('success', sprintf('Agenda "%s" opgeslagen.', $agenda->getTitle()));
 
             return $this->redirectToRoute('admin_agenda_agendas');
         }
@@ -117,12 +117,12 @@ class AgendaController extends AbstractController
     public function delete(Request $request, Agenda $agenda): JsonResponse
     {
         if (!$this->isValidToken($request, 'delete_agenda' . $agenda->getId())) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken'], 403);
         }
 
         $this->em->remove($agenda);
         $this->em->flush();
-        $this->addFlash('success', sprintf('Agenda "%s" and its items have been deleted.', $agenda->getTitle()));
+        $this->addFlash('success', sprintf('Agenda "%s" en de bijbehorende items zijn verwijderd.', $agenda->getTitle()));
 
         return new JsonResponse(['success' => true]);
     }
@@ -132,12 +132,12 @@ class AgendaController extends AbstractController
     public function regenerateFeedToken(Request $request, Agenda $agenda): JsonResponse
     {
         if (!$this->isValidToken($request, 'feed_token' . $agenda->getId())) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken'], 403);
         }
 
         $agenda->regenerateFeedToken();
         $this->em->flush();
-        $this->addFlash('success', sprintf('The feed link of "%s" has been renewed; the old link no longer works.', $agenda->getTitle()));
+        $this->addFlash('success', sprintf('De feedlink van "%s" is vernieuwd; de oude link werkt niet meer.', $agenda->getTitle()));
 
         return new JsonResponse(['success' => true]);
     }
@@ -147,13 +147,13 @@ class AgendaController extends AbstractController
     public function import(Request $request, Agenda $agenda, AgendaIcal $ical): Response
     {
         if ($agenda->isGoogleLinked()) {
-            $this->addFlash('warning', 'This agenda follows a Google calendar; importing into it is not possible.');
+            $this->addFlash('warning', 'Deze agenda volgt een Google-agenda; importeren is hier niet mogelijk.');
 
             return $this->redirectToRoute('admin_agenda_agendas');
         }
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('import_agenda' . $agenda->getId(), (string) $request->request->get('_token'))) {
-                throw $this->createAccessDeniedException('Invalid CSRF token');
+                throw $this->createAccessDeniedException('Ongeldig beveiligingstoken');
             }
 
             try {
@@ -164,15 +164,15 @@ class AgendaController extends AbstractController
                 } elseif ($url !== '') {
                     $ics = $ical->download($url);
                 } else {
-                    throw new \InvalidArgumentException('Enter a link or choose an .ics file.');
+                    throw new \InvalidArgumentException('Vul een link in of kies een .ics-bestand.');
                 }
 
                 $result = $ical->import($agenda, $ics);
                 $this->addFlash('success', sprintf(
-                    'Import finished: %d new, %d updated%s.',
+                    'Import klaar: %d nieuw, %d bijgewerkt%s.',
                     $result['created'],
                     $result['updated'],
-                    $result['skipped'] ? sprintf(', %d skipped', $result['skipped']) : ''
+                    $result['skipped'] ? sprintf(', %d overgeslagen', $result['skipped']) : ''
                 ));
 
                 return $this->redirectToRoute('admin_agenda_index', ['agendas' => [$agenda->getId()]]);
@@ -202,7 +202,7 @@ class AgendaController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->persist($item);
             $this->em->flush();
-            $this->addFlash('success', sprintf('"%s" added to the agenda.', $item->getTitle()));
+            $this->addFlash('success', sprintf('"%s" toegevoegd aan de agenda.', $item->getTitle()));
 
             return $this->redirectToCalendar($item);
         }
@@ -214,7 +214,7 @@ class AgendaController extends AbstractController
     public function editItem(Request $request, AgendaItem $item): Response
     {
         if ($item->getAgenda()?->isGoogleLinked()) {
-            $this->addFlash('warning', 'This item comes from Google Calendar; change it there. It is updated here automatically.');
+            $this->addFlash('warning', 'Dit item komt uit Google Agenda; wijzig het daar. Het wordt hier automatisch bijgewerkt.');
 
             return $this->redirectToCalendar($item);
         }
@@ -226,7 +226,7 @@ class AgendaController extends AbstractController
             $item->setDateChanged(new \DateTimeImmutable());
             $item->setChangedBy($this->getAppUser());
             $this->em->flush();
-            $this->addFlash('success', sprintf('"%s" saved.', $item->getTitle()));
+            $this->addFlash('success', sprintf('"%s" opgeslagen.', $item->getTitle()));
 
             return $this->redirectToCalendar($item);
         }
@@ -238,10 +238,10 @@ class AgendaController extends AbstractController
     public function deleteItem(Request $request, AgendaItem $item): JsonResponse
     {
         if (!$this->isValidToken($request, 'delete_agenda_item' . $item->getId())) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken'], 403);
         }
         if ($item->getAgenda()?->isGoogleLinked()) {
-            return new JsonResponse(['success' => false, 'message' => 'This item comes from Google Calendar; delete it there.'], 409);
+            return new JsonResponse(['success' => false, 'message' => 'Dit item komt uit Google Agenda; verwijder het daar.'], 409);
         }
 
         $this->em->remove($item);
@@ -253,7 +253,7 @@ class AgendaController extends AbstractController
     private function setArchived(Request $request, Agenda $agenda, bool $archived): JsonResponse
     {
         if (!$this->isValidToken($request, ($archived ? 'archive_agenda' : 'unarchive_agenda') . $agenda->getId())) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken'], 403);
         }
 
         $agenda->setDeleted($archived);

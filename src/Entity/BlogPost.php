@@ -13,7 +13,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: BlogPostRepository::class)]
 #[ORM\Table(name: 'blog_post')]
-#[UniqueEntity(fields: ['slug'], message: 'This slug is already in use')]
+#[UniqueEntity(fields: ['slug'], message: 'Deze slug is al in gebruik')]
 #[ORM\HasLifecycleCallbacks]
 class BlogPost
 {
@@ -156,6 +156,17 @@ class BlogPost
     public function isOnline(): bool
     {
         return $this->status === self::STATUS_ONLINE;
+    }
+
+    /**
+     * Same rules as the public listings in BlogPostRepository.
+     */
+    public function isVisibleOn(\DateTimeImmutable $now): bool
+    {
+        return $this->isOnline()
+            && !$this->isDeleted()
+            && ($this->dateOnline === null || $this->dateOnline <= $now)
+            && ($this->dateOffline === null || $this->dateOffline >= $now);
     }
 
     public function isDraft(): bool
@@ -335,6 +346,14 @@ class BlogPost
     public function getCommentCount(): int
     {
         return $this->comments->count();
+    }
+
+    /**
+     * Comments the public sees, replies included (getCommentCount() also counts pending and deleted ones).
+     */
+    public function getPublishedCommentCount(): int
+    {
+        return $this->comments->filter(fn(BlogComment $c) => $c->isPublished())->count();
     }
 
     public function isScheduledForPublishing(): bool

@@ -114,7 +114,7 @@ class CheckListItemFormTest extends WebTestCase
         $this->client->submit($form);
 
         $this->assertResponseStatusCodeSame(422);
-        $this->assertSelectorTextContains('.invalid-feedback', 'This field is required.');
+        $this->assertSelectorTextContains('.invalid-feedback', 'Dit veld is verplicht.');
     }
 
     public function testConditionIsRenderedForTheBrowser(): void
@@ -197,7 +197,7 @@ class CheckListItemFormTest extends WebTestCase
     {
         $this->createField($this->checkList, 'Mail', 'email', ['allowedEmailDomains' => '.nl, voorbeeld.com']);
 
-        foreach (['geen-email' => 'This is not a valid email address.', 'jan@gmail.com' => 'This email domain is not allowed.'] as $email => $message) {
+        foreach (['geen-email' => 'Dit is geen geldig e-mailadres.', 'jan@gmail.com' => 'Dit e-maildomein is niet toegestaan.'] as $email => $message) {
             $form = $this->newForm();
             $form['check_list_item[field_mail]'] = $email;
             $this->client->submit($form);
@@ -235,8 +235,8 @@ class CheckListItemFormTest extends WebTestCase
         $crawler = $this->client->request('GET', $this->newUrl());
         $content = html_entity_decode(strip_tags((string) $crawler->filter('.js-field-info')->attr('data-bs-content')));
 
-        $this->assertStringContainsString('Maximum 2 MB', $content);
-        $this->assertStringContainsString('Allowed file types: pdf, jpg', $content);
+        $this->assertStringContainsString('Maximaal 2 MB', $content);
+        $this->assertStringContainsString('Toegestane bestandstypen: pdf, jpg', $content);
     }
 
     public function testUploadIsStoredAndKeptWhenSavingWithoutANewFile(): void

@@ -1,3 +1,8 @@
-doctrine_fixtures:
-    paths:
-        - '%kernel.project_dir%/src/DataFixtures'
+# The fixtures bundle is only installed for development and tests (require-dev), so its configuration
+# must not be loaded in production (composer install --no-dev): the site wouldn't start there.
+when@dev: &fixtures
+    doctrine_fixtures:
+        paths:
+            - '%kernel.project_dir%/src/DataFixtures'
+
+when@test: *fixtures

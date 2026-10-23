@@ -4,19 +4,13 @@
  * data-youtube-add-url) and images, files and videos are uploaded right away. Delete buttons (.delete-image etc.)
  * and status buttons (.change-status) carry their own data-delete-url / data-status-url and data-csrf-token.
  * Deleting confirms in #deleteImageModal / #deleteFileModal / #deleteYoutubeModal when the page has them,
- * otherwise with a browser confirm.
+ * otherwise in AppDialog (core/dialog.js), like errors.
  */
 (function () {
     const config = document.currentScript.dataset;
 
     function showError(message) {
-        const errorModal = document.getElementById('errorModal');
-        if (errorModal) {
-            document.getElementById('errorModalMessage').textContent = message;
-            new bootstrap.Modal(errorModal).show();
-        } else {
-            alert(message);
-        }
+        AppDialog.alert(message);
     }
 
     function postJson(url, body, headers) {
@@ -42,10 +36,10 @@
                     if (data.success) {
                         location.reload();
                     } else {
-                        showError(data.message || 'Unknown error');
+                        showError(data.message || 'Onbekende fout');
                     }
                 })
-                .catch(err => showError('Request failed: ' + err.message));
+                .catch(err => showError('Verzoek mislukt: ' + err.message));
         });
     }
 
@@ -64,10 +58,10 @@
                         }
                         location.reload();
                     } else {
-                        showError(data.message || 'Unknown error');
+                        showError(data.message || 'Onbekende fout');
                     }
                 })
-                .catch(err => showError('Request failed: ' + err.message));
+                .catch(err => showError('Verzoek mislukt: ' + err.message));
         }
 
         document.querySelectorAll(selector).forEach(button => {
@@ -75,8 +69,8 @@
                 current = this;
                 if (modal) {
                     modal.show();
-                } else if (confirm(confirmText)) {
-                    remove();
+                } else {
+                    AppDialog.confirm(confirmText, { confirmLabel: 'Verwijderen', confirmIcon: 'fa-trash' }).then(ok => ok && remove());
                 }
             });
         });
@@ -94,9 +88,7 @@
     function bindFormRemove(selector, itemSelector, confirmText) {
         document.querySelectorAll(selector).forEach(button => {
             button.addEventListener('click', function () {
-                if (confirm(confirmText)) {
-                    this.closest(itemSelector).remove();
-                }
+                AppDialog.confirm(confirmText, { confirmLabel: 'Weghalen' }).then(ok => ok && this.closest(itemSelector).remove());
             });
         });
     }
@@ -106,13 +98,13 @@
         bindUpload('fileUploadForm', config.fileUploadUrl);
         bindUpload('youtubeForm', config.youtubeAddUrl);
 
-        bindDelete('.delete-image', 'deleteImageModal', 'confirmDeleteImage', 'Delete this image?');
-        bindDelete('.delete-file', 'deleteFileModal', 'confirmDeleteFile', 'Delete this file?');
-        bindDelete('.delete-youtube', 'deleteYoutubeModal', 'confirmDeleteYoutube', 'Delete this video?');
+        bindDelete('.delete-image', 'deleteImageModal', 'confirmDeleteImage', 'Deze afbeelding verwijderen?');
+        bindDelete('.delete-file', 'deleteFileModal', 'confirmDeleteFile', 'Dit bestand verwijderen?');
+        bindDelete('.delete-youtube', 'deleteYoutubeModal', 'confirmDeleteYoutube', 'Deze video verwijderen?');
 
-        bindFormRemove('.remove-form-image', '.image-item', 'Remove this image?');
-        bindFormRemove('.remove-form-file', '.file-item', 'Remove this file?');
-        bindFormRemove('.remove-form-youtube', '.youtube-item', 'Remove this video?');
+        bindFormRemove('.remove-form-image', '.image-item', 'Deze afbeelding weghalen?');
+        bindFormRemove('.remove-form-file', '.file-item', 'Dit bestand weghalen?');
+        bindFormRemove('.remove-form-youtube', '.youtube-item', 'Deze video weghalen?');
 
         document.querySelectorAll('.change-status').forEach(button => {
             button.addEventListener('click', function (event) {

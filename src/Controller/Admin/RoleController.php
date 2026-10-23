@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
-use App\Entity\Permission;
 use App\Entity\Role;
 use App\Form\RoleType;
 use App\Repository\RoleRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -23,6 +22,7 @@ class RoleController extends AbstractController
 {
     public function __construct(
         private RoleRepository $roleRepository,
+        private UserRepository $userRepository,
         private EntityManagerInterface $em,
         private PaginatorInterface $paginator
     ) {}
@@ -54,6 +54,7 @@ class RoleController extends AbstractController
         return $this->render('admin/role/index.html.twig', [
             'pagination' => $pagination,
             'search' => $search,
+            'userCounts' => $this->userRepository->countPerRole(),
         ]);
     }
 
@@ -69,7 +70,7 @@ class RoleController extends AbstractController
             $this->em->persist($role);
             $this->em->flush();
 
-            $this->addFlash('success', 'Role created successfully.');
+            $this->addFlash('success', 'Rol aangemaakt.');
 
             return $this->redirectToRoute('admin_role_edit', ['id' => $role->getId()]);
         }
@@ -89,7 +90,7 @@ class RoleController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
 
-            $this->addFlash('success', 'Role updated successfully.');
+            $this->addFlash('success', 'Rol opgeslagen.');
 
             return $this->redirectToRoute('admin_role_edit', ['id' => $role->getId()]);
         }
@@ -97,6 +98,7 @@ class RoleController extends AbstractController
         return $this->render('admin/role/edit.html.twig', [
             'form' => $form,
             'role' => $role,
+            'userCount' => $this->userRepository->countPerRole()[$role->getId()] ?? 0,
         ]);
     }
 
@@ -104,9 +106,23 @@ class RoleController extends AbstractController
     public function delete(Request $request, Role $role): Response
     {
         if ($this->isCsrfTokenValid('delete' . $role->getId(), $request->request->get('_token'))) {
-            $this->em->remove($role);
-            $this->em->flush();
-            $this->addFlash('success', 'Role deleted successfully.');
+            $userCount = $this->userRepository->countPerRole()[$role->getId()] ?? 0;
+
+            if ($role->isSystemRole()) {
+                $this->addFlash('danger', sprintf('%s is een systeemrol en kan niet worden verwijderd.', $role->getName()));
+            } elseif ($userCount > 0) {
+                $this->addFlash('danger', sprintf('%s is nog toegekend aan %d gebruiker(s). Haal de rol eerst bij hen weg.', $role->getName(), $userCount));
+            } else {
+                foreach ($role->getParentRoles()->toArray() as $parent) {
+                    $role->removeParent($parent);
+                }
+                foreach ($role->getChildRoles()->toArray() as $child) {
+                    $role->removeChild($child);
+                }
+                $this->em->remove($role);
+                $this->em->flush();
+                $this->addFlash('success', 'Rol verwijderd.');
+            }
         }
 
         if ($request->isXmlHttpRequest()) {

@@ -16,10 +16,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/menu')]
-#[IsGranted('ROLE_ADMIN')]
 class MenuController extends AbstractController
 {
     public function __construct(
@@ -49,7 +47,7 @@ class MenuController extends AbstractController
             $this->em->persist($menu);
             $this->em->flush();
 
-            $this->addFlash('success', 'Menu created successfully.');
+            $this->addFlash('success', 'Menu aangemaakt.');
 
             return $this->redirectToRoute('admin_menu_index');
         }
@@ -80,7 +78,7 @@ class MenuController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
 
-            $this->addFlash('success', 'Menu updated successfully.');
+            $this->addFlash('success', 'Menu opgeslagen.');
 
             return $this->redirectToRoute('admin_menu_index');
         }
@@ -97,7 +95,7 @@ class MenuController extends AbstractController
         if ($this->isCsrfTokenValid('delete' . $menu->getId(), $request->request->get('_token'))) {
             $this->em->remove($menu);
             $this->em->flush();
-            $this->addFlash('success', 'Menu deleted successfully.');
+            $this->addFlash('success', 'Menu verwijderd.');
         }
 
         if ($request->isXmlHttpRequest()) {
@@ -123,7 +121,7 @@ class MenuController extends AbstractController
             $this->em->persist($item);
             $this->em->flush();
 
-            $this->addFlash('success', 'Menu item created successfully.');
+            $this->addFlash('success', 'Menu-item aangemaakt.');
 
             return $this->redirectToRoute('admin_menu_show', ['id' => $menu->getId()]);
         }
@@ -147,7 +145,7 @@ class MenuController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->flush();
 
-            $this->addFlash('success', 'Menu item updated successfully.');
+            $this->addFlash('success', 'Menu-item opgeslagen.');
 
             return $this->redirectToRoute('admin_menu_show', ['id' => $menu->getId()]);
         }
@@ -165,7 +163,7 @@ class MenuController extends AbstractController
         if ($this->isCsrfTokenValid('delete' . $item->getId(), $request->request->get('_token'))) {
             $this->em->remove($item);
             $this->em->flush();
-            $this->addFlash('success', 'Menu item deleted successfully.');
+            $this->addFlash('success', 'Menu-item verwijderd.');
         }
 
         if ($request->isXmlHttpRequest()) {
@@ -175,21 +173,44 @@ class MenuController extends AbstractController
         return $this->redirectToRoute('admin_menu_show', ['id' => $menu->getId()]);
     }
 
-    #[Route('/item/{id}/reorder', name: 'admin_menu_item_reorder', methods: ['POST'])]
-    public function reorderItem(Request $request, MenuItem $item): JsonResponse
+    /**
+     * Saves the order after a drag: for each list that changed, its parent item (null = top level) and its items
+     * in their new order. All of them are numbered 1, 2, 3, ..., so no two items share a position.
+     * JSON body: {"_token": "...", "lists": [{"parentId": 12|null, "items": [5, 3, 9]}]}
+     */
+    #[Route('/{id}/reorder', name: 'admin_menu_reorder', methods: ['POST'])]
+    public function reorder(Request $request, Menu $menu): JsonResponse
     {
-        $newOrder = (int) $request->request->get('sortOrder', 0);
-        $newParentId = $request->request->get('parentId');
+        $data = json_decode($request->getContent(), true);
+        if (!is_array($data) || !$this->isCsrfTokenValid('menu_reorder' . $menu->getId(), (string) ($data['_token'] ?? ''))) {
+            return new JsonResponse(['success' => false, 'message' => 'Je sessie is verlopen, herlaad de pagina.'], 403);
+        }
 
-        $item->setSortOrder($newOrder);
+        $items = [];
+        foreach ($menu->getMenuItems() as $item) {
+            $items[$item->getId()] = $item;
+        }
 
-        if ($newParentId !== null) {
-            $newParent = $this->menuItemRepository->find($newParentId);
-            if ($newParent && $newParent->getMenu() === $item->getMenu()) {
-                $item->setParent($newParent);
+        foreach ((array) ($data['lists'] ?? []) as $list) {
+            $parentId = $list['parentId'] ?? null;
+            $parent = $parentId !== null ? ($items[(int) $parentId] ?? null) : null;
+            if ($parentId !== null && $parent === null) {
+                return new JsonResponse(['success' => false, 'message' => 'Onbekend bovenliggend item.'], 400);
             }
-        } else {
-            $item->setParent(null);
+            foreach (array_values((array) ($list['items'] ?? [])) as $position => $id) {
+                $item = $items[(int) $id] ?? null;
+                if ($item === null) {
+                    return new JsonResponse(['success' => false, 'message' => 'Onbekend menu-item.'], 400);
+                }
+                // An item can't go under itself or one of its own sub-items
+                for ($ancestor = $parent; $ancestor !== null; $ancestor = $ancestor->getParent()) {
+                    if ($ancestor === $item) {
+                        return new JsonResponse(['success' => false, 'message' => 'Een item kan niet in zijn eigen submenu worden geplaatst.'], 400);
+                    }
+                }
+                $item->setParent($parent);
+                $item->setSortOrder($position + 1);
+            }
         }
 
         $this->em->flush();

@@ -46,30 +46,30 @@ class BlogPostType extends AbstractType
 
         $builder
             ->add('title', TextType::class, [
-                'label' => 'Title',
-                'attr' => ['placeholder' => 'Enter blog post title'],
+                'label' => 'Titel',
+                'attr' => ['placeholder' => 'Titel van het bericht'],
             ])
             ->add('introText', TextareaType::class, [
-                'label' => 'Introduction',
-                'attr' => ['rows' => 3, 'placeholder' => 'Short introduction (shown in lists)'],
+                'label' => 'Inleiding',
+                'attr' => ['rows' => 3, 'placeholder' => 'Korte inleiding (zichtbaar in overzichten)'],
             ])
             ->add('content', TextareaType::class, [
-                'label' => 'Content',
+                'label' => 'Inhoud',
                 'attr' => ['rows' => 20],
             ])
             ->add('status', \Symfony\Component\Form\Extension\Core\Type\ChoiceType::class, [
                 'label' => 'Status',
                 'choices' => [
-                    'Draft' => BlogPost::STATUS_DRAFT,
+                    'Concept' =>BlogPost::STATUS_DRAFT,
                     'Online' => BlogPost::STATUS_ONLINE,
                     'Offline' => BlogPost::STATUS_OFFLINE,
-                    'Archived' => BlogPost::STATUS_ARCHIVED,
+                    'Gearchiveerd' =>BlogPost::STATUS_ARCHIVED,
                 ],
                 'expanded' => false,
                 'multiple' => false,
             ])
             ->add('categories', EntityType::class, [
-                'label' => 'Categories',
+                'label' => 'Categorieën',
                 'class' => Category::class,
                 'choice_label' => 'name',
                 'multiple' => true,
@@ -80,28 +80,28 @@ class BlogPostType extends AbstractType
                 'required' => false,
             ])
             ->add('dateOnline', DateType::class, [
-                'label' => 'Publish Date',
+                'label' => 'Publicatiedatum',
                 'required' => false,
                 'widget' => 'single_text',
                 'html5' => true,
-                'attr' => ['placeholder' => 'Leave empty for immediate'],
+                'attr' => ['placeholder' => 'Leeg = direct'],
             ])
             ->add('timeOnline', TimeType::class, [
-                'label' => 'Publish Time',
+                'label' => 'Publicatietijd',
                 'required' => false,
                 'widget' => 'single_text',
                 'html5' => true,
                 'data' => new \DateTimeImmutable('09:00:00'),
             ])
             ->add('dateOffline', DateType::class, [
-                'label' => 'Unpublish Date',
+                'label' => 'Offline vanaf (datum)',
                 'required' => false,
                 'widget' => 'single_text',
                 'html5' => true,
-                'attr' => ['placeholder' => 'Leave empty for no expiry'],
+                'attr' => ['placeholder' => 'Leeg = blijft online'],
             ])
             ->add('timeOffline', TimeType::class, [
-                'label' => 'Unpublish Time',
+                'label' => 'Offline vanaf (tijd)',
                 'required' => false,
                 'widget' => 'single_text',
                 'html5' => true,

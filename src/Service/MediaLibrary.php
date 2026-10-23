@@ -44,7 +44,7 @@ class MediaLibrary
     {
         $absolute = $this->resolve($folder);
         if (!is_dir($absolute)) {
-            throw new \InvalidArgumentException(sprintf('"%s" is not a folder.', $folder));
+            throw new \InvalidArgumentException(sprintf('"%s" is geen map.', $folder));
         }
 
         $entries = [];
@@ -88,16 +88,16 @@ class MediaLibrary
     {
         $absolute = $this->resolve($path);
         if ($absolute === $this->uploadsDir) {
-            throw new \InvalidArgumentException('The uploads folder itself can\'t be deleted.');
+            throw new \InvalidArgumentException('De uploadmap zelf kan niet worden verwijderd.');
         }
         if (!file_exists($absolute)) {
-            throw new \InvalidArgumentException(sprintf('"%s" doesn\'t exist.', $path));
+            throw new \InvalidArgumentException(sprintf('"%s" bestaat niet.', $path));
         }
 
         if (is_dir($absolute)) {
             $inUse = array_filter(iterator_to_array($this->walk($absolute), false), fn (\SplFileInfo $file) => $this->usageOf($this->relative($file->getPathname())) !== null);
             if ($inUse !== []) {
-                throw new \InvalidArgumentException(sprintf('The folder contains %d file(s) that are still in use.', count($inUse)));
+                throw new \InvalidArgumentException(sprintf('De map bevat %d bestand(en) die nog in gebruik zijn.', count($inUse)));
             }
             $this->removeFolder($absolute);
 
@@ -105,7 +105,7 @@ class MediaLibrary
         }
 
         if ($usedBy = $this->usageOf($this->relative($absolute))) {
-            throw new \InvalidArgumentException(sprintf('This file is still in use (%s).', $usedBy));
+            throw new \InvalidArgumentException(sprintf('Dit bestand is nog in gebruik (%s).', $usedBy));
         }
         unlink($absolute);
     }
@@ -245,7 +245,7 @@ class MediaLibrary
             }
             if ($part === '..') {
                 if ($parts === []) {
-                    throw new \InvalidArgumentException('The path is outside the uploads folder.');
+                    throw new \InvalidArgumentException('Het pad ligt buiten de uploadmap.');
                 }
                 array_pop($parts);
                 continue;
@@ -263,7 +263,7 @@ class MediaLibrary
         $real = realpath($absolute);
         $root = realpath($this->uploadsDir);
         if ($real !== false && $root !== false && $real !== $root && !str_starts_with($real, $root . '/')) {
-            throw new \InvalidArgumentException('The path is outside the uploads folder.');
+            throw new \InvalidArgumentException('Het pad ligt buiten de uploadmap.');
         }
 
         return $absolute;
@@ -358,13 +358,13 @@ class MediaLibrary
             }
             foreach ($this->em->getRepository(Event::class)->findAll() as $event) {
                 if ($image = $event->getEventImage()) {
-                    $this->addUsage($image, 'Event: ' . $event->getTitle());
+                    $this->addUsage($image, 'Evenement: ' . $event->getTitle());
                 }
             }
             // Records not attached to anything still own their file: the check pages handle those
             foreach ([BlogImage::class, BlogFile::class] as $class) {
                 foreach ($this->em->getRepository($class)->findAll() as $record) {
-                    $this->addUsage($record, 'Unattached ' . ($record instanceof BlogImage ? 'image' : 'file') . ' record #' . $record->getId());
+                    $this->addUsage($record, 'Losse ' . ($record instanceof BlogImage ? 'afbeelding' : 'bestand') . ' #' . $record->getId());
                 }
             }
         }
@@ -381,15 +381,15 @@ class MediaLibrary
     }
 
     /**
-     * Relative path of a record's file. Records store an absolute folder ("/var/www/…/public/uploads/blog/images"),
-     * which differs per server, so everything after "uploads/" is used.
+     * Relative path of a record's file. Records store a folder relative to public/ ("uploads/blog/images"), or an
+     * absolute folder that differs per server ("/var/www/…/public/uploads/blog/images"); everything after "uploads/" is used.
      */
     private function recordPath(BlogImage|BlogFile $record): ?string
     {
         if ($this->isExternal($record->getPath())) {
             return null;
         }
-        $full = rtrim(str_replace('\\', '/', $record->getPath()), '/') . '/' . $record->getFilename();
+        $full = '/' . trim(str_replace('\\', '/', $record->getPath()), '/') . '/' . $record->getFilename();
         if (str_starts_with($full, $this->uploadsDir . '/')) {
             return $this->relative($full);
         }

@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', function () {
             deleteId = this.dataset.id;
             deleteToken = this.dataset.csrfToken;
-            document.getElementById('deleteModalMessage').textContent = 'Delete message "' + this.dataset.subject + '"?';
+            document.getElementById('deleteModalMessage').textContent = 'Bericht "' + this.dataset.subject + '" verwijderen?';
             deleteModal.show();
         });
     });
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (data.success) {
                         location.reload();
                     } else {
-                        alert(data.message || 'Failed to delete');
+                        AppDialog.alert(data.message || 'Verwijderen mislukt');
                     }
                 });
         });
@@ -88,25 +88,25 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', function () {
             const resetButton = () => {
                 this.disabled = false;
-                this.innerHTML = '<i class="fas fa-sync me-1"></i>Sync';
+                this.innerHTML = '<i class="fas fa-sync me-1"></i>Synchroniseren';
             };
             this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Syncing...';
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Synchroniseren...';
 
             post(imapMessagesConfig.syncUrl.replace('__ID__', this.dataset.id), '_token=' + encodeURIComponent(this.dataset.csrfToken) + '&folder=' + encodeURIComponent(this.dataset.folder) + '&limit=100')
                 .then(res => res.json())
                 .then(data => {
                     resetButton();
                     if (data.success) {
-                        alert('Synced: ' + data.synced + ' messages, ' + data.new + ' new');
-                        location.reload();
+                        AppDialog.alert('Gesynchroniseerd: ' + data.synced + ' berichten, ' + data.new + ' nieuw', { type: 'success' })
+                            .then(() => location.reload());
                     } else {
-                        alert('Sync failed: ' + data.message);
+                        AppDialog.alert('Synchroniseren mislukt: ' + data.message);
                     }
                 })
                 .catch(err => {
                     resetButton();
-                    alert('Sync error: ' + err.message);
+                    AppDialog.alert('Fout bij synchroniseren: ' + err.message);
                 });
         });
     });
@@ -123,8 +123,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (bulkDeleteBtn) {
             bulkDeleteBtn.disabled = checkedCount === 0;
             bulkDeleteBtn.innerHTML = checkedCount > 0
-                ? '<i class="fas fa-trash-alt me-1"></i>Delete Permanently (' + checkedCount + ')'
-                : '<i class="fas fa-trash-alt me-1"></i>Delete Permanently';
+                ? '<i class="fas fa-trash-alt me-1"></i>Definitief verwijderen (' + checkedCount + ')'
+                : '<i class="fas fa-trash-alt me-1"></i>Definitief verwijderen';
         }
     }
 
@@ -154,19 +154,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 const ids = Array.from(checked).map(cb => cb.value);
                 const subjects = Array.from(checked).map(cb => cb.dataset.subject).filter(s => s);
 
-                let message = 'Permanently delete ' + ids.length + ' message(s)';
+                let message = ids.length + ' bericht(en) definitief verwijderen';
                 if (subjects.length > 0) {
                     message += ': ' + subjects.slice(0, 3).join(', ');
                     if (subjects.length > 3) {
-                        message += ' and ' + (subjects.length - 3) + ' more';
+                        message += ' en nog ' + (subjects.length - 3);
                     }
                 }
-                message += '? This action cannot be undone.';
+                message += '? Dit kan niet ongedaan worden gemaakt.';
 
-                if (confirm(message)) {
-                    bulkDeleteMessageIds.value = ids.join(',');
-                    bulkDeleteForm.submit();
-                }
+                AppDialog.confirm(message, { title: 'Definitief verwijderen', confirmLabel: 'Definitief verwijderen', confirmIcon: 'fa-trash-alt' }).then(ok => {
+                    if (ok) {
+                        bulkDeleteMessageIds.value = ids.join(',');
+                        bulkDeleteForm.submit();
+                    }
+                });
             });
         }
     }
@@ -189,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-sync"></i>';
                     if (!data.success || !data.folders) {
-                        alert('Failed to refresh folders: ' + (data.message || 'Unknown error'));
+                        AppDialog.alert('Mappen vernieuwen mislukt: ' + (data.message || 'Onbekende fout'));
                         return;
                     }
                     const folderList = document.getElementById('folderList');

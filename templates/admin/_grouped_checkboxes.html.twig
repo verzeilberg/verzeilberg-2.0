@@ -1,0 +1,26 @@
+{# Expanded multiple-choice field with group_by, rendered as one column of checkboxes per group.
+   Usage: {% include 'admin/_grouped_checkboxes.html.twig' with {field: form.permissions} %} #}
+<div class="row g-3">
+    {% for groupLabel, group in field.vars.choices %}
+        <div class="col-sm-6 col-lg-4">
+            <fieldset class="border rounded p-2 h-100">
+                {% if group.choices is defined %}
+                    <legend class="float-none w-auto px-1 fs-6 fw-semibold text-capitalize mb-1">{{ groupLabel }}</legend>
+                    {% set choices = group.choices %}
+                {% else %}
+                    {% set choices = [group] %}
+                {% endif %}
+                {% for choice in choices %}
+                    {% set child = field[choice.value] %}
+                    <div class="form-check">
+                        {{ form_widget(child) }}
+                        <label class="form-check-label font-monospace small" for="{{ child.vars.id }}">{{ choice.label }}</label>
+                        {% if choice.attr.title is defined and choice.attr.title %}<div class="form-text mt-0 small">{{ choice.attr.title }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+            </fieldset>
+        </div>
+    {% else %}
+        <div class="col"><span class="text-muted">Geen beschikbaar.</span></div>
+    {% endfor %}
+</div>

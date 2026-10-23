@@ -1,0 +1,110 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ profileUser.fullName }} - Gebruikers - Verzeilberg.nl{% endblock %}
+
+{% block page_title %}{{ profileUser.fullName }}{% endblock %}
+{% block page_lead %}{{ profileUser.details ? profileUser.details.catchLine }}{% endblock %}
+{% block page_actions %}
+    <a href="{{ path('app_users') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Alle gebruikers</a>
+{% endblock %}
+
+{% block body %}
+{% if not profileUser.profilePublic %}
+    <div class="alert alert-warning">
+        <i class="fas fa-lock me-2"></i>Deze pagina is privé: alleen {{ isOwner ? 'jij' : 'de eigenaar' }}, {{ isOwner ? 'jouw' : 'diens' }} vrienden en beheerders kunnen hem zien.
+        {% if isOwner %}<a href="{{ path('app_profile') }}">Maak hem openbaar via je profiel.</a>{% endif %}
+    </div>
+{% endif %}
+
+<div class="row g-4">
+    <aside class="col-lg-4">
+        <div class="card">
+            <div class="card-body text-center">
+                {{ include('user/_avatar.html.twig', {user: profileUser, avatarClass: 'profile-avatar mb-3'}) }}
+                <h2 class="h3 mb-1">{{ profileUser.fullName }}</h2>
+
+                {% set details = profileUser.details %}
+                {% if details and (details.location or details.website) %}
+                    <div class="card-meta flex-column text-start mt-3">
+                        {% if details.location %}
+                            <span><i class="fas fa-map-marker-alt"></i>{{ details.location }}</span>
+                        {% endif %}
+                        {% if details.website %}
+                            <span><i class="fas fa-globe"></i><a href="{{ details.website }}" target="_blank" rel="noopener nofollow">{{ details.website }}</a></span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if details and details.hasSocialLinks %}
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        {% for platform, url in details.socialLinks %}
+                            <a href="{{ url }}" target="_blank" rel="noopener nofollow" class="btn btn-outline-primary btn-sm" aria-label="{{ platform|capitalize }}">
+                                <i class="fab fa-{{ platform }}"></i>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <p class="text-muted small mt-3 mb-0">Lid sinds {{ profileUser.dateCreated|nl_date('F Y') }}</p>
+
+                {% if app.user and not isOwner and profileUser.active %}
+                    <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mt-3">
+                        {{ include('friend/_actions.html.twig', {other: profileUser}) }}
+                    </div>
+                {% elseif not app.user %}
+                    <p class="small mt-3 mb-0"><a href="{{ path('app_login') }}">Log in</a> om {{ profileUser.fullName }} als vriend toe te voegen.</p>
+                {% endif %}
+            </div>
+        </div>
+    </aside>
+
+    <div class="col-lg-8">
+        <section class="card">
+            <div class="card-header"><h2>Over</h2></div>
+            <div class="card-body">
+                {% if profileUser.details and profileUser.details.bio %}
+                    <p class="mb-0">{{ profileUser.details.bio|nl2br }}</p>
+                {% else %}
+                    <p class="text-muted mb-0">{{ profileUser.fullName }} heeft nog geen bio geschreven.</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="card mt-4">
+            <div class="card-header"><h2>Vrienden <span class="text-muted fw-normal">{{ friends|length }}</span></h2></div>
+            <div class="card-body">
+                {% if friends is empty %}
+                    <p class="text-muted mb-0">{{ isOwner ? 'Je hebt' : profileUser.fullName ~ ' heeft' }} nog geen vrienden om te tonen.</p>
+                {% else %}
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for friend in friends %}
+                            <a href="{{ path('app_user_show', {id: friend.id}) }}" class="d-flex align-items-center gap-2 text-decoration-none">
+                                {{ include('user/_avatar.html.twig', {user: friend, avatarClass: 'user-avatar'}) }}
+                                <span>{{ friend.fullName }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="card mt-4">
+            <div class="card-header"><h2>Recente reacties</h2></div>
+            {% if recentComments is empty %}
+                <div class="card-body">
+                    <p class="text-muted mb-0">{{ isOwner ? 'Je hebt' : profileUser.fullName ~ ' heeft' }} nog geen reacties geplaatst.</p>
+                </div>
+            {% else %}
+                <div class="list-group list-group-flush">
+                    {% for comment in recentComments %}
+                        <a href="{{ path('blog_detail', {slug: comment.blogPost.slug}) }}#comment-{{ comment.id }}" class="list-group-item list-group-item-action">
+                            <small class="text-muted d-block">{{ comment.dateCreated|nl_date('j M Y') }} bij <strong>{{ comment.blogPost.title }}</strong></small>
+                            <span>{{ comment.content|u.truncate(160, '…', false) }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

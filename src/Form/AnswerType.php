@@ -23,15 +23,15 @@ class AnswerType extends AbstractType
                     new NotBlank(),
                     new Length(max: 255),
                 ],
-                'attr' => ['class' => 'form-control', 'placeholder' => 'Display label'],
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Getoonde tekst'],
             ])
             ->add('value', TextType::class, [
-                'label' => 'Value',
+                'label' => 'Waarde',
                 'constraints' => [
                     new NotBlank(),
                     new Length(max: 255),
                 ],
-                'attr' => ['class' => 'form-control', 'placeholder' => 'Internal value'],
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Interne waarde'],
             ]);
     }
 

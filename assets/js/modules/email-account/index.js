@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', function () {
             deleteId = this.dataset.id;
             deleteToken = this.dataset.csrfToken;
-            document.getElementById('deleteModalMessage').textContent = 'Delete email account "' + this.dataset.name + '"? This will also delete all synced messages.';
+            document.getElementById('deleteModalMessage').textContent = 'E-mailaccount "' + this.dataset.name + '" verwijderen? Alle gesynchroniseerde berichten worden ook verwijderd.';
             deleteModal.show();
         });
     });
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data.success) {
                 location.reload();
             } else {
-                alert(data.message || 'Failed to delete');
+                AppDialog.alert(data.message || 'Verwijderen mislukt');
             }
         });
     });
@@ -53,12 +53,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 post(url.replace('__ID__', btn.dataset.id), btn.dataset.csrfToken).then(data => {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas ' + icon + '"></i>';
-                    alert(data.success ? okMessage : failMessage + data.message);
+                    AppDialog.alert(data.success ? okMessage : failMessage + data.message, { type: data.success ? 'success' : 'error' });
                 });
             });
         });
     }
 
-    testButtons('.test-account', emailAccountConfig.testUrl, 'fa-plug', 'Connection successful!', 'Connection failed: ');
-    testButtons('.test-smtp', emailAccountConfig.testSmtpUrl, 'fa-paper-plane', 'SMTP test email sent successfully!', 'SMTP test failed: ');
+    testButtons('.test-account', emailAccountConfig.testUrl, 'fa-plug', 'Verbinding gelukt!', 'Verbinding mislukt: ');
+    testButtons('.test-smtp', emailAccountConfig.testSmtpUrl, 'fa-paper-plane', 'SMTP-testmail verstuurd!', 'SMTP-test mislukt: ');
 });

@@ -1,28 +1,37 @@
-{# 754 → "12.6 hrs", 30 → "30 min" #}
+{# 754 → "12,6 uur", 30 → "30 min" #}
 {% macro playtime(minutes) %}
     {%- if minutes < 60 %}{{ minutes }} min
-    {%- else %}{{ (minutes / 60)|number_format(minutes < 6000 ? 1 : 0, '.', ',') }} hrs
+    {%- else %}{{ (minutes / 60)|number_format(minutes < 6000 ? 1 : 0, ',', '.') }} uur
     {%- endif -%}
 {% endmacro %}
 
 {# "today", "3 days ago", or the date #}
 {% macro last_played(date) %}
-    {%- if date is null %}never
+    {%- if date is null %}nooit
     {%- else %}
         {%- set days = ((('today'|date('U')) - (date|date('Y-m-d')|date('U'))) / 86400)|round -%}
-        {%- if days <= 0 %}today{% elseif days == 1 %}yesterday{% elseif days < 30 %}{{ days }} days ago{% else %}{{ date|date('j M Y') }}{% endif -%}
+        {%- if days <= 0 %}vandaag{% elseif days == 1 %}gisteren{% elseif days < 30 %}{{ days }} dagen geleden{% else %}{{ date|nl_date('j M Y') }}{% endif -%}
     {%- endif -%}
 {% endmacro %}
 
 {# Unlocked/total achievements as a small progress bar #}
 {% macro achievements(game) %}
     {%- if game.hasAchievements -%}
-        <div class="d-flex align-items-center gap-2 small" title="{{ game.achievementsUnlocked }} of {{ game.achievementsTotal }} achievements">
+        <div class="d-flex align-items-center gap-2 small" title="{{ game.achievementsUnlocked }} van {{ game.achievementsTotal }} prestaties">
             <i class="fas fa-trophy {{ game.achievementPercentage == 100 ? 'text-warning' : 'text-muted' }}"></i>
-            <div class="progress flex-grow-1 steam-progress" role="progressbar" aria-label="Achievements" aria-valuenow="{{ game.achievementPercentage }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress flex-grow-1 steam-progress" role="progressbar" aria-label="Prestaties" aria-valuenow="{{ game.achievementPercentage }}" aria-valuemin="0" aria-valuemax="100">
                 <div class="progress-bar {{ game.achievementPercentage == 100 ? 'bg-warning' : '' }}" style="width: {{ game.achievementPercentage }}%"></div>
             </div>
             <span class="text-muted text-nowrap">{{ game.achievementsUnlocked }}/{{ game.achievementsTotal }}</span>
         </div>
+    {%- endif -%}
+{% endmacro %}
+
+{# 4 → ★★★★☆ with "4 out of 5 (Good)" for screen readers #}
+{% macro stars(review, class = '') %}
+    {%- if review -%}
+        <span class="steam-stars {{ class }}" role="img" aria-label="{{ review.rating }} van 5 ({{ review.ratingLabel }})" title="{{ review.rating }}/5 - {{ review.ratingLabel }}">
+            {%- for i in 1..5 %}<i class="{{ i <= review.rating ? 'fas' : 'far' }} fa-star"></i>{% endfor -%}
+        </span>
     {%- endif -%}
 {% endmacro %}

@@ -1,43 +1,42 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Comments - Admin{% endblock %}
+{% block title %}Reacties - Beheer{% endblock %}
 
 {% block body %}
-{% include 'admin/partials/delete_modal.html.twig' %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="fas fa-comments me-2"></i>Comments</h1>
+    <h1><i class="fas fa-comments me-2"></i>Reacties</h1>
 </div>
 
 <div class="mb-3">
     <div class="btn-group" role="group">
         <a href="{{ path('admin_blog_comments', {status: 'pending'}) }}" class="btn {% if currentStatus == 'pending' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-            <i class="fas fa-clock me-1"></i>Pending ({{ pendingCount }})
+            <i class="fas fa-clock me-1"></i>Wacht op goedkeuring ({{ pendingCount }})
         </a>
         <a href="{{ path('admin_blog_comments', {status: 'approved'}) }}" class="btn {% if currentStatus == 'approved' %}btn-success{% else %}btn-outline-success{% endif %}">
-            <i class="fas fa-check me-1"></i>Approved
+            <i class="fas fa-check me-1"></i>Goedgekeurd
         </a>
         <a href="{{ path('admin_blog_comments') }}" class="btn {% if currentStatus == 'all' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
-            <i class="fas fa-list me-1"></i>All
+            <i class="fas fa-list me-1"></i>Alle
         </a>
     </div>
 </div>
 
 {% if pagination.getTotalItemCount() == 0 %}
     <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>No comments found.
+        <i class="fas fa-info-circle me-2"></i>Geen reacties gevonden.
     </div>
 {% else %}
     <div class="table-responsive">
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>Post</th>
-                    <th>Author</th>
-                    <th>Content</th>
-                    <th>Created</th>
+                    <th>Bericht</th>
+                    <th>Auteur</th>
+                    <th>Inhoud</th>
+                    <th>Aangemaakt</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th>Acties</th>
                 </tr>
             </thead>
             <tbody>
@@ -49,36 +48,36 @@
                                 {{ comment.blogPost.title|u.truncate(50) }}
                             </a>
                         {% else %}
-                            <span class="text-muted">(deleted post)</span>
+                            <span class="text-muted">(verwijderd bericht)</span>
                         {% endif %}
                     </td>
                     <td>
-                        {{ comment.author.getFullName() ?? comment.author.getUserIdentifier() }}
+                        {{ comment.author ? (comment.author.getFullName() ?? comment.author.getUserIdentifier()) : 'Oud-lid' }}
                     </td>
                     <td class="text-truncate comment-excerpt">{{ comment.content }}</td>
-                    <td>{{ comment.dateCreated|date('M d, Y H:i') }}</td>
+                    <td>{{ comment.dateCreated|nl_date('j M Y H:i') }}</td>
                     <td>
                         {% if comment.isApproved %}
-                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Approved</span>
+                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Goedgekeurd</span>
                         {% else %}
-                            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Pending</span>
+                            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Wacht op goedkeuring</span>
                         {% endif %}
                     </td>
                     <td>
                         <div class="btn-group btn-group-sm">
                             {% if not comment.isApproved %}
-                                <button type="button" class="btn btn-outline-success approve-comment" data-comment-id="{{ comment.id }}" title="Approve">
+                                <button type="button" class="btn btn-outline-success approve-comment" data-comment-id="{{ comment.id }}" title="Goedkeuren">
                                     <i class="fas fa-check"></i>
                                 </button>
                             {% else %}
-                                <button type="button" class="btn btn-outline-warning reject-comment" data-comment-id="{{ comment.id }}" title="Reject">
+                                <button type="button" class="btn btn-outline-warning reject-comment" data-comment-id="{{ comment.id }}" title="Afwijzen">
                                     <i class="fas fa-times"></i>
                                 </button>
                             {% endif %}
                             <button type="button" class="btn btn-outline-danger delete-comment" 
                                     data-comment-id="{{ comment.id }}" 
                                     data-csrf-token="{{ csrf_token('delete_comment' ~ comment.id) }}"
-                                    title="Delete">
+                                    title="Verwijderen">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -89,8 +88,8 @@
         </table>
     </div>
 
-    <nav aria-label="Comments pagination">
-        {{ knp_pagination_render(pagination) }}
+    <nav aria-label="Paginering reacties">
+        {{ knp_pagination_render(pagination, '_partials/pagination.html.twig', {}, {label: 'reacties'}) }}
     </nav>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Status - Beheer{% endblock %}
+
+{% block body %}
+{% set icons = {ok: 'fa-check-circle text-success', warn: 'fa-exclamation-triangle text-warning', fail: 'fa-times-circle text-danger', info: 'fa-info-circle text-secondary'} %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Status</h1>
+    <form method="post" action="{{ path('admin_status_test_mail') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('status_test_mail') }}">
+        <button type="submit" class="btn btn-outline-primary"><i class="fas fa-paper-plane me-1"></i>Stuur testmail naar {{ app.user.email }}</button>
+    </form>
+</div>
+
+{% set problems = sections|reduce((carry, checks) => carry + checks|filter(c => c.state in ['warn', 'fail'])|length, 0) %}
+<div class="alert {{ problems ? 'alert-warning' : 'alert-success' }}">
+    {% if problems %}
+        <i class="fas fa-exclamation-triangle me-1"></i>{{ problems }} {{ problems == 1 ? 'punt vraagt' : 'punten vragen' }} aandacht.
+    {% else %}
+        <i class="fas fa-check-circle me-1"></i>Everything is in order.
+    {% endif %}
+</div>
+
+<div class="row g-4">
+    {% for title, checks in sections %}
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header"><h5 class="mb-0">{{ title }}</h5></div>
+                <ul class="list-group list-group-flush">
+                    {% for check in checks %}
+                        <li class="list-group-item d-flex gap-2">
+                            <i class="fas {{ icons[check.state] }} mt-1" title="{{ {ok: 'In orde', warn: 'Waarschuwing', fail: 'Fout', info: 'Info'}[check.state] ?? check.state }}"></i>
+                            <div>
+                                <strong>{{ check.label }}</strong>
+                                <div class="small text-muted">{{ check.detail }}</div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endfor %}
+
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Recente fouten</h5></div>
+            {% if errors is empty %}
+                <div class="card-body text-muted">
+                    Geen fouten in het log van de afgelopen 14 dagen{% if app.environment != 'prod' %} (alleen productie schrijft ze naar var/log){% endif %}.
+                </div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Tijd</th><th>Niveau</th><th>Bericht</th></tr></thead>
+                        <tbody>
+                            {% for error in errors %}
+                                <tr>
+                                    <td class="text-nowrap">{{ error.time ? error.time|date('d-m-Y H:i') : '' }}</td>
+                                    <td><span class="badge text-bg-danger">{{ error.level }}</span></td>
+                                    <td class="small">{{ error.message }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer small text-muted">Het volledige log staat in var/log/ (via FTP), één bestand per dag.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

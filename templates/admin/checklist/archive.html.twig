@@ -1,28 +1,28 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Archived Checklists - Admin{% endblock %}
+{% block title %}Gearchiveerde checklists - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="fas fa-archive me-2"></i>Archived Checklists</h1>
+    <h1><i class="fas fa-archive me-2"></i>Gearchiveerde checklists</h1>
     <a href="{{ path('admin_checklist_index') }}" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-1"></i>Back to Active
+        <i class="fas fa-arrow-left me-1"></i>Terug naar actieve
     </a>
 </div>
 
 {% if pagination.getTotalItemCount() == 0 %}
     <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>No archived checklists.
+        <i class="fas fa-info-circle me-2"></i>Geen gearchiveerde checklists.
     </div>
 {% else %}
     <div class="table-responsive">
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Fields</th>
+                    <th>Naam</th>
+                    <th>Velden</th>
                     <th>Items</th>
-                    <th>Created</th>
+                    <th>Aangemaakt</th>
                     <th class="text-center"><i class="fas fa-cogs"></i></th>
                 </tr>
             </thead>
@@ -35,7 +35,7 @@
                     {# All fields that hold an answer, including those inside fieldsets (a fieldset itself is not counted) #}
                     <td>{{ checkList.allCheckListFields|filter(field => field.formType != 'fieldset')|length }}</td>
                     <td>{{ checkList.checkListItems|length }}</td>
-                    <td>{{ checkList.dateCreated|date('M d, Y H:i') }}</td>
+                    <td>{{ checkList.dateCreated|nl_date('j M Y H:i') }}</td>
                     <td class="text-center">
                         <div class="btn-group btn-group-sm">
                             <button type="button" class="btn btn-outline-success"
@@ -43,12 +43,12 @@
                                     data-bs-target="#deleteModal"
                                     data-delete-url="{{ path('admin_checklist_unarchive', {id: checkList.id}) }}"
                                     data-csrf-token="{{ csrf_token('unarchive' ~ checkList.id) }}"
-                                    data-delete-message="Are you sure you want to restore this checklist?"
-                                    data-confirm-title="Confirm Unarchive"
-                                    data-confirm-label="Unarchive"
+                                    data-delete-message="Weet je zeker dat je deze checklist wilt terugzetten?"
+                                    data-confirm-title="Terugzetten bevestigen"
+                                    data-confirm-label="Terugzetten"
                                     data-confirm-icon="fa-undo"
                                     data-confirm-class="btn-success"
-                                    title="Unarchive">
+                                    title="Terugzetten">
                                 <i class="fas fa-undo"></i>
                             </button>
                             <button type="button" class="btn btn-outline-danger"
@@ -56,8 +56,8 @@
                                     data-bs-target="#deleteModal"
                                     data-delete-url="{{ path('admin_checklist_delete', {id: checkList.id}) }}"
                                     data-csrf-token="{{ csrf_token('delete' ~ checkList.id) }}"
-                                    data-delete-message="Are you sure you want to permanently delete this checklist? All its fields, items and uploaded files will be deleted. This cannot be undone."
-                                    title="Delete Permanently">
+                                    data-delete-message="Weet je zeker dat je deze checklist definitief wilt verwijderen? Alle velden, items en geüploade bestanden worden verwijderd. Dit kan niet ongedaan worden gemaakt."
+                                    title="Definitief verwijderen">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -68,8 +68,8 @@
         </table>
     </div>
 
-    <nav aria-label="Archived checklists pagination">
-        {{ knp_pagination_render(pagination) }}
+    <nav aria-label="Paginering gearchiveerde checklists">
+        {{ knp_pagination_render(pagination, '_partials/pagination.html.twig', {}, {label: 'checklists'}) }}
     </nav>
 {% endif %}
 

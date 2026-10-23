@@ -1,14 +1,13 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Users - Admin{% endblock %}
+{% block title %}Gebruikers - Beheer{% endblock %}
 
 {% block body %}
-{% include 'admin/partials/delete_modal.html.twig' %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="fas fa-users me-2"></i>Users</h1>
+    <h1><i class="fas fa-users me-2"></i>Gebruikers</h1>
     <a href="{{ path('admin_user_new') }}" class="btn btn-primary">
-        <i class="fas fa-plus me-1"></i>New User
+        <i class="fas fa-plus me-1"></i>Nieuwe gebruiker
     </a>
 </div>
 
@@ -18,15 +17,16 @@
             <div class="col-md-3">
                 <label class="form-label">Status</label>
                 <select name="status" class="form-select" data-auto-submit>
-                    <option value="all" {% if currentStatus == 'all' %}selected{% endif %}>All ({{ activeCount + inactiveCount }})</option>
-                    <option value="active" {% if currentStatus == 'active' %}selected{% endif %}>Active ({{ activeCount }})</option>
-                    <option value="inactive" {% if currentStatus == 'inactive' %}selected{% endif %}>Inactive ({{ inactiveCount }})</option>
+                    <option value="all" {% if currentStatus == 'all' %}selected{% endif %}>Alle ({{ activeCount + inactiveCount + pendingCount }})</option>
+                    <option value="pending" {% if currentStatus == 'pending' %}selected{% endif %}>Wacht op goedkeuring ({{ pendingCount }})</option>
+                    <option value="active" {% if currentStatus == 'active' %}selected{% endif %}>Actief ({{ activeCount }})</option>
+                    <option value="inactive" {% if currentStatus == 'inactive' %}selected{% endif %}>Inactief ({{ inactiveCount }})</option>
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Role</label>
+                <label class="form-label">Rol</label>
                 <select name="role" class="form-select" data-auto-submit>
-                    <option value="">All Roles</option>
+                    <option value="">Alle rollen</option>
                     {% for role in roles %}
                         <option value="{{ role.id }}" {% if currentRole == role.id %}selected{% endif %}>
                             {{ role.name }}
@@ -35,12 +35,12 @@
                 </select>
             </div>
             <div class="col-md-4">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Search email, name..." value="{{ search }}">
+                <label class="form-label">Zoeken</label>
+                <input type="text" name="search" class="form-control" placeholder="Zoek op e-mail, naam..." value="{{ search }}">
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <a href="{{ path('admin_user_index') }}" class="btn btn-outline-secondary w-100">
-                    <i class="fas fa-times me-1"></i>Clear
+                    <i class="fas fa-times me-1"></i>Wissen
                 </a>
             </div>
         </form>
@@ -49,19 +49,20 @@
 
 {% if pagination.getTotalItemCount() == 0 %}
     <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>No users found.
+        <i class="fas fa-info-circle me-2"></i>Geen gebruikers gevonden.
     </div>
 {% else %}
     <div class="table-responsive">
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>User</th>
-                    <th>Email</th>
-                    <th>Roles</th>
+                    <th>Gebruiker</th>
+                    <th>E-mail</th>
+                    <th>Rollen</th>
                     <th>Status</th>
-                    <th>Created</th>
-                    <th class="text-end">Actions</th>
+                    <th>Inloggen</th>
+                    <th>Aangemaakt</th>
+                    <th class="text-end">Acties</th>
                 </tr>
             </thead>
             <tbody>
@@ -80,27 +81,53 @@
                         {% for role in user.doctrineRoles %}
                             <span class="badge bg-info me-1">{{ role.name }}</span>
                         {% else %}
-                            <span class="text-muted">No roles</span>
+                            <span class="text-muted">Geen rollen</span>
                         {% endfor %}
                     </td>
                     <td>
                         {% if user.isActive() %}
-                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Active</span>
+                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Actief</span>
+                        {% elseif user.isPending() and not user.isEmailVerified() %}
+                            <span class="badge bg-light text-dark border" title="De gebruiker heeft nog niet op de link in de bevestigingsmail geklikt"><i class="fas fa-envelope me-1"></i>E-mail niet bevestigd</span>
+                        {% elseif user.isPending() %}
+                            <span class="badge bg-warning text-dark"><i class="fas fa-hourglass-half me-1"></i>Wacht op goedkeuring</span>
                         {% else %}
-                            <span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>Inactive</span>
+                            <span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>Inactief</span>
                         {% endif %}
                     </td>
-                    <td>{{ user.dateCreated|date('d M Y H:i') }}</td>
+                    <td>
+                        {% if user.isTotpAuthenticationEnabled() %}
+                            <span class="badge bg-light text-dark border" title="Inlogcode uit een authenticator-app"><i class="fas fa-mobile-alt me-1"></i>App</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark border" title="Inlogcode per e-mail"><i class="fas fa-envelope me-1"></i>E-mail</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.dateCreated|nl_date('d M Y H:i') }}</td>
                     <td class="text-end">
-                        <a href="{{ path('admin_user_edit', {id: user.id}) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                        {% if user.isPending() %}
+                        <form method="post" action="{{ path('admin_user_approve', {id: user.id}) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('approve' ~ user.id) }}">
+                            <button type="submit" class="btn btn-sm btn-success" title="Goedkeuren">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </form>
+                        <form method="post" action="{{ path('admin_user_reject', {id: user.id}) }}" class="d-inline"
+                              data-confirm="De registratie van {{ user.fullName }} afwijzen? {{ user.email }} krijgt een e-mail en het account wordt verwijderd.">
+                            <input type="hidden" name="_token" value="{{ csrf_token('reject' ~ user.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Afwijzen">
+                                <i class="fas fa-user-times"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                        <a href="{{ path('admin_user_edit', {id: user.id}) }}" class="btn btn-sm btn-outline-primary" title="Bewerken">
                             <i class="fas fa-edit"></i>
                         </a>
                         <button type="button" class="btn btn-sm btn-outline-danger js-ajax-delete"
                                 data-delete-url="{{ path('admin_user_delete', {id: user.id}) }}"
-                                data-delete-message="Are you sure you want to delete the user &quot;{{ user.email }}&quot;? This action cannot be undone."
-                                data-error-message="Failed to delete user"
+                                data-delete-message="Weet je zeker dat je de gebruiker &quot;{{ user.email }}&quot; wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
+                                data-error-message="Gebruiker verwijderen mislukt"
                                 data-csrf-token="{{ csrf_token('delete' ~ user.id) }}"
-                                title="Delete">
+                                title="Verwijderen">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -110,8 +137,8 @@
         </table>
     </div>
 
-    <nav aria-label="Users pagination">
-        {{ knp_pagination_render(pagination) }}
+    <nav aria-label="Paginering gebruikers">
+        {{ knp_pagination_render(pagination, '_partials/pagination.html.twig', {}, {label: 'gebruikers'}) }}
     </nav>
 {% endif %}
 {% endblock %}

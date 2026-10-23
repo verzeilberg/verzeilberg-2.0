@@ -17,21 +17,21 @@ class BlogImageType extends AbstractType
     {
         $builder
             ->add('name', TextType::class, [
-                'label' => 'Name',
+                'label' => 'Naam',
                 'required' => false,
-                'attr' => ['placeholder' => 'Optional name'],
+                'attr' => ['placeholder' => 'Optionele naam'],
             ])
             ->add('alt', TextType::class, [
-                'label' => 'Alt Text',
+                'label' => 'Alt-tekst',
                 'required' => false,
-                'attr' => ['placeholder' => 'Alt text for accessibility'],
+                'attr' => ['placeholder' => 'Alt-tekst voor toegankelijkheid'],
             ])
             ->add('description', TextType::class, [
-                'label' => 'Description',
+                'label' => 'Beschrijving',
                 'required' => false,
             ])
             ->add('sortOrder', IntegerType::class, [
-                'label' => 'Sort Order',
+                'label' => 'Volgorde',
                 'required' => false,
             ]);
     }

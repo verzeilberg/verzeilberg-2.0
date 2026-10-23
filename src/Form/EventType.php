@@ -23,69 +23,69 @@ class EventType extends AbstractType
     {
         $builder
             ->add('title', TextType::class, [
-                'label' => 'Title',
-                'attr' => ['placeholder' => 'Event title'],
+                'label' => 'Titel',
+                'attr' => ['placeholder' => 'Titel van het evenement'],
             ])
             ->add('eventStartDate', DateType::class, [
-                'label' => 'Start Date',
+                'label' => 'Startdatum',
                 'widget' => 'single_text',
                 'html5' => true,
             ])
             ->add('eventEndDate', DateType::class, [
-                'label' => 'End Date',
+                'label' => 'Einddatum',
                 'widget' => 'single_text',
                 'html5' => true,
             ])
             ->add('eventStartTime', TimeType::class, [
-                'label' => 'Start Time',
+                'label' => 'Starttijd',
                 'required' => false,
                 'widget' => 'single_text',
                 'html5' => true,
-                'attr' => ['placeholder' => 'Optional'],
+                'attr' => ['placeholder' => 'Optioneel'],
             ])
             ->add('eventEndTime', TimeType::class, [
-                'label' => 'End Time',
+                'label' => 'Eindtijd',
                 'required' => false,
                 'widget' => 'single_text',
                 'html5' => true,
-                'attr' => ['placeholder' => 'Optional'],
+                'attr' => ['placeholder' => 'Optioneel'],
             ])
             ->add('category', EntityType::class, [
-                'label' => 'Category',
+                'label' => 'Categorie',
                 'class' => Category::class,
                 'choice_label' => 'name',
-                'placeholder' => 'Select category',
+                'placeholder' => 'Kies een categorie',
                 'required' => false,
                 'query_builder' => fn($repo) => $repo->createQueryBuilder('c')
                     ->andWhere('c.enabled = true')
                     ->orderBy('c.name', 'ASC'),
             ])
             ->add('labelText', TextareaType::class, [
-                'label' => 'Label Text (short description)',
+                'label' => 'Labeltekst (korte beschrijving)',
                 'required' => false,
-                'attr' => ['rows' => 3, 'placeholder' => 'Short description for listings'],
+                'attr' => ['rows' => 3, 'placeholder' => 'Korte beschrijving voor overzichten'],
             ])
             ->add('text', TextareaType::class, [
-                'label' => 'Full Description',
+                'label' => 'Volledige beschrijving',
                 'required' => false,
-                'attr' => ['rows' => 10, 'placeholder' => 'Detailed event description'],
+                'attr' => ['rows' => 10, 'placeholder' => 'Uitgebreide beschrijving van het evenement'],
             ])
             ->add('longitude', TextType::class, [
-                'label' => 'Longitude',
+                'label' => 'Lengtegraad',
                 'required' => false,
-                'attr' => ['placeholder' => 'e.g. 4.8952'],
+                'attr' => ['placeholder' => 'bijv. 4.8952'],
             ])
             ->add('latitude', TextType::class, [
-                'label' => 'Latitude',
+                'label' => 'Breedtegraad',
                 'required' => false,
-                'attr' => ['placeholder' => 'e.g. 52.3702'],
+                'attr' => ['placeholder' => 'bijv. 52.3702'],
             ])
             ->add('eventImageFile', FileType::class, [
-                'label' => 'Event Image',
+                'label' => 'Afbeelding',
                 'required' => false,
                 'mapped' => false,
                 'attr' => ['accept' => 'image/*'],
-                'help' => 'Upload an image for this event. Supported formats: JPG, PNG, WebP. Leave empty to keep current image.',
+                'help' => 'Upload een afbeelding voor dit evenement. Toegestaan: JPG, PNG, WebP. Laat leeg om de huidige afbeelding te houden.',
             ])
             ->add('event_image_cropped', HiddenType::class, [
                 'mapped' => false,

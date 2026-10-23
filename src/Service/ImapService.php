@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PhpImap\Mailbox;
 use PhpImap\IncomingMail;
 use Symfony\Component\Mime\Email;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Mime\Address;
 
 class ImapService
@@ -18,6 +19,7 @@ class ImapService
     public function __construct(
         private EmailMessageRepository $emailMessageRepository,
         private EntityManagerInterface $em,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -27,7 +29,7 @@ class ImapService
             $mailbox = $this->createMailbox($account);
             $mailbox->getMailboxInfo();
             $this->closeMailbox($mailbox);
-            return ['success' => true, 'message' => 'Connection successful'];
+            return ['success' => true, 'message' => 'Verbinding geslaagd'];
         } catch (\Throwable $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
@@ -97,7 +99,6 @@ class ImapService
                     }
                 } catch (\Throwable $e) {
                     // Skip messages that no longer exist (UID does not exist)
-                    error_log("DEBUG: Skipping UID $mailId - " . $e->getMessage());
                     continue;
                 }
             }
@@ -188,10 +189,9 @@ class ImapService
                 return strcmp($a, $b);
             });
 
-            error_log("DEBUG getFolders: Found " . count($folders) . " folders: " . json_encode($folders));
             return ['success' => true, 'folders' => $folders];
         } catch (\Throwable $e) {
-            error_log("DEBUG getFolders error: " . $e->getMessage());
+            $this->logger->warning('Reading the mail folders failed: ' . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -252,7 +252,7 @@ class ImapService
             $message->setFolder($targetFolder);
             $this->em->flush();
         } catch (\Throwable $e) {
-            throw new \RuntimeException('Failed to move message: ' . $e->getMessage());
+            throw new \RuntimeException('Verplaatsen van bericht mislukt: ' . $e->getMessage());
         }
     }
 
@@ -278,7 +278,7 @@ class ImapService
                 $smtpUsername = $account->getSmtpUsername();
                 $smtpPassword = $account->getSmtpPassword();
             } else {
-                throw new \RuntimeException('SMTP not configured. Set useImapForSmtp=true or configure dedicated SMTP settings (smtpHost, smtpUsername, etc.)');
+                throw new \RuntimeException('SMTP is niet ingesteld. Zet "IMAP-gegevens ook voor SMTP gebruiken" aan of vul eigen SMTP-instellingen in.');
             }
 
             // Create transport for this specific account
@@ -341,8 +341,7 @@ class ImapService
 
             return true;
         } catch (\Throwable $e) {
-            // Log error with more context
-            error_log('Failed to send email: ' . $e->getMessage() . ' | Host: ' . ($smtpHost ?? 'unknown') . ' Port: ' . ($smtpPort ?? 'unknown') . ' Encryption: ' . ($smtpEncryption ?? 'unknown'));
+            $this->logger->error('Sending email failed: ' . $e->getMessage(), ['host' => $smtpHost ?? null, 'port' => $smtpPort ?? null, 'encryption' => $smtpEncryption ?? null]);
             return false;
         }
     }
@@ -445,9 +444,7 @@ public function getAttachment(EmailAccount $account, string $folder, string $uid
 
             // First check if the UID still exists in the folder
             $mailIds = $mailbox->searchMailbox("UID $uid");
-            error_log("DEBUG: searchMailbox('UID $uid') in folder '$folder' returned: " . json_encode($mailIds));
             if (empty($mailIds)) {
-                error_log("DEBUG: UID $uid not found in folder $folder, searching local temp directory for attachment '$attachmentName'");
 
                 // Search local temp directory for files matching this UID and attachment name
                 $attachmentsDir = sys_get_temp_dir() . '/verzeilberg_imap_attachments_' . $account->getId();
@@ -468,7 +465,6 @@ public function getAttachment(EmailAccount $account, string $folder, string $uid
                                 $savedFilenamePart = $savedFilename;
                             }
                             if (str_ends_with($normalize($savedFilenamePart), $normalizedAttachName)) {
-                                error_log("DEBUG: Found local file: $file");
                                 return [
                                     'name' => $attachmentName,
                                     'mimeType' => mime_content_type($file) ?: 'application/octet-stream',
@@ -480,17 +476,11 @@ public function getAttachment(EmailAccount $account, string $folder, string $uid
                     }
                 }
 
-                error_log("DEBUG: Attachment '$attachmentName' not found in local storage, trying IMAP fetch");
             }
 
             $mail = $mailbox->getMail((int) $uid, false);
 
             $attachments = $mail->getAttachments();
-
-            error_log("DEBUG: Found " . count($attachments) . " attachments in fetched mail");
-            foreach ($attachments as $key => $att) {
-                error_log("DEBUG: Attachment key=$key, id={$att->id}, name={$att->name}, filePath={$att->filePath}");
-            }
 
             // Get the attachment by numeric index (since keys might be attachment IDs)
             $attachmentArray = array_values($attachments);
@@ -504,7 +494,6 @@ public function getAttachment(EmailAccount $account, string $folder, string $uid
                 foreach ($attachmentArray as $att) {
                     if ($att->name === $attachmentName || ($attachmentId && $att->id === $attachmentId)) {
                         $attachment = $att;
-                        error_log("DEBUG: Found attachment by name/id match");
                         break;
                     }
                 }
@@ -513,15 +502,12 @@ public function getAttachment(EmailAccount $account, string $folder, string $uid
             // Fallback to index-based lookup
             if (!$attachment && isset($attachmentArray[$arrayIndex])) {
                 $attachment = $attachmentArray[$arrayIndex];
-                error_log("DEBUG: Found attachment by index: $arrayIndex");
             }
 
             if (!$attachment) {
-                error_log("DEBUG: No attachment found at index $arrayIndex or by name");
                 return null;
             }
 
-            error_log("DEBUG: Selected attachment: id={$attachment->id}, name={$attachment->name}, filePath={$attachment->filePath}");
 
             // If filePath is set and file exists, return file path for streaming
             if ($attachment->filePath && file_exists($attachment->filePath)) {
@@ -541,12 +527,12 @@ public function getAttachment(EmailAccount $account, string $folder, string $uid
                     'content' => $attachment->getContents(),
                 ];
             } catch (\Throwable $e) {
-                error_log("DEBUG: IMAP fallback error: " . $e->getMessage());
+                $this->logger->warning('Fetching an attachment from the mail server failed: ' . $e->getMessage());
             }
 
             return null;
         } catch (\Throwable $e) {
-            error_log("DEBUG: Exception in getAttachment: " . $e->getMessage());
+            $this->logger->warning('Fetching an attachment failed: ' . $e->getMessage());
             return null;
         }
     }

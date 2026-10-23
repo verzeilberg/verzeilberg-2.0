@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Nieuwe reactie op je reactie - Verzeilberg.nl</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h1 style="color: #0d6efd;">Nieuwe reactie op je reactie</h1>
+
+    <p>Hallo {{ recipient.fullName }},</p>
+
+    <p><strong>{{ comment.author ? comment.author.fullName : 'Iemand' }}</strong> reageerde op je reactie bij <strong>{{ comment.blogPost.title }}</strong>:</p>
+
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; white-space: pre-wrap;">{{ comment.content }}</div>
+
+    <p style="text-align: center; margin: 30px 0;">
+        <a href="{{ url('blog_detail', {slug: comment.blogPost.slug}) }}#comment-{{ comment.id }}" style="background-color: #0d6efd; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            Bekijk de reactie
+        </a>
+    </p>
+
+    <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+    <p style="color: #6c757d; font-size: 0.875rem;">Verzeilberg.nl &middot; Geen meldingen meer? Zet ze uit bij <a href="{{ url('app_profile_edit') }}" style="color: #6c757d;">je profiel</a>.</p>
+</body>
+</html>

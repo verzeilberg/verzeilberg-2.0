@@ -9,6 +9,7 @@ use App\Entity\Event;
 use App\Repository\BlogPostRepository;
 use App\Repository\EventRepository;
 use App\Repository\SearchPhraseRepository;
+use App\Repository\Steam\SteamGameRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class SiteSearchService
@@ -17,6 +18,7 @@ class SiteSearchService
         private BlogPostRepository $blogPostRepository,
         private EventRepository $eventRepository,
         private SearchPhraseRepository $searchPhraseRepository,
+        private SteamGameRepository $steamGameRepository,
         private EntityManagerInterface $em
     ) {
     }
@@ -28,6 +30,7 @@ class SiteSearchService
             return [
                 'blogPosts' => [],
                 'events' => [],
+                'games' => [],
                 'totalCount' => 0,
             ];
         }
@@ -46,13 +49,16 @@ class SiteSearchService
         }
         $this->em->flush();
 
-        $blogPosts = $this->blogPostRepository->search($term);
+        // Only posts that are online (search() also finds scheduled/expired ones and stops at 10)
+        $blogPosts = $this->blogPostRepository->createPublicListQuery(null, $term)->setMaxResults(100)->getQuery()->getResult();
         $events = $this->eventRepository->search($term);
+        $games = $this->steamGameRepository->searchPublic($term);
 
         return [
             'blogPosts' => $blogPosts,
             'events' => $events,
-            'totalCount' => count($blogPosts) + count($events),
+            'games' => $games,
+            'totalCount' => count($blogPosts) + count($events) + count($games),
         ];
     }
 
@@ -70,6 +76,10 @@ class SiteSearchService
         }
         foreach ($results['events'] as $event) {
             $combined[] = ['type' => 'event', 'entity' => $event, 'date' => $event->getDateCreated()];
+        }
+        foreach ($results['games'] as $game) {
+            // A reviewed game counts from its review, otherwise from when it came into the library
+            $combined[] = ['type' => 'game', 'entity' => $game, 'date' => $game->getPublishedReview()?->getCreatedAt() ?? $game->getAddedAt()];
         }
         
         // Sort by date descending

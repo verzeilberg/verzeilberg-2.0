@@ -1,17 +1,17 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Item #{{ item.id }} - {{ checkList.name }} - Admin{% endblock %}
+{% block title %}Item #{{ item.id }} - {{ checkList.name }} - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="fas fa-eye me-2"></i>Item #{{ item.id }} <small class="text-muted fs-5">{{ checkList.name }}</small></h1>
     <div class="d-flex gap-2 d-print-none">
         <button type="button" class="btn btn-outline-primary" data-print>
-            <i class="fas fa-print me-1"></i>Print
+            <i class="fas fa-print me-1"></i>Afdrukken
         </button>
         {# Back to the same page, search and filters of the list #}
         <a href="{{ path('admin_checklist_show', app.request.query.all|filter((value, key) => key in ['q', 'filter', 'order_by', 'order_dir', 'page'])|merge({id: checkList.id})) }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-1"></i>Back to List
+            <i class="fas fa-arrow-left me-1"></i>Terug naar overzicht
         </a>
     </div>
 </div>
@@ -20,9 +20,9 @@
 <div class="card">
     <div class="card-header">
         <small class="text-muted">
-            Created {{ item.dateCreated|date('d-m-Y H:i') }}{% if item.createdBy %} by {{ item.createdBy.fullName }}{% endif %}
+            Aangemaakt {{ item.dateCreated|date('d-m-Y H:i') }}{% if item.createdBy %} door {{ item.createdBy.fullName }}{% endif %}
             {% if item.dateChanged %}
-                &middot; Changed {{ item.dateChanged|date('d-m-Y H:i') }}{% if item.changedBy %} by {{ item.changedBy.fullName }}{% endif %}
+                &middot; Gewijzigd {{ item.dateChanged|date('d-m-Y H:i') }}{% if item.changedBy %} door {{ item.changedBy.fullName }}{% endif %}
             {% endif %}
         </small>
     </div>

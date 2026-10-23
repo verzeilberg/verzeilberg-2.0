@@ -1,4 +1,5 @@
-/* Agenda management (admin/agenda/agendas): copy buttons for the iCal feed URLs. */
+/* Copy buttons: <button class="js-copy" data-copy="text"> copies the text and shows a check mark for a moment.
+   Used for the agenda feed URLs and the preview link of a blog post. */
 document.querySelectorAll('.js-copy').forEach(function(button) {
     button.addEventListener('click', function() {
         navigator.clipboard?.writeText(button.dataset.copy).then(function() {

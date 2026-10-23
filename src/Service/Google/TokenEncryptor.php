@@ -39,7 +39,7 @@ class TokenEncryptor
             $this->key
         );
         if ($plain === false) {
-            throw new \RuntimeException('The token could not be decrypted; connect the Google account again.');
+            throw new \RuntimeException('Het token kon niet worden ontsleuteld; koppel het Google-account opnieuw.');
         }
 
         return $plain;

@@ -68,7 +68,7 @@ class MediaControllerTest extends WebTestCase
         $crawler = $this->client->request('GET', '/admin/media/?folder=blog/images');
         $rows = $crawler->filter('tbody tr');
         $this->assertSame(2, $rows->count());
-        $this->assertStringContainsString('Not used', $rows->eq(0)->text(), 'loose.jpg');
+        $this->assertStringContainsString('Niet in gebruik', $rows->eq(0)->text(), 'loose.jpg');
         $this->assertStringContainsString('Blog: Zomerkamp', $rows->eq(1)->text(), 'used.jpg');
         $this->assertCount(1, $rows->eq(1)->filter('button[disabled]'), 'a used file can\'t be deleted');
         $this->assertSame('/uploads/blog/images/loose.jpg', $rows->eq(0)->filter('img')->attr('src'));
@@ -100,7 +100,7 @@ class MediaControllerTest extends WebTestCase
 
         $this->delete('blog/images/used.jpg');
         $this->assertResponseStatusCodeSame(422);
-        $this->assertStringContainsString('still in use (Blog: Zomerkamp)', (string) $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('nog in gebruik (Blog: Zomerkamp)', (string) $this->client->getResponse()->getContent());
         $this->assertFileExists($this->uploads . '/blog/images/used.jpg');
 
         $this->delete('blog');
@@ -147,7 +147,7 @@ class MediaControllerTest extends WebTestCase
         $this->assertFileDoesNotExist($this->uploads . '/blog/images/loose.jpg');
         $this->assertFileExists($this->uploads . '/blog/images/used.jpg');
         $this->client->followRedirect();
-        $this->assertSelectorTextContains('.alert-warning, .alert-success', '1 of 3 selected file(s) deleted.');
+        $this->assertSelectorTextContains('.alert-warning, .alert-success', '1 van 3 geselecteerde bestand(en) verwijderd.');
     }
 
     public function testCheckListsRecordsWithoutFileAndRemovesThemFromPostsAndEvents(): void
@@ -167,7 +167,7 @@ class MediaControllerTest extends WebTestCase
         $this->assertSame([], array_diff($ours, $records), 'gone.jpg, gone-poster.png and gone.pdf are listed');
         $this->assertNotContains('image:' . $external->getId(), $records, 'an external URL is skipped');
         $this->assertNotContains('image:' . $ids('used.jpg', 'blog_image'), $records);
-        $this->assertStringContainsString('Event: Regatta', $crawler->filter('#missing')->text());
+        $this->assertStringContainsString('Evenement: Regatta', $crawler->filter('#missing')->text());
 
         $this->client->request('POST', '/admin/media/check/missing-files', [
             '_token' => $crawler->filter('#missing input[name="_token"]')->attr('value'),

@@ -1,17 +1,39 @@
-<div class="card mb-3 blog-comment ms-{{ depth * 3 }}" style="--depth: {{ depth }};">
-    <div class="card-body py-2">
-        <div class="d-flex justify-content-between mb-1">
-            <strong>{{ comment.author.getFullName() ?? comment.author.getUserIdentifier() }}</strong>
-            <small class="text-muted">{{ comment.dateCreated|date('M d, Y H:i') }}</small>
+{# One comment with its replies; needs post, depth, replyToId, commentDraft, commentMaxLength and commentMaxDepth #}
+<article class="blog-comment{{ not comment.isApproved ? ' blog-comment-pending' }}" id="comment-{{ comment.id }}" style="--depth: {{ depth }};">
+    <div class="d-flex justify-content-between flex-wrap gap-2 mb-1">
+        <div>
+            <strong>{{ comment.author ? (comment.author.fullName ?: comment.author.userIdentifier) : 'Oud-lid' }}</strong>
+            {% if not comment.isApproved %}
+                <span class="badge bg-warning text-dark ms-1">Wacht op goedkeuring</span>
+            {% endif %}
         </div>
-        <p class="mb-0">{{ comment.content|nl2br }}</p>
-
-        {% if comment.children|length > 0 %}
-            <div class="mt-2 ms-3">
-                {% for child in comment.children %}
-                    {% include 'blog/partials/comment.html.twig' with {comment: child, depth: depth + 1} %}
-                {% endfor %}
-            </div>
-        {% endif %}
+        <small class="text-muted">{{ comment.dateCreated|nl_date('j M Y, H:i') }}</small>
     </div>
-</div>
+    <p class="mb-1">{{ comment.content|nl2br }}</p>
+
+    {# Only under published comments: a reply to a pending comment would hang in the air #}
+    {% if is_granted('IS_AUTHENTICATED_FULLY') and comment.isPublished %}
+        {% set replyOpen = replyToId == comment.id %}
+        <button type="button" class="btn btn-link btn-sm p-0 blog-comment-reply" data-bs-toggle="collapse" data-bs-target="#reply-{{ comment.id }}" aria-expanded="{{ replyOpen ? 'true' : 'false' }}" aria-controls="reply-{{ comment.id }}">
+            <i class="fas fa-reply me-1"></i>Reageren
+        </button>
+        <div class="collapse{{ replyOpen ? ' show' }}" id="reply-{{ comment.id }}">
+            <form action="{{ path('blog_detail', {slug: post.slug}) }}#comment-{{ comment.id }}" method="POST" class="mt-2">
+                <input type="hidden" name="_token" value="{{ csrf_token('comment_' ~ post.id) }}">
+                <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                <label for="reply-text-{{ comment.id }}" class="visually-hidden">Je antwoord</label>
+                <textarea class="form-control mb-2" id="reply-text-{{ comment.id }}" name="comment" rows="2" maxlength="{{ commentMaxLength }}" required placeholder="Je antwoord">{{ replyOpen ? commentDraft }}</textarea>
+                <button type="submit" class="btn btn-primary btn-sm">Plaats antwoord</button>
+            </form>
+        </div>
+    {% endif %}
+
+    {% set replies = comment.children|filter(child => child.isVisibleTo(app.user)) %}
+    {% if replies|length > 0 %}
+        <div class="blog-comment-replies">
+            {% for child in replies %}
+                {% include 'blog/partials/comment.html.twig' with {comment: child, depth: min(depth + 1, commentMaxDepth)} %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</article>

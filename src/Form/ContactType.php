@@ -24,33 +24,32 @@ class ContactType extends AbstractType
                 'choices' => [
                     'De heer'   => Contact::SALUTATION_MR,
                     'Mevrouw'   => Contact::SALUTATION_MRS,
-                    'Undefined' => Contact::SALUTATION_UND,
+                    'Geen voorkeur' =>Contact::SALUTATION_UND,
                 ],
                 'expanded' => true,
                 'multiple' => false,
                 'required' => true,
-                'attr' => ['class' => 'form-check-input'],
-                'label_attr' => ['class' => 'form-check-label'],
+                // Rendered per option as Bootstrap form-checks in contact/index.html.twig
             ])
             ->add('name', TextType::class, [
                 'label' => 'Naam',
                 'required' => true,
-                'attr' => ['class' => 'form-control', 'placeholder' => 'Uw naam'],
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Je naam'],
             ])
             ->add('email', EmailType::class, [
                 'label' => 'E-mail',
                 'required' => true,
-                'attr' => ['class' => 'form-control', 'placeholder' => 'uw@email.nl'],
+                'attr' => ['class' => 'form-control', 'placeholder' => 'jij@email.nl'],
             ])
             ->add('subject', TextType::class, [
                 'label' => 'Onderwerp',
                 'required' => true,
-                'attr' => ['class' => 'form-control', 'placeholder' => 'Onderwerp van uw bericht'],
+                'attr' => ['class' => 'form-control', 'placeholder' => 'Onderwerp van je bericht'],
             ])
             ->add('message', TextareaType::class, [
                 'label' => 'Bericht',
                 'required' => true,
-                'attr' => ['class' => 'form-control', 'rows' => 6, 'placeholder' => 'Uw bericht...'],
+                'attr' => ['class' => 'form-control', 'rows' => 6, 'placeholder' => 'Je bericht...'],
             ])
             ->add('submit', SubmitType::class, [
                 'label' => 'Versturen',

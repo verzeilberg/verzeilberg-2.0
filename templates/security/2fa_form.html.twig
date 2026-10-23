@@ -1,0 +1,78 @@
+{# Second login step (scheb/2fa): a code by email, or from the authenticator app (or a backup code) #}
+{% extends 'base.html.twig' %}
+
+{% set byEmail = twoFactorProvider == 'email' %}
+{# "j••••@example.com": enough to recognise the address, without showing it to someone at the screen #}
+{% set recipient = app.user ? app.user.email : '' %}
+{% set maskedRecipient = recipient ? recipient|slice(0, 1) ~ '••••' ~ recipient|slice(recipient|split('@')|first|length) : 'je e-mailadres' %}
+
+{% block title %}Verificatiecode - Verzeilberg.nl{% endblock %}
+
+{% block page_title %}Verificatiecode{% endblock %}
+{% block page_lead %}
+    {%- if byEmail -%}
+        We hebben een code van 6 cijfers gestuurd naar {{ maskedRecipient }}. Vul die in om het inloggen af te ronden.
+    {%- else -%}
+        Vul de code van 6 cijfers uit je authenticator-app in om het inloggen af te ronden.
+    {%- endif -%}
+{% endblock %}
+
+{% block body %}
+<div class="form-page">
+    <div class="card">
+        <div class="card-body article-body">
+            {% if authenticationError %}
+                <div class="alert alert-danger" role="alert">
+                    {% if authenticationError == 'code_invalid' %}
+                        Die code klopt niet of is verlopen. Probeer het opnieuw{{ byEmail ? ' of vraag hieronder een nieuwe code aan' }}.
+                    {% else %}
+                        {{ authenticationError|trans(authenticationErrorData, 'SchebTwoFactorBundle') }}
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <form action="{{ checkPathUrl ? checkPathUrl : path(checkPathRoute) }}" method="post">
+                <div class="mb-3">
+                    <label for="_auth_code" class="form-label">Code</label>
+                    {# No numeric pattern with the app: a backup code (letters and digits) works there too #}
+                    <input type="text" id="_auth_code" name="{{ authCodeParameterName }}" class="form-control form-control-lg text-center two-factor-code"
+                           autocomplete="one-time-code" autocapitalize="off" spellcheck="false" required autofocus
+                           {{ byEmail ? 'inputmode="numeric" maxlength="6"' : 'maxlength="20"' }}>
+                    <div class="form-text">
+                        {% if byEmail %}
+                            De code is 10 minuten geldig. Geen e-mail ontvangen? Kijk in je spammap.
+                        {% else %}
+                            Telefoon kwijt? Vul dan een van je back-upcodes in.
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if displayTrustedOption %}
+                    <div class="mb-4 form-check">
+                        <input type="checkbox" id="_trusted" name="{{ trustedParameterName }}" class="form-check-input">
+                        <label class="form-check-label" for="_trusted">Dit apparaat 30 dagen vertrouwen</label>
+                    </div>
+                {% endif %}
+
+                {% if isCsrfProtectionEnabled %}
+                    <input type="hidden" name="{{ csrfParameterName }}" value="{{ csrf_token(csrfTokenId) }}">
+                {% endif %}
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Controleren</button>
+                </div>
+            </form>
+
+            {% if byEmail %}
+                <form action="{{ path('app_two_factor_resend') }}" method="post" class="text-center mt-3">
+                    <input type="hidden" name="_token" value="{{ csrf_token('two_factor_resend') }}">
+                    <button type="submit" class="btn btn-link btn-sm">Stuur me een nieuwe code</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    <p class="text-center mt-3">
+        <a href="{{ logoutPath }}">Annuleren en uitloggen</a>
+    </p>
+</div>
+{% endblock %}

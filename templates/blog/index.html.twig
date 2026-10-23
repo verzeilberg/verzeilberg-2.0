@@ -2,107 +2,36 @@
 
 {% block title %}{% if currentCategory %}{{ currentCategory.name }} - {% endif %}Blog - Verzeilberg.nl{% endblock %}
 
-{% block hero_section %}{% endblock %}
+{% block page_title %}{{ currentCategory ? currentCategory.name : 'Blog' }}{% endblock %}
+{% block page_lead %}{{ currentCategory ? currentCategory.description|striptags : 'Wedstrijdverslagen, reizen en notities uit de werkplaats.' }}{% endblock %}
+
+{% block page_actions %}
+    <a href="{{ path('blog_feed') }}" class="btn btn-outline-primary" title="Volg de blog in een feedreader"><i class="fas fa-rss me-2"></i>RSS</a>
+{% endblock %}
 
 {% block body %}
-<div class="row">
-    <div class="col-lg-8">
-        {% if searchTerm is defined %}
-            <h1 class="mb-4">Search Results for "{{ searchTerm }}"</h1>
-        {% elseif currentCategory %}
-            <h1 class="mb-4">{{ currentCategory.name }}</h1>
-            {% if currentCategory.description %}
-                <p class="text-muted">{{ currentCategory.description }}</p>
-            {% endif %}
-        {% else %}
-            <h1 class="mb-4">Blog</h1>
-            <p class="text-muted">Latest articles and updates</p>
-        {% endif %}
-
-        {% if pagination.getTotalItemCount() == 0 %}
-            <div class="alert alert-info">
-                No posts found{% if currentCategory %} in this category{% endif %}.
-            </div>
-        {% else %}
-            {% for post in pagination %}
-                <article class="card mb-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                                <span class="badge bg-{% if post.status == 1 %}success{% elseif post.status == 2 %}warning{% else %}secondary{% endif %} me-1">
-                                    {% if post.status == 1 %}Published{% elseif post.status == 2 %}Offline{% elseif post.status == 3 %}Archived{% else %}Draft{% endif %}
-                                </span>
-                                {% for category in post.categories %}
-                                    <span class="badge bg-info text-dark">{{ category.name }}</span>
-                                {% endfor %}
-                            </div>
-                            <small class="text-muted">
-                                {{ post.dateCreated|date('M d, Y') }}
-                            </small>
-                        </div>
-
-                        <h2 class="card-title h4">
-                            <a href="{{ path('blog_detail', {slug: post.slug}) }}" class="text-dark text-decoration-none">
-                                {{ post.title }}
-                            </a>
-                        </h2>
-
-                        <p class="card-text">{{ post.introText|striptags|u.truncate(200) }}</p>
-
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a href="{{ path('blog_detail', {slug: post.slug}) }}" class="btn btn-outline-primary btn-sm">
-                                Read More
-                            </a>
-                            <small class="text-muted">
-                                {{ post.getCommentCount() }} comment{{ post.getCommentCount() != 1 ? 's' : '' }}
-                            </small>
-                        </div>
-                    </div>
-                </article>
-            {% endfor %}
-
-            <nav aria-label="Blog pagination">
-                {{ knp_pagination_render(pagination) }}
-            </nav>
-        {% endif %}
+<div class="row g-4">
+    <div class="col-lg-3">
+        {{ include('blog/_sidebar.html.twig') }}
     </div>
 
-    <div class="col-lg-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Categories</h5>
+    <div class="col-lg-9">
+        {% if pagination.getTotalItemCount() == 0 %}
+            <div class="empty-state">
+                <i class="fas fa-newspaper"></i>
+                <p>Hier staan nog geen berichten{% if currentCategory %}. <a href="{{ path('blog_index') }}">Toon alle berichten</a>{% endif %}.</p>
             </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    {% for category in categories %}
-                        <li class="list-group-item px-0">
-                            <a href="{{ path('blog_category', {slug: category.slug}) }}" class="text-decoration-none">
-                                {{ category.name }}
-                                <span class="badge bg-secondary float-end">{{ category.getOnlinePostCount() }}</span>
-                            </a>
-                        </li>
-                    {% else %}
-                        <li class="list-group-item px-0 text-muted">No categories</li>
-                    {% endfor %}
-                </ul>
+        {% else %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                {% for post in pagination %}
+                    {{ include('blog/_card.html.twig') }}
+                {% endfor %}
             </div>
-        </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Search</h5>
-            </div>
-            <div class="card-body">
-                <form action="{{ path('blog_search') }}" method="GET">
-                    <div class="input-group">
-                        <input type="text" name="q" class="form-control" placeholder="Search posts..." value="{{ searchTerm ?? '' }}">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+            <nav aria-label="Blogpagina's">
+                {{ knp_pagination_render(pagination, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
+            </nav>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

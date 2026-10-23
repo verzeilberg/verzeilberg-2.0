@@ -22,6 +22,10 @@ class Event
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
+    /** Set by EventSlugListener when the event is first saved (until then not initialized) */
+    #[ORM\Column(length: 255, unique: true)]
+    private string $slug;
+
     #[ORM\Column(name: 'event_start_date', type: Types::DATE_IMMUTABLE)]
     #[Assert\NotNull]
     private \DateTimeImmutable $eventStartDate;
@@ -72,6 +76,18 @@ class Event
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /** null for an event that hasn't been saved yet */
+    public function getSlug(): ?string
+    {
+        return $this->slug ?? null;
+    }
+
+    public function setSlug(string $slug): self
+    {
+        $this->slug = $slug;
+        return $this;
     }
 
     public function getEventStartDate(): \DateTimeImmutable

@@ -9,6 +9,10 @@ use App\Repository\RoutePermissionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * Grants a permission access to one or more admin routes. Admin routes without a matching
+ * rule are for ROLE_ADMIN only (see App\Security\AdminRouteAccess).
+ */
 #[ORM\Entity(repositoryClass: RoutePermissionRepository::class)]
 #[ORM\Table(name: 'route_permission')]
 #[ORM\HasLifecycleCallbacks]
@@ -21,22 +25,23 @@ class RoutePermission
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
+    /** Route name, "*" matches anything: "admin_blog_*" covers every blog admin page */
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
-    private string $routePattern;
+    #[Assert\Regex(pattern: '/^[a-z0-9_.*]+$/', message: 'Use a route name such as admin_blog_index; * matches anything.')]
+    private string $routePattern = '';
 
-    #[ORM\Column(length: 100)]
-    #[Assert\NotBlank]
-    private string $permissionName;
+    #[ORM\ManyToOne(targetEntity: Permission::class, inversedBy: 'routePermissions')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Assert\NotNull(message: 'Kies het recht dat toegang geeft.')]
+    private Permission $permission;
 
+    /** @var list<string>|null null = every HTTP method */
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $methods = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private bool $enabled = true;
-
-    #[ORM\Column(type: 'integer', options: ['default' => 0])]
-    private int $priority = 0;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
@@ -56,20 +61,24 @@ class RoutePermission
         return $this->routePattern;
     }
 
-    public function setRoutePattern(string $routePattern): self
+    public function setRoutePattern(?string $routePattern): self
     {
-        $this->routePattern = $routePattern;
+        $this->routePattern = strtolower(trim((string) $routePattern));
         return $this;
     }
 
-    public function getPermissionName(): string
+    /** Null only for a new rule whose permission isn't chosen yet */
+    public function getPermission(): ?Permission
     {
-        return $this->permissionName;
+        return $this->permission ?? null;
     }
 
-    public function setPermissionName(string $permissionName): self
+    /** Null (the form's empty choice) is ignored; NotNull then reports it for a new rule */
+    public function setPermission(?Permission $permission): self
     {
-        $this->permissionName = $permissionName;
+        if ($permission !== null) {
+            $this->permission = $permission;
+        }
         return $this;
     }
 
@@ -80,7 +89,7 @@ class RoutePermission
 
     public function setMethods(?array $methods): self
     {
-        $this->methods = $methods;
+        $this->methods = $methods ? array_values($methods) : null;
         return $this;
     }
 
@@ -95,17 +104,6 @@ class RoutePermission
         return $this;
     }
 
-    public function getPriority(): int
-    {
-        return $this->priority;
-    }
-
-    public function setPriority(int $priority): self
-    {
-        $this->priority = $priority;
-        return $this;
-    }
-
     public function getDescription(): ?string
     {
         return $this->description;
@@ -117,29 +115,30 @@ class RoutePermission
         return $this;
     }
 
+    public function matchesRouteName(string $route): bool
+    {
+        $regex = '#^' . str_replace('\*', '.*', preg_quote($this->routePattern, '#')) . '$#';
+
+        return (bool) preg_match($regex, $route);
+    }
+
     public function matches(string $route, ?string $method = null): bool
     {
-        if (!$this->enabled) {
+        if (!$this->enabled || !$this->matchesRouteName($route)) {
             return false;
         }
 
-        // Convert route pattern to regex
-        $pattern = preg_replace('/\{[^}]+\}/', '[^/]+', $this->routePattern);
-        $pattern = '#^' . $pattern . '$#';
+        return $this->methods === null || $method === null || in_array(strtoupper($method), $this->methods, true);
+    }
 
-        if (!preg_match($pattern, $route)) {
-            return false;
-        }
-
-        if ($this->methods !== null && $method !== null && !in_array(strtoupper($method), $this->methods)) {
-            return false;
-        }
-
-        return true;
+    /** Exact names beat wildcards, longer patterns beat shorter ones: admin_blog_delete before admin_blog_* before admin_* */
+    public function getSpecificity(): int
+    {
+        return (str_contains($this->routePattern, '*') ? 0 : 1000) + strlen($this->routePattern);
     }
 
     public function __toString(): string
     {
-        return $this->routePattern . ' → ' . $this->permissionName;
+        return $this->routePattern . ' → ' . ($this->getPermission()?->getName() ?? '?');
     }
 }

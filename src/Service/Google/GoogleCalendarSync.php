@@ -61,7 +61,7 @@ class GoogleCalendarSync
         $account = $agenda->getGoogleAccount();
         $calendarId = $agenda->getGoogleCalendarId();
         if ($account === null || $calendarId === null) {
-            throw new GoogleApiException(sprintf('Agenda "%s" is not linked to a Google calendar.', $agenda->getTitle()));
+            throw new GoogleApiException(sprintf('Agenda "%s" is niet gekoppeld aan een Google-agenda.', $agenda->getTitle()));
         }
 
         $timezone = new \DateTimeZone($this->appTimezone);
@@ -125,7 +125,7 @@ class GoogleCalendarSync
         $start = $event['start'];
         $end = $event['end'] ?? $start;
 
-        $item->setTitle(mb_substr(trim((string) ($event['summary'] ?? '')), 0, 255) ?: '(no title)');
+        $item->setTitle(mb_substr(trim((string) ($event['summary'] ?? '')), 0, 255) ?: '(geen titel)');
         $item->setLocation(mb_substr(trim((string) ($event['location'] ?? '')), 0, 255) ?: null);
         $item->setDescription($this->plainText((string) ($event['description'] ?? '')));
 

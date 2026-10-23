@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 ['clean']
             ]
         },
-        placeholder: 'Compose your HTML email...'
+        placeholder: 'Schrijf je HTML-e-mail...'
     });
 
     if (textarea.value) {

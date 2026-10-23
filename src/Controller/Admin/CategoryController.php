@@ -14,11 +14,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/admin/category')]
-#[IsGranted('ROLE_ADMIN')]
 class CategoryController extends AbstractController
 {
     public function __construct(
@@ -70,7 +68,7 @@ class CategoryController extends AbstractController
         if ($this->isCsrfTokenValid('toggle' . $category->getId(), $request->request->get('_token'))) {
             $category->setEnabled(!$category->isEnabled());
             $this->em->flush();
-            $this->addFlash('success', 'Category ' . ($category->isEnabled() ? 'enabled' : 'disabled') . ' successfully.');
+            $this->addFlash('success', 'Categorie ' . ($category->isEnabled() ? 'ingeschakeld' : 'uitgeschakeld') . '.');
         }
 
         if ($request->isXmlHttpRequest()) {
@@ -93,7 +91,7 @@ class CategoryController extends AbstractController
             $this->em->persist($category);
             $this->em->flush();
 
-            $this->addFlash('success', 'Category created successfully.');
+            $this->addFlash('success', 'Categorie aangemaakt.');
 
             return $this->redirectToRoute('admin_category_index');
         }
@@ -114,7 +112,7 @@ class CategoryController extends AbstractController
 
             $this->em->flush();
 
-            $this->addFlash('success', 'Category updated successfully.');
+            $this->addFlash('success', 'Categorie opgeslagen.');
 
             return $this->redirectToRoute('admin_category_index');
         }
@@ -130,7 +128,7 @@ class CategoryController extends AbstractController
     {
         if ($this->isCsrfTokenValid('delete' . $category->getId(), $request->request->get('_token'))) {
             if ($category->getBlogPosts()->count() > 0) {
-                $message = 'Cannot delete category with associated posts.';
+                $message = 'Een categorie met berichten kan niet worden verwijderd.';
                 if ($request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json') {
                     return new JsonResponse(['success' => false, 'message' => $message]);
                 }
@@ -138,14 +136,14 @@ class CategoryController extends AbstractController
             } else {
                 $category->setEnabled(false);
                 $this->em->flush();
-                $message = 'Category deleted successfully.';
+                $message = 'Categorie verwijderd.';
                 if ($request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json') {
                     return new JsonResponse(['success' => true]);
                 }
                 $this->addFlash('success', $message);
             }
         } else {
-            $message = 'Invalid token';
+            $message = 'Ongeldig beveiligingstoken';
             if ($request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json') {
                 return new JsonResponse(['success' => false, 'message' => $message]);
             }

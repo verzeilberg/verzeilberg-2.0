@@ -1,0 +1,15 @@
+{# A user in a list on the friends page, with avatar and name; the buttons go in the `actions` variable (HTML) #}
+<li class="list-group-item d-flex flex-wrap align-items-center gap-3">
+    {{ include('user/_avatar.html.twig', {user: other, avatarClass: 'user-avatar'}) }}
+    <div class="flex-grow-1 text-break">
+        {% if other.profilePublic or friendship.accepted %}
+            <a href="{{ path('app_user_show', {id: other.id}) }}" class="fw-semibold">{{ other.fullName }}</a>
+        {% else %}
+            <span class="fw-semibold">{{ other.fullName }}</span>
+        {% endif %}
+        {% if other.details and other.details.location %}
+            <div class="card-meta"><span><i class="fas fa-map-marker-alt"></i>{{ other.details.location }}</span></div>
+        {% endif %}
+    </div>
+    <div class="d-flex flex-wrap gap-2">{{ actions|raw }}</div>
+</li>

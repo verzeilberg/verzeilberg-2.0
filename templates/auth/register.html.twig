@@ -1,175 +1,128 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Create Account - Verzeilberg.nl{% endblock %}
+{% block title %}Account aanmaken - Verzeilberg.nl{% endblock %}
 
-{% block stylesheets %}
-    {{ parent() }}
-{% endblock %}
-
-{% block hero_section %}{% endblock %}
+{% block page_title %}Account aanmaken{% endblock %}
+{% block page_lead %}Word lid van Verzeilberg.nl om te reageren op berichten, checklists in te vullen en zeil- en techupdates te volgen.{% endblock %}
 
 {% block body %}
-<div class="row justify-content-center">
-    <div class="col-12 col-md-10 col-lg-8 col-xl-7">
-        <!-- Illustration/Branding Card -->
-        <div class="card bg-dark text-white mb-4 d-none d-lg-flex card-border-top">
-            <div class="card-body p-5 d-flex flex-column justify-content-center">
-                <div class="text-center">
-                    <i class="fas fa-ship fa-4x text-warning mb-3"></i>
-                    <h2 class="fw-bold mb-2">Join Verzeilberg.nl</h2>
-                    <p class="lead mb-0 opacity-75">Sailing adventures, tech projects & life stories</p>
+<div class="form-page-wide">
+    <div class="card">
+        <div class="card-body article-body">
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    {{ form_label(form.firstName, 'Voornaam', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.firstName, {'attr': {'class': 'form-control', 'placeholder': 'Voornaam', 'autocomplete': 'given-name'}}) }}
+                    {{ form_errors(form.firstName) }}
                 </div>
-                <ul class="list-unstyled mt-4">
-                    <li class="mb-2"><i class="fas fa-check text-warning me-2"></i>Weekly sailing & tech updates</li>
-                    <li class="mb-2"><i class="fas fa-check text-warning me-2"></i>Exclusive project insights</li>
-                    <li class="mb-2"><i class="fas fa-check text-warning me-2"></i>Community events & meetups</li>
-                    <li class="mb-0"><i class="fas fa-check text-warning me-2"></i>No spam, unsubscribe anytime</li>
-                </ul>
+                <div class="col-md-6">
+                    {{ form_label(form.lastName, 'Achternaam', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.lastName, {'attr': {'class': 'form-control', 'placeholder': 'Achternaam', 'autocomplete': 'family-name'}}) }}
+                    {{ form_errors(form.lastName) }}
+                </div>
             </div>
-        </div>
 
-        <!-- Registration Form Card -->
-        <div class="card shadow-sm card-border-top">
-            <div class="card-body p-4 p-md-5">
-                <div class="text-center mb-4">
-                    <a href="{{ path('app_home') }}" class="text-decoration-none">
-                        <span class="fs-4 fw-bold text-dark">
-                            <i class="fas fa-anchor text-warning me-2"></i>Verzeilberg.nl
-                        </span>
-                    </a>
-                    <h3 class="fw-bold mt-3">Create your account</h3>
-                    <p class="text-muted">Join our community of sailors and developers</p>
-                </div>
+            <div class="mb-3">
+                {{ form_label(form.email, 'E-mailadres', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.email, {'attr': {'class': 'form-control', 'placeholder': 'jij@voorbeeld.nl', 'autocomplete': 'email'}}) }}
+                {{ form_errors(form.email) }}
+            </div>
 
-                {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
-
-                <!-- Name Fields Row -->
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        {{ form_label(form.firstName, null, {'label_attr': {'class': 'form-label fw-medium'}}) }}
-                        {{ form_widget(form.firstName, {'attr': {'class': 'form-control', 'placeholder': 'First name', 'autocomplete': 'given-name'}}) }}
-                        {{ form_errors(form.firstName) }}
-                    </div>
-                    <div class="col-md-6">
-                        {{ form_label(form.lastName, null, {'label_attr': {'class': 'form-label fw-medium'}}) }}
-                        {{ form_widget(form.lastName, {'attr': {'class': 'form-control', 'placeholder': 'Last name', 'autocomplete': 'family-name'}}) }}
-                        {{ form_errors(form.lastName) }}
-                    </div>
-                </div>
-
-                <!-- Email Field -->
-                <div class="mb-3">
-                    {{ form_label(form.email, null, {'label_attr': {'class': 'form-label fw-medium'}}) }}
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-envelope"></i></span>
-                        {{ form_widget(form.email, {'attr': {'class': 'form-control border-start-0', 'placeholder': 'you@example.com', 'autocomplete': 'email'}}) }}
-                    </div>
-                    {{ form_errors(form.email) }}
-                </div>
-
-                <!-- Password Field with Strength Meter -->
-                <div class="mb-3">
-                    <div class="d-flex align-items-center justify-content-between mb-1">
-                        {{ form_label(form.plainPassword.first, 'Password', {'label_attr': {'class': 'form-label fw-medium mb-0'}}) }}
-                        <button type="button" class="btn btn-link p-0 ms-2" data-bs-toggle="popover" data-bs-placement="top" data-bs-trigger="focus" tabindex="0" data-bs-title="Password Requirements" data-bs-content="<ul class='mb-0 ps-3'><li>At least 8 characters</li><li>One uppercase letter</li><li>One lowercase letter</li><li>One number</li><li>One special character</li></ul>" aria-label="Password requirements">
-                            <i class="fas fa-info-circle text-muted"></i>
-                        </button>
-                    </div>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock"></i></span>
-                    </div>
-                    {{ form_errors(form.plainPassword.first) }}
-
-                    <!-- Password Strength Meter -->
-                    <div class="password-strength mt-2">
-                        <div class="password-strength-bar strength-0" id="password-strength-bar"></div>
-                    </div>
-                </div>
-
-                <!-- Confirm Password -->
-                <div class="mb-3">
-                    {{ form_label(form.plainPassword.second, 'Confirm Password', {'label_attr': {'class': 'form-label fw-medium'}}) }}
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock"></i></span>
-                        {{ form_widget(form.plainPassword.second, {'attr': {'class': 'form-control border-start-0', 'placeholder': 'Confirm your password', 'autocomplete': 'new-password'}}) }}
-                    </div>
-                    {{ form_errors(form.plainPassword.second) }}
-                </div>
-
-                <!-- Terms Checkbox -->
-                <div class="mb-4">
-                    <div class="form-check">
-                        {{ form_widget(form.termsAccepted, {'attr': {'class': 'form-check-input', 'id': 'terms-accepted'}}) }}
-                        <label class="form-check-label" for="terms-accepted">
-                            I agree to the 
-                            <a href="#" class="link-custom" data-bs-toggle="modal" data-bs-target="#termsModal">Terms of Service</a> 
-                            and 
-                            <a href="#" class="link-custom" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a>
-                        </label>
-                        {{ form_errors(form.termsAccepted, {'attr': {'class': 'text-danger small mt-1 d-block'}}) }}
-                    </div>
-                </div>
-
-                <!-- Submit Button -->
-                <div class="d-grid mb-4">
-                    <button type="submit" class="btn btn-primary btn-lg py-3">
-                        <i class="fas fa-user-plus me-2"></i>Create Account
+            {# Password with strength meter (js/components/password-strength.js reads #password-input) #}
+            <div class="mb-3">
+                <div class="d-flex align-items-center mb-1">
+                    {{ form_label(form.plainPassword.first, 'Wachtwoord', {'id': 'password-input', 'label_attr': {'class': 'form-label mb-0'}}) }}
+                    <button type="button" class="btn btn-link p-0 ms-2" data-bs-toggle="popover" data-bs-placement="top" data-bs-trigger="focus" tabindex="0" data-bs-title="Eisen aan het wachtwoord" data-bs-content="<ul class='mb-0 ps-3'><li>Minimaal 8 tekens</li><li>Eén hoofdletter</li><li>Eén kleine letter</li><li>Eén cijfer</li><li>Eén speciaal teken</li></ul>" aria-label="Eisen aan het wachtwoord">
+                        <i class="fas fa-info-circle text-muted"></i>
                     </button>
                 </div>
-
-{{ form_end(form) }}
-
-                <!-- Login Link -->
-                <div class="text-center">
-                    <p class="mb-0">Already have an account? <a href="{{ path('app_login') }}" class="link-custom fw-medium">Sign in</a></p>
+                {{ form_widget(form.plainPassword.first, {'id': 'password-input', 'attr': {'class': 'form-control', 'placeholder': 'Kies een wachtwoord', 'autocomplete': 'new-password'}}) }}
+                {{ form_errors(form.plainPassword.first) }}
+                <div class="password-strength mt-2">
+                    <div class="password-strength-bar strength-0" id="password-strength-bar"></div>
                 </div>
             </div>
+
+            <div class="mb-3">
+                {{ form_label(form.plainPassword.second, 'Bevestig wachtwoord', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.plainPassword.second, {'attr': {'class': 'form-control', 'placeholder': 'Bevestig je wachtwoord', 'autocomplete': 'new-password'}}) }}
+                {{ form_errors(form.plainPassword.second) }}
+            </div>
+
+            <div class="mb-4">
+                <div class="form-check">
+                    {{ form_widget(form.termsAccepted, {'attr': {'class': 'form-check-input', 'id': 'terms-accepted'}}) }}
+                    <label class="form-check-label" for="terms-accepted">
+                        Ik ga akkoord met de
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">gebruiksvoorwaarden</a>
+                        en het
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">privacybeleid</a>
+                    </label>
+                    {{ form_errors(form.termsAccepted, {'attr': {'class': 'text-danger small mt-1 d-block'}}) }}
+                </div>
+            </div>
+
+            {# Spam trap: hidden for people (and screen readers), bots fill it in #}
+            <div class="visually-offscreen" aria-hidden="true">
+                {{ form_row(form.website) }}
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Account aanmaken</button>
+            </div>
+
+            {{ form_end(form) }}
         </div>
     </div>
+    <p class="text-center mt-3">
+        Heb je al een account? <a href="{{ path('app_login') }}">Inloggen</a>
+    </p>
 </div>
 
 <!-- Terms of Service Modal -->
 <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="termsModalLabel"><i class="fas fa-file-alt me-2"></i>Terms of Service</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Gebruiksvoorwaarden</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
             </div>
             <div class="modal-body">
-                <h6>1. Acceptance of Terms</h6>
-                <p>By accessing and using Verzeilberg.nl, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                <h6>1. Aanvaarding van de voorwaarden</h6>
+                <p>Door Verzeilberg.nl te bezoeken en te gebruiken, ga je akkoord met deze voorwaarden.</p>
                 
-                <h6>2. User Accounts</h6>
-                <p>When you create an account, you must provide accurate and complete information. You are responsible for maintaining the confidentiality of your account and password.</p>
+                <h6>2. Accounts</h6>
+                <p>Als je een account aanmaakt, geef je juiste en volledige gegevens op. Je bent zelf verantwoordelijk voor het geheimhouden van je account en wachtwoord.</p>
                 
-                <h6>3. Content</h6>
-                <p>You retain ownership of content you post. By posting, you grant us a license to use, display, and distribute your content on our platform.</p>
+                <h6>3. Inhoud</h6>
+                <p>Wat je plaatst, blijft van jou. Door iets te plaatsen geef je ons toestemming om het op deze site te gebruiken, te tonen en te verspreiden.</p>
                 
-                <h6>4. Prohibited Activities</h6>
-                <p>You may not use our service for any unlawful purpose or to post harmful, offensive, or illegal content.</p>
+                <h6>4. Niet toegestaan</h6>
+                <p>Je mag de site niet gebruiken voor onwettige doelen of om schadelijke, beledigende of illegale inhoud te plaatsen.</p>
                 
-                <h6>5. Intellectual Property</h6>
-                <p>All content, features, and functionality of Verzeilberg.nl are owned by us and are protected by international copyright laws.</p>
+                <h6>5. Intellectueel eigendom</h6>
+                <p>Alle inhoud, functies en functionaliteit van Verzeilberg.nl zijn van ons en worden beschermd door het internationale auteursrecht.</p>
                 
-                <h6>6. Termination</h6>
-                <p>We may terminate or suspend your account immediately, without prior notice, for conduct that we believe violates these Terms.</p>
+                <h6>6. Beëindiging</h6>
+                <p>We kunnen je account direct en zonder voorafgaande melding opheffen of blokkeren als we vinden dat je deze voorwaarden overtreedt.</p>
                 
-                <h6>7. Limitation of Liability</h6>
-                <p>We shall not be liable for any indirect, incidental, or consequential damages arising from your use of the service.</p>
+                <h6>7. Beperking van aansprakelijkheid</h6>
+                <p>We zijn niet aansprakelijk voor indirecte schade, incidentele schade of gevolgschade door je gebruik van de site.</p>
                 
-                <h6>8. Changes to Terms</h6>
-                <p>We reserve the right to modify these Terms at any time. Continued use after changes constitutes acceptance.</p>
+                <h6>8. Wijzigingen</h6>
+                <p>We mogen deze voorwaarden altijd aanpassen. Als je de site daarna blijft gebruiken, ga je akkoord met de wijzigingen.</p>
                 
-                <h6>9. Governing Law</h6>
-                <p>These Terms shall be governed by the laws of the Netherlands.</p>
+                <h6>9. Toepasselijk recht</h6>
+                <p>Op deze voorwaarden is Nederlands recht van toepassing.</p>
                 
                 <h6>10. Contact</h6>
-                <p>For questions about these Terms, contact us at <a href="mailto:legal@verzeilberg.nl">legal@verzeilberg.nl</a>.</p>
+                <p>Vragen over deze voorwaarden? Mail naar <a href="mailto:legal@verzeilberg.nl">legal@verzeilberg.nl</a>.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#privacyModal">Read Privacy Policy</button>
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Sluiten</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#privacyModal">Lees het privacybeleid</button>
             </div>
         </div>
     </div>
@@ -179,43 +132,43 @@
 <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="privacyModalLabel"><i class="fas fa-shield-alt me-2"></i>Privacy Policy</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header">
+                <h5 class="modal-title" id="privacyModalLabel">Privacybeleid</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
             </div>
             <div class="modal-body">
-                <h6>1. Information We Collect</h6>
-                <p>We collect information you provide directly: name, email, and any content you post. We also collect usage data automatically.</p>
+                <h6>1. Welke gegevens we verzamelen</h6>
+                <p>We bewaren de gegevens die je zelf opgeeft: naam, e-mailadres en alles wat je plaatst. Daarnaast verzamelen we automatisch gebruiksgegevens.</p>
                 
-                <h6>2. How We Use Your Information</h6>
-                <p>To provide and improve our service, send updates, respond to inquiries, and ensure security.</p>
+                <h6>2. Waarvoor we je gegevens gebruiken</h6>
+                <p>Om de site te laten werken en te verbeteren, updates te sturen, vragen te beantwoorden en de beveiliging te waarborgen.</p>
                 
-                <h6>3. Data Sharing</h6>
-                <p>We do not sell your personal data. We may share with service providers who assist in operating our site.</p>
+                <h6>3. Delen van gegevens</h6>
+                <p>We verkopen je persoonsgegevens niet. We kunnen ze delen met dienstverleners die helpen de site te draaien.</p>
                 
-                <h6>4. Data Security</h6>
-                <p>We implement appropriate security measures to protect your personal information.</p>
+                <h6>4. Beveiliging</h6>
+                <p>We nemen passende maatregelen om je persoonsgegevens te beschermen.</p>
                 
-                <h6>5. Your Rights</h6>
-                <p>You can access, correct, or delete your personal data. Contact us to exercise these rights.</p>
+                <h6>5. Jouw rechten</h6>
+                <p>Je kunt je persoonsgegevens inzien, laten corrigeren of laten verwijderen. Neem daarvoor contact met ons op.</p>
                 
                 <h6>6. Cookies</h6>
-                <p>We use cookies to enhance your experience. You can disable cookies in your browser settings.</p>
+                <p>We gebruiken cookies om de site prettiger te laten werken. Je kunt cookies uitzetten in de instellingen van je browser.</p>
                 
-                <h6>7. Third-Party Links</h6>
-                <p>Our site may contain links to third-party sites. We are not responsible for their privacy practices.</p>
+                <h6>7. Links naar andere sites</h6>
+                <p>De site kan links naar andere sites bevatten. We zijn niet verantwoordelijk voor hun privacybeleid.</p>
                 
-                <h6>8. Children's Privacy</h6>
-                <p>Our service is not intended for children under 16. We do not knowingly collect data from children.</p>
+                <h6>8. Kinderen</h6>
+                <p>De site is niet bedoeld voor kinderen onder de 16. We verzamelen niet bewust gegevens van kinderen.</p>
                 
-                <h6>9. Changes</h6>
-                <p>We may update this Privacy Policy. Continued use constitutes acceptance of changes.</p>
+                <h6>9. Wijzigingen</h6>
+                <p>We kunnen dit privacybeleid aanpassen. Als je de site blijft gebruiken, ga je akkoord met de wijzigingen.</p>
                 
                 <h6>10. Contact</h6>
-                <p>For privacy questions, contact <a href="mailto:privacy@verzeilberg.nl">privacy@verzeilberg.nl</a>.</p>
+                <p>Vragen over privacy? Mail naar <a href="mailto:privacy@verzeilberg.nl">privacy@verzeilberg.nl</a>.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Sluiten</button>
             </div>
         </div>
     </div>

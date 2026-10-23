@@ -25,4 +25,9 @@ class ContactRepository extends ServiceEntityRepository
 
         return $this->paginator->paginate($query, $page, $limit);
     }
+
+    public function countUnread(): int
+    {
+        return $this->count(['readAt' => null]);
+    }
 }

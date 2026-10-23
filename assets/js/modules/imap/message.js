@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         button.addEventListener('click', function () {
             button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Marking...';
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Bezig...';
             post(url, '_token=' + encodeURIComponent(button.dataset.csrfToken)).then(data => {
                 if (data.success) {
                     location.reload();
@@ -38,13 +38,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const deleteBtn = document.querySelector('.delete-msg');
     if (deleteBtn) {
         deleteBtn.addEventListener('click', function () {
-            if (!confirm('Delete message "' + deleteBtn.dataset.subject + '"?')) {
-                return;
-            }
-            post(imapMessageConfig.deleteUrl, '_token=' + encodeURIComponent(deleteBtn.dataset.csrfToken)).then(data => {
-                if (data.success) {
-                    window.location.href = imapMessageConfig.backUrl;
+            AppDialog.confirm('Bericht "' + deleteBtn.dataset.subject + '" verwijderen?', { confirmLabel: 'Verwijderen', confirmIcon: 'fa-trash' }).then(ok => {
+                if (!ok) {
+                    return;
                 }
+                post(imapMessageConfig.deleteUrl, '_token=' + encodeURIComponent(deleteBtn.dataset.csrfToken)).then(data => {
+                    if (data.success) {
+                        window.location.href = imapMessageConfig.backUrl;
+                    } else {
+                        AppDialog.alert(data.message || 'Verwijderen mislukt');
+                    }
+                });
             });
         });
     }
@@ -59,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     bootstrap.Modal.getInstance(document.getElementById('moveModal')).hide();
                     location.reload();
                 } else {
-                    alert('Move failed: ' + data.message);
+                    AppDialog.alert('Verplaatsen mislukt: ' + data.message);
                 }
             });
         });

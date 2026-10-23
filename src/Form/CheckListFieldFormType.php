@@ -30,7 +30,7 @@ class CheckListFieldFormType extends AbstractType
     {
         $builder
             ->add('name', TextType::class, [
-                'label' => 'Name',
+                'label' => 'Naam',
                 'constraints' => [
                     new NotBlank(),
                     new Length(max: 255),
@@ -38,12 +38,12 @@ class CheckListFieldFormType extends AbstractType
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('introText', TextareaType::class, [
-                'label' => 'Intro Text',
+                'label' => 'Introtekst',
                 'required' => false,
                 'attr' => ['class' => 'form-control', 'rows' => 3],
             ])
             ->add('order', NumberType::class, [
-                'label' => 'Order',
+                'label' => 'Volgorde',
                 'required' => false,
                 'attr' => ['class' => 'form-control', 'min' => 0],
                 'data' => 999,
@@ -52,36 +52,36 @@ class CheckListFieldFormType extends AbstractType
                 'class' => CheckListField::class,
                 'choices' => $options['parent_choices'],
                 'choice_label' => 'name',
-                'label' => 'Fieldset',
+                'label' => 'Veldgroep',
                 'required' => false,
-                'placeholder' => '— None (top level) —',
-                'help' => 'Place this field in a fieldset. You can also do this by dragging the field in the Fields tab.',
+                'placeholder' => '— Geen (hoogste niveau) —',
+                'help' => 'Plaats dit veld in een veldgroep. Dit kan ook door het veld te slepen op het tabblad Velden.',
                 'attr' => ['class' => 'form-select'],
             ])
             ->add('defaultValue', TextType::class, [
-                'label' => 'Default value',
+                'label' => 'Standaardwaarde',
                 'mapped' => false,
                 'required' => false,
-                'help' => 'Pre-filled for a new item. For a choice field: the value of the answer (checkbox: several values separated by commas).',
+                'help' => 'Vooraf ingevuld bij een nieuw item. Bij een keuzeveld: de waarde van het antwoord (selectievakjes: meerdere waarden gescheiden door komma\'s).',
                 'attr' => ['class' => 'form-control', 'maxlength' => 255],
             ])
             ->add('placeholder', TextType::class, [
-                'label' => 'Placeholder',
+                'label' => 'Voorbeeldtekst',
                 'mapped' => false,
                 'required' => false,
-                'help' => 'Example text shown in the empty field (for a dropdown: the text of the empty choice). Leave empty for the default.',
+                'help' => 'Voorbeeldtekst in het lege veld (bij een keuzelijst: de tekst van de lege keuze). Laat leeg voor de standaardtekst.',
                 'attr' => ['class' => 'form-control', 'maxlength' => 255],
             ])
             ->add('conditionField', ChoiceType::class, [
-                'label' => 'Show only when',
+                'label' => 'Alleen tonen als',
                 'mapped' => false,
                 'required' => false,
                 'choices' => array_combine(
                     array_map(fn (array $source) => $source['name'], $options['condition_sources']),
                     array_keys($options['condition_sources'])
                 ) ?: [],
-                'placeholder' => '— Always show —',
-                'help' => 'Only show this field (or fieldset) when a choice field has one of the selected answers.',
+                'placeholder' => '— Altijd tonen —',
+                'help' => 'Toon dit veld (of deze veldgroep) alleen als een keuzeveld een van de gekozen antwoorden heeft.',
                 'attr' => ['class' => 'form-select', 'data-condition-sources' => json_encode($options['condition_sources'])],
             ])
             // JSON list of answer values, filled by the checkboxes the field form script renders for the chosen field
@@ -90,15 +90,15 @@ class CheckListFieldFormType extends AbstractType
                 'required' => false,
             ])
             ->add('showInOverview', CheckboxType::class, [
-                'label' => 'Show in Overview',
+                'label' => 'Tonen in overzicht',
                 'required' => false,
                 'attr' => ['class' => 'form-check-input'],
             ])
             ->add('fieldType', EntityType::class, [
-                'label' => 'Field Type',
+                'label' => 'Veldtype',
                 'class' => CheckListFieldType::class,
                 'choice_label' => 'name',
-                'placeholder' => 'Select field type',
+                'placeholder' => 'Kies een veldtype',
                 'required' => true,
                 // The field form script shows the matching options by form type (not by database id)
                 'choice_attr' => fn (CheckListFieldType $type) => ['data-form-type' => $type->getFormType()],
@@ -109,17 +109,17 @@ class CheckListFieldFormType extends AbstractType
                 },
             ])
             ->add('required', CheckboxType::class, [
-                'label' => 'Required',
+                'label' => 'Verplicht',
                 'required' => false,
                 'attr' => ['class' => 'form-check-input'],
             ])
             ->add('requiredMessage', TextType::class, [
-                'label' => 'Required Message',
+                'label' => 'Melding bij verplicht veld',
                 'required' => false,
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('answers', EntityType::class, [
-                'label' => 'Predefined Answers (for select/radio/checkbox)',
+                'label' => 'Vaste antwoorden (voor keuzelijst/keuzerondjes/selectievakjes)',
                 'class' => Answer::class,
                 'choice_label' => 'label',
                 'multiple' => true,
@@ -132,28 +132,28 @@ class CheckListFieldFormType extends AbstractType
                 },
             ])
             ->add('readonly', CheckboxType::class, [
-                'label' => 'Read only',
+                'label' => 'Alleen-lezen',
                 'required' => false,
                 'mapped' => false,
                 'value' => true,
                 'attr' => ['class' => 'form-check-input'],
             ])
             ->add('disabled', CheckboxType::class, [
-                'label' => 'Disabled',
+                'label' => 'Uitgeschakeld',
                 'required' => false,
                 'mapped' => false,
                 'value' => true,
                 'attr' => ['class' => 'form-check-input'],
             ])
             ->add('maxlength', CheckboxType::class, [
-                'label' => 'Max length',
+                'label' => 'Maximale lengte',
                 'required' => false,
                 'mapped' => false,
                 'value' => true,
                 'attr' => ['class' => 'form-check-input'],
             ])
             ->add('maxLengthValue', NumberType::class, [
-                'label' => 'Max length value',
+                'label' => 'Maximaal aantal tekens',
                 'required' => false,
                 'mapped' => false,
                 'html5' => true,
@@ -167,42 +167,42 @@ class CheckListFieldFormType extends AbstractType
                 'attr' => ['class' => 'form-check-input'],
             ])
             ->add('resize', CheckboxType::class, [
-                'label' => 'Resize',
+                'label' => 'Formaat aanpasbaar',
                 'required' => false,
                 'mapped' => false,
                 'value' => true,
                 'attr' => ['class' => 'form-check-input'],
             ])
             ->add('measurements', CheckboxType::class, [
-                'label' => 'Dimensions',
+                'label' => 'Afmetingen',
                 'required' => false,
                 'mapped' => false,
                 'value' => true,
                 'attr' => ['class' => 'form-check-input'],
             ])
             ->add('textareaWidth', NumberType::class, [
-                'label' => 'Width',
+                'label' => 'Breedte',
                 'required' => false,
                 'mapped' => false,
                 'html5' => true,
-                'attr' => ['class' => 'form-control', 'placeholder' => 'width', 'min' => 1, 'step' => 1],
+                'attr' => ['class' => 'form-control', 'placeholder' => 'breedte', 'min' => 1, 'step' => 1],
             ])
             ->add('textareaHeight', NumberType::class, [
-                'label' => 'Height',
+                'label' => 'Hoogte',
                 'required' => false,
                 'mapped' => false,
                 'html5' => true,
-                'attr' => ['class' => 'form-control', 'placeholder' => 'height', 'min' => 1, 'step' => 1],
+                'attr' => ['class' => 'form-control', 'placeholder' => 'hoogte', 'min' => 1, 'step' => 1],
             ])
             ->add('measurementsType', ChoiceType::class, [
-                'label' => 'Unit',
+                'label' => 'Eenheid',
                 'required' => false,
                 'mapped' => false,
                 'choices' => ['px' => 'px', '%' => '%'],
                 'attr' => ['class' => 'form-select'],
             ])
             ->add('prependappend', CheckboxType::class, [
-                'label' => 'Prepend/Append',
+                'label' => 'Voor-/achtervoegsel',
                 'required' => false,
                 'mapped' => false,
                 'value' => true,
@@ -210,35 +210,35 @@ class CheckListFieldFormType extends AbstractType
                 'data' => true,
             ])
             ->add('preapp', ChoiceType::class, [
-                'label' => 'Position',
+                'label' => 'Positie',
                 'required' => true,
                 'mapped' => false,
-                'choices' => ['Prepend' => 'pre', 'Append' => 'app'],
+                'choices' => ['Ervoor' => 'pre', 'Erachter' => 'app'],
                 'expanded' => true,
                 'multiple' => false,
                 'attr' => ['class' => 'form-check-input'],
             ])
             ->add('apppreinput', TextType::class, [
-                'label' => 'Value',
+                'label' => 'Waarde',
                 'required' => false,
                 'mapped' => false,
                 'attr' => ['class' => 'form-control', 'placeholder' => 'VB: ml'],
             ])
             ->add('maxUploadSize', NumberType::class, [
-                'label' => 'Max Upload Size (MB)',
+                'label' => 'Maximale bestandsgrootte (MB)',
                 'required' => false,
                 'mapped' => false,
                 'html5' => true,
                 'attr' => ['class' => 'form-control', 'min' => 1, 'max' => 100, 'step' => 1],
             ])
             ->add('allowedFileTypes', TextType::class, [
-                'label' => 'Allowed File Types',
+                'label' => 'Toegestane bestandstypen',
                 'required' => false,
                 'mapped' => false,
-                'attr' => ['class' => 'form-control', 'placeholder' => 'pdf,jpg,png or application/pdf,image/jpeg,image/png'],
+                'attr' => ['class' => 'form-control', 'placeholder' => 'pdf,jpg,png of application/pdf,image/jpeg,image/png'],
             ])
             ->add('dateFormat', ChoiceType::class, [
-                'label' => 'Date Format',
+                'label' => 'Datumformaat',
                 'required' => false,
                 'mapped' => false,
                 'choices' => [
@@ -252,14 +252,14 @@ class CheckListFieldFormType extends AbstractType
                 'attr' => ['class' => 'form-select'],
             ])
             ->add('showTime', CheckboxType::class, [
-                'label' => 'Show Time',
+                'label' => 'Tijd tonen',
                 'required' => false,
                 'mapped' => false,
                 'value' => true,
                 'attr' => ['class' => 'form-check-input'],
             ])
             ->add('allowedEmailDomains', TextType::class, [
-                'label' => 'Allowed Email Domains',
+                'label' => 'Toegestane e-maildomeinen',
                 'required' => false,
                 'mapped' => false,
                 'attr' => ['class' => 'form-control', 'placeholder' => 'verzeilberg.nl,hotmail.com,.nl,.eu'],
@@ -376,7 +376,7 @@ class CheckListFieldFormType extends AbstractType
                 } else {
                     unset($options['condition']);
                     if ($source !== null) {
-                        $form->get('conditionField')->addError(new \Symfony\Component\Form\FormError('Select at least one answer for which this field is shown.'));
+                        $form->get('conditionField')->addError(new \Symfony\Component\Form\FormError('Kies minstens één antwoord waarbij dit veld wordt getoond.'));
                     }
                 }
             }

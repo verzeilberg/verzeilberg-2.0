@@ -53,7 +53,7 @@ class CheckListItemType extends AbstractType
             $builder->add(self::HONEYPOT_FIELD, TextType::class, [
                 'mapped' => false,
                 'required' => false,
-                'label' => 'Leave this field empty',
+                'label' => 'Laat dit veld leeg',
                 'attr' => ['autocomplete' => 'off', 'tabindex' => '-1'],
             ]);
         }
@@ -256,7 +256,7 @@ class CheckListItemType extends AbstractType
                 $allowedDomains = $this->getAllowedEmailDomains($field);
                 $this->addChild($form, $validate, $fieldName, EmailType::class, array_merge($fieldOptions, [
                     'constraints' => array_merge($fieldOptions['constraints'] ?? [], [
-                        new Email(message: 'This is not a valid email address.'),
+                        new Email(message: 'Dit is geen geldig e-mailadres.'),
                         new Callback(function (mixed $value, ExecutionContextInterface $context) use ($allowedDomains): void {
                             if (!is_string($value) || $value === '' || !$allowedDomains || !str_contains($value, '@')) {
                                 return;
@@ -268,7 +268,7 @@ class CheckListItemType extends AbstractType
                                     return;
                                 }
                             }
-                            $context->addViolation('This email domain is not allowed. Allowed: ' . implode(', ', $allowedDomains));
+                            $context->addViolation('Dit e-maildomein is niet toegestaan. Toegestaan: ' . implode(', ', $allowedDomains));
                         }),
                     ]),
                     'attr' => array_merge($fieldOptions['attr'], [
@@ -285,7 +285,7 @@ class CheckListItemType extends AbstractType
                         'step' => 1,
                     ]),
                     'constraints' => array_merge($fieldOptions['constraints'] ?? [], [
-                        new PositiveOrZero(message: 'The number must be 0 or higher.'),
+                        new PositiveOrZero(message: 'Het getal moet 0 of hoger zijn.'),
                     ]),
                 ]));
                 break;
@@ -318,7 +318,7 @@ class CheckListItemType extends AbstractType
                 }
                 $this->addChild($form, $validate, $fieldName, \Symfony\Component\Form\Extension\Core\Type\ChoiceType::class, array_merge($fieldOptions, [
                     'choices' => $choices,
-                    'placeholder' => $placeholder ?? 'Select...',
+                    'placeholder' => $placeholder ?? 'Kies...',
                     'attr' => ['class' => 'form-select'],
                 ]));
                 break;
@@ -370,7 +370,7 @@ class CheckListItemType extends AbstractType
                 if (isset($options['maxUploadSize']) && $options['maxUploadSize']) {
                     $constraints[] = new File(
                         maxSize: $options['maxUploadSize'] . 'M',
-                        maxSizeMessage: 'The file is too large. Maximum: {{ limit }} {{ suffix }}'
+                        maxSizeMessage: 'Het bestand is te groot. Maximaal: {{ limit }} {{ suffix }}'
                     );
                 }
                 if (isset($options['allowedFileTypes']) && $options['allowedFileTypes']) {
@@ -381,13 +381,13 @@ class CheckListItemType extends AbstractType
                     if ($extensions) {
                         $constraints[] = new File(
                             extensions: $extensions,
-                            extensionsMessage: 'Invalid file type. Allowed: {{ extensions }}'
+                            extensionsMessage: 'Ongeldig bestandstype. Toegestaan: {{ extensions }}'
                         );
                     }
                     if ($mimeTypes) {
                         $constraints[] = new File(
                             mimeTypes: $mimeTypes,
-                            mimeTypesMessage: 'Invalid file type. Allowed: {{ types }}'
+                            mimeTypesMessage: 'Ongeldig bestandstype. Toegestaan: {{ types }}'
                         );
                     }
                 }
@@ -424,7 +424,7 @@ class CheckListItemType extends AbstractType
                 $this->addChild($form, $validate, $fieldName, UrlType::class, array_merge($fieldOptions, [
                     'default_protocol' => 'https',
                     'constraints' => array_merge($fieldOptions['constraints'] ?? [], [
-                        new Url(message: 'This is not a valid URL.'),
+                        new Url(message: 'Dit is geen geldige URL.'),
                     ]),
                     'attr' => array_merge($fieldOptions['attr'], [
                         'placeholder' => $placeholder ?? 'https://',
@@ -469,22 +469,22 @@ class CheckListItemType extends AbstractType
         $restrictions = [];
 
         if ($this->isReadonly($field) || $this->isDisabled($field)) {
-            return ['This field cannot be changed'];
+            return ['Dit veld kan niet worden gewijzigd'];
         }
 
         switch ($field->getFormType()) {
             case 'text':
             case 'textarea':
                 if ($maxLength = $this->getMaxLength($field)) {
-                    $restrictions[] = sprintf('Maximum %d characters', $maxLength);
+                    $restrictions[] = sprintf('Maximaal %d tekens', $maxLength);
                 }
                 break;
 
             case 'email':
-                $restrictions[] = 'A valid email address, e.g. name@example.com';
+                $restrictions[] = 'Een geldig e-mailadres, bijv. naam@example.com';
                 if ($domains = $this->getAllowedEmailDomains($field)) {
-                    $restrictions[] = 'Allowed domains: ' . implode(', ', array_map(
-                        fn (string $domain) => str_starts_with($domain, '.') ? 'anything ending in ' . $domain : $domain,
+                    $restrictions[] = 'Toegestane domeinen: ' . implode(', ', array_map(
+                        fn (string $domain) => str_starts_with($domain, '.') ? 'alles wat eindigt op ' . $domain : $domain,
                         $domains
                     ));
                 }
@@ -492,28 +492,28 @@ class CheckListItemType extends AbstractType
 
             case 'file':
                 if (!empty($options['maxUploadSize'])) {
-                    $restrictions[] = sprintf('Maximum %s MB', $options['maxUploadSize']);
+                    $restrictions[] = sprintf('Maximaal %s MB', $options['maxUploadSize']);
                 }
                 if ($types = $this->getAllowedFileTypes($field)) {
-                    $restrictions[] = 'Allowed file types: ' . implode(', ', $types);
+                    $restrictions[] = 'Toegestane bestandstypen: ' . implode(', ', $types);
                 }
                 break;
 
             case 'date':
                 $restrictions[] = sprintf(
-                    'Format: %s (e.g. %s)',
-                    strtr($this->getIcuDateFormat($field), ['yyyy' => 'yyyy', 'dd' => 'dd', 'MM' => 'mm']),
+                    'Formaat: %s (bijv. %s)',
+                    strtr($this->getIcuDateFormat($field), ['yyyy' => 'jjjj', 'dd' => 'dd', 'MM' => 'mm']),
                     (new \DateTimeImmutable('2024-12-31'))->format($this->getPhpDateFormat($field))
                 );
                 break;
 
             case 'number':
-                $restrictions[] = 'Whole numbers only, 0 or higher';
+                $restrictions[] = 'Alleen hele getallen, 0 of hoger';
                 break;
 
             case 'url':
-                $restrictions[] = 'A valid URL, e.g. https://example.com';
-                $restrictions[] = 'https:// is added when http(s):// is missing';
+                $restrictions[] = 'Een geldige URL, bijv. https://example.com';
+                $restrictions[] = 'https:// wordt toegevoegd als http(s):// ontbreekt';
                 break;
         }
 
@@ -655,7 +655,7 @@ class CheckListItemType extends AbstractType
 
     private function getRequiredMessage(CheckListField $field): string
     {
-        return $field->getRequiredMessage() ?: 'This field is required.';
+        return $field->getRequiredMessage() ?: 'Dit veld is verplicht.';
     }
 
     /**

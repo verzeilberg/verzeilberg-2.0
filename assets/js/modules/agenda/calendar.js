@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const confirmTrigger = document.createElement('button');
             confirmTrigger.dataset.deleteUrl = current.dataset.deleteUrl;
             confirmTrigger.dataset.csrfToken = current.dataset.csrfToken;
-            confirmTrigger.dataset.deleteMessage = 'Delete "' + current.dataset.title + '" from the agenda?';
+            confirmTrigger.dataset.deleteMessage = '"' + current.dataset.title + '" uit de agenda verwijderen?';
             bootstrap.Modal.getOrCreateInstance(modal).hide();
             bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show(confirmTrigger);
         });

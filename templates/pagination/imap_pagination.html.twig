@@ -1,9 +1,9 @@
 {% if pageCount > 1 %}
-    <nav aria-label="Messages pagination" class="d-flex justify-content-center">
+    <nav aria-label="Berichten per pagina" class="d-flex justify-content-center">
         <ul class="pagination pagination-sm mb-0">
             {% if previous is defined %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ path(route, knp_pagination_query(query, previous, options)) }}" aria-label="Previous">
+                    <a class="page-link" href="{{ path(route, knp_pagination_query(query, previous, options)) }}" aria-label="Vorige">
                         <span aria-hidden="true">&laquo;</span>
                     </a>
                 </li>
@@ -59,7 +59,7 @@
 
             {% if next is defined %}
                 <li class="page-item">
-                    <a class="page-link" href="{{ path(route, knp_pagination_query(query, next, options)) }}" aria-label="Next">
+                    <a class="page-link" href="{{ path(route, knp_pagination_query(query, next, options)) }}" aria-label="Volgende">
                         <span aria-hidden="true">&raquo;</span>
                     </a>
                 </li>
@@ -72,6 +72,6 @@
     </nav>
     
     <div class="text-center text-muted small mt-2">
-        Page {{ current }} of {{ pageCount }} &mdash; {{ totalCount }} messages
+        Pagina {{ current }} van {{ pageCount }} &mdash; {{ totalCount }} berichten
     </div>
 {% endif %}

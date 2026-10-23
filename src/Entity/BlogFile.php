@@ -143,7 +143,7 @@ class BlogFile
     public function getHumanReadableSize(): string
     {
         if ($this->fileSize === null) {
-            return 'Unknown size';
+            return 'Onbekende grootte';
         }
 
         $units = ['B', 'KB', 'MB', 'GB'];

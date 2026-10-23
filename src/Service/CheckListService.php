@@ -58,14 +58,16 @@ class CheckListService
         return $this->em;
     }
 
-    public function getCheckLists(int $page = 1, int $limit = 10): PaginationInterface
+    /** @param User|null $owner only the checklists of this user; null for all */
+    public function getCheckLists(int $page = 1, int $limit = 10, ?User $owner = null): PaginationInterface
     {
-        return $this->checkListRepository->findAllOrdered($page, $limit);
+        return $this->checkListRepository->findAllOrdered($page, $limit, $owner);
     }
 
-    public function getArchivedCheckLists(int $page = 1, int $limit = 10): PaginationInterface
+    /** @param User|null $owner only the checklists of this user; null for all */
+    public function getArchivedCheckLists(int $page = 1, int $limit = 10, ?User $owner = null): PaginationInterface
     {
-        return $this->checkListRepository->findAllArchived($page, $limit);
+        return $this->checkListRepository->findAllArchived($page, $limit, $owner);
     }
 
     public function getCheckListById(int $id): ?CheckList
@@ -85,8 +87,10 @@ class CheckListService
 
     public function saveCheckList(CheckList $checkList, ?UserInterface $user = null): void
     {
-        // Set createdBy if user is provided
-        // Note: We'd need to add createdBy field to CheckList entity for this
+        // A new checklist belongs to whoever made it
+        if ($checkList->getOwner() === null && $user instanceof User) {
+            $checkList->setOwner($user);
+        }
         $this->em->persist($checkList);
         $this->em->flush();
     }
@@ -112,9 +116,11 @@ class CheckListService
      * Copies a checklist with all its settings and fields (incl. fieldsets, options and linked answers).
      * Items are not copied. The copy gets a unique name: "Name (copy)", "Name (copy 2)", ...
      */
-    public function duplicateCheckList(CheckList $original): CheckList
+    /** @param User|null $owner owner of the copy (whoever duplicates it) */
+    public function duplicateCheckList(CheckList $original, ?User $owner = null): CheckList
     {
         $copy = new CheckList();
+        $copy->setOwner($owner ?? $original->getOwner());
         $copy->setName($this->getUniqueCopyName($original->getName()));
         $copy->setLayoutColumns($original->getLayoutColumns());
         $copy->setItemsPerPage($original->getItemsPerPage());
@@ -471,12 +477,12 @@ class CheckListService
      * Searches, filters and sorts all items of a checklist (answers list and export).
      * Works on the readable values, so search and sort also match answer labels.
      *
-     * @param array<string, string> $filters  formFieldName => answer value (choice fields)
-     * @param string                $orderBy  'id', 'created', 'createdBy' or a field id
+     * @param array<string, string>                 $filters formFieldName => answer value (choice fields)
+     * @param list<array{by: string, dir: string}> $order   sort levels; "by" is 'id', 'created', 'createdBy' or a field id
      *
      * @return CheckListItem[]
      */
-    public function findItemsForList(CheckList $checkList, string $search = '', array $filters = [], string $orderBy = 'created', string $orderDir = 'asc'): array
+    public function findItemsForList(CheckList $checkList, string $search = '', array $filters = [], array $order = [['by' => 'created', 'dir' => 'asc']]): array
     {
         $items = $this->checkListItemRepository->findAllByCheckList($checkList);
         $fields = array_values(array_filter(
@@ -512,7 +518,7 @@ class CheckListService
             return false;
         }));
 
-        $sortValue = function (CheckListItem $item) use ($orderBy, $values): string|int|null {
+        $sortValue = function (CheckListItem $item, string $orderBy) use ($values): string|int|null {
             return match ($orderBy) {
                 'id' => $item->getId(),
                 'created' => $item->getDateCreated()->getTimestamp(),
@@ -520,8 +526,8 @@ class CheckListService
                 default => $values[$item->getId()][(int) $orderBy] ?? null,
             };
         };
-        usort($items, function (CheckListItem $a, CheckListItem $b) use ($sortValue, $orderDir): int {
-            [$va, $vb] = [$sortValue($a), $sortValue($b)];
+        $compare = function (CheckListItem $a, CheckListItem $b, string $orderBy, string $orderDir) use ($sortValue): int {
+            [$va, $vb] = [$sortValue($a, $orderBy), $sortValue($b, $orderBy)];
             // Empty values always last
             if ($va === null || $va === '' || $vb === null || $vb === '') {
                 return ($va === null || $va === '') <=> ($vb === null || $vb === '');
@@ -529,6 +535,17 @@ class CheckListService
             $result = is_numeric($va) && is_numeric($vb) ? $va <=> $vb : strnatcasecmp((string) $va, (string) $vb);
 
             return $orderDir === 'desc' ? -$result : $result;
+        };
+        // Level by level: the next one decides when the previous ones are equal; finally the order they were added
+        usort($items, function (CheckListItem $a, CheckListItem $b) use ($compare, $order): int {
+            foreach ($order as $level) {
+                $result = $compare($a, $b, $level['by'], $level['dir']);
+                if ($result !== 0) {
+                    return $result;
+                }
+            }
+
+            return $a->getId() <=> $b->getId();
         });
 
         return $items;

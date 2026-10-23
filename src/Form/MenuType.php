@@ -16,9 +16,9 @@ class MenuType extends AbstractType
     {
         $builder
             ->add('name', TextType::class, [
-                'label' => 'Menu Name',
-                'attr' => ['placeholder' => 'e.g., main, footer, sidebar'],
-                'help' => 'Unique identifier for this menu (used in Twig).',
+                'label' => 'Menunaam',
+                'attr' => ['placeholder' => 'bijv. main, footer, sidebar'],
+                'help' => 'Unieke naam voor dit menu (gebruikt in Twig).',
             ]);
     }
 

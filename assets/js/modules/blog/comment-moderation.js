@@ -34,7 +34,7 @@
             button.addEventListener('click', function () {
                 deleteCommentId = this.dataset.commentId;
                 deleteCommentToken = this.dataset.csrfToken;
-                document.getElementById('deleteModalMessage').textContent = 'Are you sure you want to delete this comment? This action cannot be undone.';
+                document.getElementById('deleteModalMessage').textContent = 'Weet je zeker dat je deze reactie wilt verwijderen? Dit kan niet ongedaan worden gemaakt.';
                 deleteModal.show();
             });
         });

@@ -1,6 +1,6 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}{{ action == 'new' ? 'New' : 'Edit' }} Field - {{ checkList.name }} - Admin{% endblock %}
+{% block title %}{{ action == 'new' ? 'Nieuw veld' : 'Veld bewerken' }} - {{ checkList.name }} - Beheer{% endblock %}
 
 {% block body %}
 {# Required / show in overview are hidden until a type is chosen, and for fieldsets; the script keeps this in sync #}
@@ -9,10 +9,10 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>
         <i class="fas fa-{{ action == 'new' ? 'plus' : 'edit' }} me-2"></i>
-        {{ action == 'new' ? 'New' : 'Edit' }} Field - {{ checkList.name }}
+        {{ action == 'new' ? 'Nieuw veld' : 'Veld bewerken' }} - {{ checkList.name }}
     </h1>
     <a href="{{ path('admin_checklist_edit', {id: checkList.id, _fragment: 'fields'}) }}" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-1"></i>Back to Fields
+        <i class="fas fa-arrow-left me-1"></i>Terug naar velden
     </a>
 </div>
 
@@ -23,7 +23,7 @@
             <div class="row mb-3">
                 <div class="col-md-8">
                     {{ form_row(form.name, {
-                        'label': 'Name',
+                        'label': 'Naam',
                         'label_attr': {'class': 'form-label'},
                         'attr': {'class': 'form-control', 'required': 'required'}
                     }) }}
@@ -83,7 +83,7 @@
 
             <div class="row mb-3" data-field="showInOverview"{{ hideValueOptions ? ' style="display: none;"' }}>
                 <div class="col-md-4">
-                    {{ form_label(form.showInOverview, 'Show in Overview', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_label(form.showInOverview, 'Tonen in overzicht', {'label_attr': {'class': 'form-label'}}) }}
                     <div class="form-check form-switch">
                         {{ form_widget(form.showInOverview, {
                             'attr': {'class': 'form-check-input', 'style': 'width: 3rem; height: 1.5rem;'}
@@ -94,7 +94,7 @@
 
             <div class="row mb-3" data-field="required"{{ hideValueOptions ? ' style="display: none;"' }}>
                 <div class="col-md-4">
-                    {{ form_label(form.required, 'Required', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_label(form.required, 'Verplicht', {'label_attr': {'class': 'form-label'}}) }}
                     <div class="form-check form-switch">
                         {{ form_widget(form.required, {
                             'attr': {'class': 'form-check-input', 'style': 'width: 3rem; height: 1.5rem;', 'id': 'requiredSwitch'}
@@ -102,9 +102,9 @@
                     </div>
                     <div class="col-md-12 mt-2 required-message-field" style="display: none;">
                         {{ form_row(form.requiredMessage, {
-                            'label': 'Required Message',
+                            'label': 'Melding bij verplicht veld',
                             'label_attr': {'class': 'form-label'},
-                            'attr': {'class': 'form-control', 'placeholder': 'Enter custom message when required'}
+                            'attr': {'class': 'form-control', 'placeholder': 'Eigen melding als het veld verplicht is'}
                         }) }}
                     </div>
                 </div>
@@ -113,16 +113,16 @@
             <div class="row mb-3" id="introTextField" style="display: none;">
                 <div class="col-md-8">
                     {{ form_row(form.introText, {
-                        'label': 'Intro Text',
+                        'label': 'Introtekst',
                         'label_attr': {'class': 'form-label'},
-                        'attr': {'class': 'form-control', 'rows': 3, 'placeholder': 'Text shown above field'}
+                        'attr': {'class': 'form-control', 'rows': 3, 'placeholder': 'Tekst boven het veld'}
                     }) }}
                 </div>
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    {{ form_label(form.fieldType, 'Field Type', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_label(form.fieldType, 'Veldtype', {'label_attr': {'class': 'form-label'}}) }}
                     {{ form_widget(form.fieldType, {
                         'attr': {'class': 'form-select', 'id': 'checklistFieldType'}
                     }) }}
@@ -131,11 +131,11 @@
 
             <div id="optionField" class="mb-3" style="display: none;">
                 <fieldset id="optionsFieldset">
-                    <legend>Options</legend>
+                    <legend>Opties</legend>
 
                     {# readonly: text, textarea, number #}
                     <div class="row mb-3 option options-text options-textarea options-number">
-                        <label class="col-md-2 col-form-label">Read only</label>
+                        <label class="col-md-2 col-form-label">Alleen-lezen</label>
                         <div class="col-md-3">
                             <div class="form-check form-switch">
                                 {{ form_widget(form.readonly, {'attr': {'class': 'form-check-input'}}) }}
@@ -144,7 +144,7 @@
                     </div>
 
                     <div class="row mb-3 option options-text options-textarea options-number">
-                        <label class="col-md-2 col-form-label">Disabled</label>
+                        <label class="col-md-2 col-form-label">Uitgeschakeld</label>
                         <div class="col-md-3">
                             <div class="form-check form-switch">
                                 {{ form_widget(form.disabled, {'attr': {'class': 'form-check-input'}}) }}
@@ -164,7 +164,7 @@
 
                     {# maxlength: text, number #}
                     <div class="row mb-3 option options-text options-number">
-                        <label class="col-md-2 col-form-label">Max length</label>
+                        <label class="col-md-2 col-form-label">Maximale lengte</label>
                         <div class="col-md-3">
                             <div class="form-check form-switch">
                                 {{ form_widget(form.maxlength, {'attr': {'class': 'form-check-input'}}) }}
@@ -177,7 +177,7 @@
 
                     {# resize: Textarea(2) only #}
                     <div class="row mb-3 option options-textarea">
-                        <label class="col-md-2 col-form-label">Resize</label>
+                        <label class="col-md-2 col-form-label">Formaat aanpasbaar</label>
                         <div class="col-md-4">
                             <div class="form-check form-switch">
                                 {{ form_widget(form.resize, {'attr': {'class': 'form-check-input'}}) }}
@@ -187,7 +187,7 @@
 
                     {# measurements: Textarea(2) only #}
                     <div class="row mb-3 option options-textarea">
-                        <label class="col-md-2 col-form-label">Dimensions</label>
+                        <label class="col-md-2 col-form-label">Afmetingen</label>
                         <div class="col-md-2">
                             <div class="form-check form-switch">
                                 {{ form_widget(form.measurements, {'attr': {'class': 'form-check-input'}}) }}
@@ -196,10 +196,10 @@
                         <div id="textareaMeasurements" class="col-md-6 measurements-fields" style="display: none;">
                             <div class="row">
                                 <div class="col-md-4">
-                                    {{ form_widget(form.textareaWidth, {'attr': {'class': 'form-control', 'placeholder': 'width', 'min': 1, 'step': 1}}) }}
+                                    {{ form_widget(form.textareaWidth, {'attr': {'class': 'form-control', 'placeholder': 'breedte', 'min': 1, 'step': 1}}) }}
                                 </div>
                                 <div class="col-md-4">
-                                    {{ form_widget(form.textareaHeight, {'attr': {'class': 'form-control', 'placeholder': 'height', 'min': 1, 'step': 1}}) }}
+                                    {{ form_widget(form.textareaHeight, {'attr': {'class': 'form-control', 'placeholder': 'hoogte', 'min': 1, 'step': 1}}) }}
                                 </div>
                                 <div class="col-md-4">
                                     {{ form_widget(form.measurementsType, {'attr': {'class': 'form-select'}}) }}
@@ -212,30 +212,30 @@
 
                     {# File (11) - upload options #}
                     <div class="row mb-3 option options-file">
-                        <label class="col-md-2 col-form-label">Max Upload Size (MB)</label>
+                        <label class="col-md-2 col-form-label">Maximale uploadgrootte (MB)</label>
                         <div class="col-md-3">
-                            {{ form_widget(form.maxUploadSize, {'attr': {'class': 'form-control', 'type': 'number', 'min': 1, 'max': 100, 'step': 1, 'placeholder': 'e.g. 10'}}) }}
+                            {{ form_widget(form.maxUploadSize, {'attr': {'class': 'form-control', 'type': 'number', 'min': 1, 'max': 100, 'step': 1, 'placeholder': 'bijv. 10'}}) }}
                         </div>
                     </div>
 
                     <div class="row mb-3 option options-file">
-                        <label class="col-md-2 col-form-label">Allowed File Types</label>
+                        <label class="col-md-2 col-form-label">Toegestane bestandstypen</label>
                         <div class="col-md-6">
-                            {{ form_widget(form.allowedFileTypes, {'attr': {'class': 'form-control', 'placeholder': 'pdf,jpg,png or application/pdf,image/jpeg,image/png'}}) }}
-                            <small class="form-text text-muted">Comma-separated extensions (pdf,jpg,png) or MIME types (application/pdf,image/jpeg)</small>
+                            {{ form_widget(form.allowedFileTypes, {'attr': {'class': 'form-control', 'placeholder': 'pdf,jpg,png of application/pdf,image/jpeg,image/png'}}) }}
+                            <small class="form-text text-muted">Extensies (pdf,jpg,png) of MIME-types (application/pdf,image/jpeg), gescheiden door komma's</small>
                         </div>
                     </div>
 
                     {# Date (8) - date format options #}
                     <div class="row mb-3 option options-date">
-                        <label class="col-md-2 col-form-label">Date Format</label>
+                        <label class="col-md-2 col-form-label">Datumnotatie</label>
                         <div class="col-md-4">
                             {{ form_widget(form.dateFormat, {'attr': {'class': 'form-select'}}) }}
                         </div>
                     </div>
 
                     <div class="row mb-3 option options-date">
-                        <label class="col-md-2 col-form-label">Show Time</label>
+                        <label class="col-md-2 col-form-label">Tijd tonen</label>
                         <div class="col-md-3">
                             <div class="form-check form-switch">
                                 {{ form_widget(form.showTime, {'attr': {'class': 'form-check-input'}}) }}
@@ -245,16 +245,16 @@
 
                     {# Email (6) - domain restriction options #}
                     <div class="row mb-3 option options-email">
-                        <label class="col-md-2 col-form-label">Allowed Domains</label>
+                        <label class="col-md-2 col-form-label">Toegestane domeinen</label>
                         <div class="col-md-6">
                             {{ form_widget(form.allowedEmailDomains, {'attr': {'class': 'form-control', 'placeholder': 'verzeilberg.nl,hotmail.com,.nl,.eu'}}) }}
-                            <small class="form-text text-muted">Comma-separated domains (verzeilberg.nl,hotmail.com) or TLDs (.nl,.eu)</small>
+                            <small class="form-text text-muted">Domeinen (verzeilberg.nl,hotmail.com) of topleveldomeinen (.nl,.eu), gescheiden door komma's</small>
                         </div>
                     </div>
 
                     {# prepend/append: Text(1) only #}
                     <div class="row mb-3 option options-text">
-                        <label class="col-md-2 col-form-label">Prepend/Append</label>
+                        <label class="col-md-2 col-form-label">Voor-/achtervoegsel</label>
                         <div class="col-md-3">
                             <div class="form-check form-switch">
                                 {{ form_widget(form.prependappend, {'attr': {'class': 'form-check-input'}}) }}
@@ -282,23 +282,23 @@
 
             <div id="answers" class="mb-3" style="display: none;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <label class="form-label mb-0">Predefined Answers (for select/radio/checkbox)</label>
+                    <label class="form-label mb-0">Vooraf ingestelde antwoorden (voor select/radio/checkbox)</label>
                     <a href="{{ path('admin_checklist_answers') }}" class="btn btn-sm btn-outline-secondary">
-                        <i class="fas fa-cog me-1"></i>Manage Answers
+                        <i class="fas fa-cog me-1"></i>Antwoorden beheren
                     </a>
                 </div>
                 {{ form_row(form.answers, {
                     'label': false,
-                    'help': 'Hold Ctrl (Cmd on Mac) to select multiple answers',
+                    'help': 'Houd Ctrl (Cmd op Mac) ingedrukt om meerdere antwoorden te selecteren',
                     'attr': {'class': 'form-select', 'size': 5}
                 }) }}
             </div>
 
-            <div class="d-flex gap-2">
+            <div class="form-actions-bar">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save me-1"></i>{{ action == 'new' ? 'Create' : 'Save' }} Field
+                    <i class="fas fa-save me-1"></i>{{ action == 'new' ? 'Veld aanmaken' : 'Veld opslaan' }}
                 </button>
-                <a href="{{ path('admin_checklist_edit', {id: checkList.id, _fragment: 'fields'}) }}" class="btn btn-outline-secondary">Cancel</a>
+                <a href="{{ path('admin_checklist_edit', {id: checkList.id, _fragment: 'fields'}) }}" class="btn btn-outline-secondary">Annuleren</a>
             </div>
         {{ form_end(form) }}
     </div>

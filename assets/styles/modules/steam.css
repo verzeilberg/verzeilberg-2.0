@@ -30,3 +30,71 @@
     border-radius: 4px;
     object-fit: cover;
 }
+
+/* Admin game page */
+.steam-game-header {
+    height: auto;
+    aspect-ratio: 460 / 215;
+}
+
+.steam-facts dd {
+    margin-bottom: 0.35rem;
+}
+
+.steam-progress-lg {
+    height: 10px;
+}
+
+.steam-achievement-icon {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    border-radius: 4px;
+}
+
+.steam-achievement.is-locked .steam-achievement-icon {
+    opacity: 0.6;
+}
+
+.steam-rarity {
+    width: 110px;
+    flex-shrink: 0;
+}
+
+/* Stars of a review */
+.steam-stars {
+    color: #f5b301;
+    white-space: nowrap;
+}
+
+/* Rating input: radios 5…1 in the HTML, shown 1…5; a checked or hovered star lights up the ones before it */
+.star-rating {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 0.25rem;
+    font-size: 1.75rem;
+}
+
+.star-rating label {
+    color: #ced4da;
+    cursor: pointer;
+    transition: color 0.1s;
+}
+
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: #f5b301;
+}
+
+.star-rating input:focus-visible + label {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Public game page: the review text */
+.steam-review-body {
+    font-size: 1.05rem;
+    line-height: 1.7;
+}

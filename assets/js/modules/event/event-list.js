@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
             deleteEventId = this.dataset.eventId;
             deleteEventToken = this.dataset.csrfToken;
             const eventTitle = this.dataset.eventTitle;
-            document.getElementById('deleteModalMessage').textContent = 'Are you sure you want to delete the event "' + eventTitle + '"? This action cannot be undone.';
+            document.getElementById('deleteModalMessage').textContent = 'Weet je zeker dat je het evenement "' + eventTitle + '" wilt verwijderen? Dit kan niet ongedaan worden gemaakt.';
             deleteModal.show();
         });
     });
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 location.reload();
             } else {
                 deleteModal.hide();
-                alert(data.message || 'Failed to delete event');
+                AppDialog.alert(data.message || 'Evenement verwijderen mislukt');
             }
         });
     });

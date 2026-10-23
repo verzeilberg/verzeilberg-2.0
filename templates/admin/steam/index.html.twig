@@ -1,17 +1,32 @@
 {% extends 'admin/base.html.twig' %}
 {% import 'games/_macros.html.twig' as steam %}
+{% import _self as table %}
 
-{% block title %}Steam - Admin{% endblock %}
+{# A sortable column header: the first click sorts in the column's own direction, the next click reverses it #}
+{% macro sort_header(label, key, filters, sorts, class = '') %}
+    {%- set current = filters.sort == key -%}
+    {%- set direction = current and filters.dir ? filters.dir : sorts[key][1]|lower -%}
+    {%- set next = current ? (direction == 'asc' ? 'desc' : 'asc') : sorts[key][1]|lower -%}
+    {%- set query = {order: key, dir: next}|merge(filters.q ? {q: filters.q} : {})|merge(filters.genre ? {genre: filters.genre} : {}) -%}
+    <th class="{{ class }}" {% if current %}aria-sort="{{ direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}>
+        <a href="{{ path('admin_steam_index', query) }}" class="text-reset text-decoration-none text-nowrap sort-header" title="Sorteren op {{ label|lower }}">
+            {{ label }}
+            <i class="fas {{ current ? (direction == 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort sort-header-idle' }} ms-1"></i>
+        </a>
+    </th>
+{% endmacro %}
+
+{% block title %}Steam - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h1><i class="fab fa-steam me-2"></i>Steam</h1>
     <div class="d-flex gap-2">
-        <a href="{{ path('app_games') }}" class="btn btn-outline-secondary" target="_blank"><i class="fas fa-external-link-alt me-1"></i>Public page</a>
+        <a href="{{ path('app_games') }}" class="btn btn-outline-secondary" target="_blank"><i class="fas fa-external-link-alt me-1"></i>Openbare pagina</a>
         {% if configured %}
             <form method="post" action="{{ path('admin_steam_sync') }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('steam_sync') }}">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-sync-alt me-1"></i>Sync now</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-sync-alt me-1"></i>Nu synchroniseren</button>
             </form>
         {% endif %}
     </div>
@@ -19,13 +34,13 @@
 
 {% if not configured %}
     <div class="alert alert-warning">
-        <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Steam is not configured</h5>
-        <p class="mb-2">Add these to <code>.env.local</code> (or the server environment):</p>
+        <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Steam is niet ingesteld</h5>
+        <p class="mb-2">Voeg deze toe aan <code>.env.local</code> (voor productie aan <code>.env.prod.local</code>, vóór je <code>bin/build-release.sh</code> draait):</p>
         <ul class="mb-2">
-            <li><code>STEAM_API_KEY</code>: a Web API key from <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener">steamcommunity.com/dev/apikey</a></li>
-            <li><code>STEAM_ID</code>: your 17-digit Steam ID, the name from your profile URL, or the profile URL itself</li>
+            <li><code>STEAM_API_KEY</code>: een Web API-sleutel van <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener">steamcommunity.com/dev/apikey</a></li>
+            <li><code>STEAM_ID</code>: je Steam ID van 17 cijfers, de naam uit je profiel-URL of de profiel-URL zelf</li>
         </ul>
-        <p class="mb-0">In the Steam privacy settings, "Game details" must be <strong>Public</strong>. Then run <code>php bin/console app:steam:sync</code>, and add it as a cronjob (e.g. every hour).</p>
+        <p class="mb-0">In de privacyinstellingen van Steam moet "Gamedetails" op <strong>Openbaar</strong> staan. Klik daarna op "Nu synchroniseren". Om elk uur vanzelf bij te werken, kan je hoster een cronjob instellen voor <code>app:steam:sync</code>.</p>
     </div>
 {% endif %}
 
@@ -39,18 +54,29 @@
                         <div>
                             <a href="{{ account.profileUrl }}" target="_blank" rel="noopener" class="fw-bold">{{ account.personaName ?? account.steamId }}</a>
                             <div class="small text-muted">{{ account.steamId }}</div>
-                            {% if account.currentlyPlaying %}<div class="small text-success">Playing {{ account.currentlyPlaying }}</div>{% endif %}
+                            {% if account.currentlyPlaying %}<div class="small text-success">Speelt {{ account.currentlyPlaying }}</div>{% endif %}
                         </div>
                     </div>
                     <div class="small">
-                        Last synced: <strong>{{ account.lastSyncedAt ? account.lastSyncedAt|date('d-m-Y H:i') : 'never' }}</strong>
+                        Laatste synchronisatie: <strong>{{ account.lastSyncedAt ? account.lastSyncedAt|date('d-m-Y H:i') : 'nooit' }}</strong>
                     </div>
                     {% if account.lastSyncError %}
                         <div class="alert alert-danger small mt-2 mb-0"><i class="fas fa-exclamation-circle me-1"></i>{{ account.lastSyncError }}</div>
                     {% endif %}
                 {% else %}
-                    <p class="text-muted mb-0">Not synced yet.</p>
+                    <p class="text-muted mb-0">Nog niet gesynchroniseerd.</p>
                 {% endif %}
+            </div>
+            <div class="card-footer">
+                <form method="post" action="{{ path('admin_steam_privacy') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('steam_privacy') }}">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" id="steamHideActivity" name="hide" value="1" {{ hideActivity ? 'checked' }} data-auto-submit>
+                        <label class="form-check-label" for="steamHideActivity">Verberg op de openbare pagina's wanneer ik speel</label>
+                    </div>
+                    <div class="form-text">Laatst gespeeld, recent gespeeld, nu aan het spelen en de uren van de afgelopen twee weken. Het beheer toont altijd alles.</div>
+                    <noscript><button type="submit" class="btn btn-sm btn-outline-primary mt-2">Opslaan</button></noscript>
+                </form>
             </div>
         </div>
     </div>
@@ -58,10 +84,10 @@
         <div class="row g-3 h-100">
             {% for label, value in {
                 'Games': stats.games,
-                'Played': stats.played,
-                'Hours': (stats.minutes / 60)|round|number_format(0, '.', ','),
-                'Achievements': stats.achievements|number_format(0, '.', ','),
-                '100% games': stats.perfect,
+                'Gespeeld': stats.played,
+                'Uren': (stats.minutes / 60)|round|number_format(0, '.', ','),
+                'Prestaties': stats.achievements|number_format(0, '.', ','),
+                'Games op 100%': stats.perfect,
             } %}
                 <div class="col">
                     <div class="card h-100 text-center"><div class="card-body py-3">
@@ -75,39 +101,38 @@
 </div>
 
 <form method="get" action="{{ path('admin_steam_index') }}" class="row g-2 align-items-end mb-3" role="search">
-    <div class="col-md-5">
-        <input type="search" name="q" value="{{ filters.q }}" class="form-control" placeholder="Search games" aria-label="Search games">
+    {# Searching keeps the sort chosen in the table headers #}
+    <input type="hidden" name="order" value="{{ filters.sort }}">
+    {% if filters.dir %}<input type="hidden" name="dir" value="{{ filters.dir }}">{% endif %}
+    <div class="col-md-7">
+        <input type="search" name="q" value="{{ filters.q }}" class="form-control" placeholder="Games zoeken" aria-label="Games zoeken">
     </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
         <select name="genre" class="form-select" aria-label="Genre" data-auto-submit>
-            <option value="">All genres</option>
+            <option value="">Alle genres</option>
             {% for genre in genres %}<option value="{{ genre }}" {{ genre == filters.genre ? 'selected' }}>{{ genre }}</option>{% endfor %}
         </select>
     </div>
-    <div class="col-md-3">
-        <select name="order" class="form-select" aria-label="Sort by" data-auto-submit>
-            {% for sort in sorts %}<option value="{{ sort }}" {{ sort == filters.sort ? 'selected' }}>{{ {recent: 'Last played', playtime: 'Playtime', name: 'Name', achievements: 'Achievements'}[sort] }}</option>{% endfor %}
-        </select>
-    </div>
     <div class="col-md-1">
-        <button type="submit" class="btn btn-primary w-100" title="Search"><i class="fas fa-search"></i></button>
+        <button type="submit" class="btn btn-primary w-100" title="Zoeken"><i class="fas fa-search"></i></button>
     </div>
 </form>
 
 {% if games.getTotalItemCount == 0 %}
-    <div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>No games{{ filters.q or filters.genre ? ' found' : ' yet' }}.</div>
+    <div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>{{ filters.q or filters.genre ? 'Geen games gevonden' : 'Nog geen games' }}.</div>
 {% else %}
     <div class="card">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead>
                     <tr>
-                        <th>Game</th>
-                        <th class="w-100px">Playtime</th>
-                        <th class="w-130px">Last played</th>
-                        <th class="min-w-150px">Achievements</th>
-                        <th class="w-120px">Store details</th>
-                        <th class="text-center w-80px">Public</th>
+                        {{ table.sort_header('Game', 'name', filters, sorts) }}
+                        {{ table.sort_header('Speeltijd', 'playtime', filters, sorts, 'w-100px') }}
+                        {{ table.sort_header('Laatst gespeeld', 'recent', filters, sorts, 'w-130px') }}
+                        {{ table.sort_header('Prestaties', 'completion', filters, sorts, 'min-w-150px') }}
+                        {{ table.sort_header('Beoordeling', 'rating', filters, sorts, 'w-120px') }}
+                        {{ table.sort_header('Winkelgegevens', 'details', filters, sorts, 'w-120px') }}
+                        {{ table.sort_header('Openbaar', 'visibility', filters, sorts, 'text-center w-80px') }}
                     </tr>
                 </thead>
                 <tbody>
@@ -117,7 +142,8 @@
                                 <div class="d-flex align-items-center gap-2">
                                     {% if game.iconUrl %}<img src="{{ game.iconUrl }}" alt="" class="steam-icon" loading="lazy">{% endif %}
                                     <div>
-                                        <a href="{{ game.storeUrl }}" target="_blank" rel="noopener">{{ game.name }}</a>
+                                        <a href="{{ path('admin_steam_game', {id: game.id}) }}">{{ game.name }}</a>
+                                        <a href="{{ game.storeUrl }}" target="_blank" rel="noopener" class="text-muted small ms-1" title="Winkelpagina op Steam"><i class="fas fa-external-link-alt"></i></a>
                                         {% if game.genres %}<div class="small text-muted">{{ game.genres|join(', ') }}</div>{% endif %}
                                     </div>
                                 </div>
@@ -126,15 +152,24 @@
                             <td>{{ steam.last_played(game.lastPlayedAt) }}</td>
                             <td>
                                 {% if game.hasAchievements %}{{ steam.achievements(game) }}
-                                {% elseif game.achievementsTotal is same as(0) %}<span class="small text-muted">None</span>
-                                {% else %}<span class="small text-muted">{{ game.playtimeForever > 0 ? 'Not read yet' : '–' }}</span>{% endif %}
+                                {% elseif game.achievementsPrivate %}<span class="small text-muted" title="Steam deelt je voortgang voor deze game niet: hij staat als privé gemarkeerd in je Steam-bibliotheek (rechtsklik op de game, Beheren, vink Als privé markeren uit)."><i class="fas fa-lock me-1"></i>Privé in Steam{{ game.achievementsTotal ? ' (' ~ game.achievementsTotal ~ ' prestaties)' }}</span>
+                                {% elseif game.achievementsTotal is same as(0) %}<span class="small text-muted">Geen</span>
+                                {% else %}<span class="small text-muted">{{ game.playtimeForever > 0 ? 'Nog niet opgehaald' : '–' }}</span>{% endif %}
                             </td>
-                            <td class="small">{{ game.detailsFetchedAt ? game.detailsFetchedAt|date('d-m-Y') : 'Not read yet' }}</td>
+                            <td>
+                                {% if game.review %}
+                                    <a href="{{ path('admin_steam_game', {id: game.id, _fragment: 'review'}) }}" class="text-decoration-none">{{ steam.stars(game.review) }}</a>
+                                    {% if not game.review.published %}<span class="badge text-bg-secondary ms-1">Concept</span>{% endif %}
+                                {% else %}
+                                    <a href="{{ path('admin_steam_game', {id: game.id, _fragment: 'review'}) }}" class="small text-muted">Schrijven</a>
+                                {% endif %}
+                            </td>
+                            <td class="small">{{ game.detailsFetchedAt ? game.detailsFetchedAt|date('d-m-Y') : 'Nog niet opgehaald' }}</td>
                             <td class="text-center">
                                 <form method="post" action="{{ path('admin_steam_game_visibility', {id: game.id}) }}">
                                     <input type="hidden" name="_token" value="{{ csrf_token('steam_visibility' ~ game.id) }}">
                                     <input type="hidden" name="back" value="{{ app.request.requestUri }}">
-                                    <button type="submit" class="btn btn-sm {{ game.hidden ? 'btn-outline-secondary' : 'btn-outline-success' }}" title="{{ game.hidden ? 'Hidden on the public pages: show it' : 'Shown on the public pages: hide it' }}">
+                                    <button type="submit" class="btn btn-sm {{ game.hidden ? 'btn-outline-secondary' : 'btn-outline-success' }}" title="{{ game.hidden ? 'Verborgen op de openbare pagina\'s: tonen' : 'Zichtbaar op de openbare pagina\'s: verbergen' }}">
                                         <i class="fas {{ game.hidden ? 'fa-eye-slash' : 'fa-eye' }}"></i>
                                     </button>
                                 </form>
@@ -146,7 +181,7 @@
         </div>
     </div>
     <div class="d-flex justify-content-center mt-3">
-        {{ knp_pagination_render(games, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
+        {{ knp_pagination_render(games, '_partials/pagination.html.twig', {}, {label: 'games'}) }}
     </div>
 {% endif %}
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Contactformulieren - Admin{% endblock %}
+{% block title %}Contactformulieren - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -24,7 +24,7 @@
                     </thead>
                     <tbody>
                         {% for contact in contacts %}
-                        <tr class="js-row-link cursor-pointer" data-href="{{ path('admin_contact_show', {id: contact.id}) }}">
+                        <tr class="js-row-link cursor-pointer {{ contact.isRead ? '' : 'fw-bold' }}" data-href="{{ path('admin_contact_show', {id: contact.id}) }}" {{ contact.isRead ? '' : 'title="Ongelezen"' }}>
                             <td>{{ contact.salutationLabel }}</td>
                             <td>{{ contact.name }}</td>
                             <td>{{ contact.email }}</td>
@@ -34,7 +34,7 @@
                                 <a href="{{ path('admin_contact_show', {id: contact.id}) }}" class="btn btn-sm btn-outline-primary me-1" title="Bekijken">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <form action="{{ path('admin_contact_delete', {id: contact.id}) }}" method="POST" data-confirm="Weet u zeker dat u dit contactformulier wilt verwijderen?" class="d-inline">
+                                <form action="{{ path('admin_contact_delete', {id: contact.id}) }}" method="POST" data-confirm="Weet je zeker dat je dit contactformulier wilt verwijderen?" class="d-inline">
                                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ contact.id) }}">
                                     <button type="submit" class="btn btn-sm btn-danger" title="Verwijderen">
                                         <i class="fas fa-trash-alt"></i>
@@ -47,11 +47,9 @@
                 </table>
             </div>
 
-            {% if contacts.getTotalItemCount() > contacts.getItemNumberPerPage() %}
             <nav aria-label="Contact paginatie">
-                {{ knp_pagination_render(contacts) }}
+                {{ knp_pagination_render(contacts, '_partials/pagination.html.twig', {}, {label: 'berichten'}) }}
             </nav>
-            {% endif %}
         {% else %}
             <div class="text-center py-5">
                 <i class="fas fa-envelope-open fa-3x text-muted mb-3"></i>

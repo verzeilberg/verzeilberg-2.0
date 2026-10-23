@@ -18,11 +18,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/admin/event')]
-#[IsGranted('ROLE_ADMIN')]
 class EventController extends AbstractController
 {
     public function __construct(
@@ -121,7 +119,7 @@ class EventController extends AbstractController
             $this->em->persist($event);
             $this->em->flush();
 
-            $this->addFlash('success', 'Event created successfully.');
+            $this->addFlash('success', 'Event aangemaakt.');
 
             return $this->redirectToRoute('admin_event_index');
         }
@@ -142,7 +140,7 @@ class EventController extends AbstractController
             $this->handleImageUpload($event, $form);
             $this->em->flush();
 
-            $this->addFlash('success', 'Event updated successfully.');
+            $this->addFlash('success', 'Event opgeslagen.');
 
             return $this->redirectToRoute('admin_event_index');
         }
@@ -202,7 +200,7 @@ class EventController extends AbstractController
             // Remove old image if exists
             if ($event->getEventImage()) {
                 $oldImage = $event->getEventImage();
-                $filePath = $oldImage->getPath() . '/' . $oldImage->getFilename();
+                $filePath = $oldImage->getFilePath($this->publicDir());
                 if (file_exists($filePath)) {
                     @unlink($filePath);
                 }
@@ -225,7 +223,7 @@ class EventController extends AbstractController
                     $image->setFileSize(strlen($binaryData));
                     
                     // Save the cropped image
-                    $uploadPath = $image->getPath();
+                    $uploadPath = $image->getFolder($this->publicDir());
                     if (!is_dir($uploadPath)) {
                         mkdir($uploadPath, 0777, true);
                     }
@@ -245,14 +243,14 @@ class EventController extends AbstractController
                 $image->setMimeType($file->getMimeType());
                 $image->setFileSize($file->getSize());
 
-                $file->move($image->getPath(), $image->getFilename());
+                $file->move($image->getFolder($this->publicDir()), $image->getFilename());
 
                 // Resize if larger than 2560px wide (for retina displays)
-                $this->resizeImageIfNeeded($image->getPath() . '/' . $image->getFilename(), 2560, 1440, 95);
+                $this->resizeImageIfNeeded($image->getFilePath($this->publicDir()), 2560, 1440, 95);
 
                 // Try to get dimensions
                 if (function_exists('getimagesize')) {
-                    $size = @getimagesize($image->getPath() . '/' . $image->getFilename());
+                    $size = @getimagesize($image->getFilePath($this->publicDir()));
                     if ($size) {
                         $image->setWidth($size[0]);
                         $image->setHeight($size[1]);
@@ -265,7 +263,7 @@ class EventController extends AbstractController
 
             $this->em->persist($image);
         } catch (FileException $e) {
-            $this->addFlash('error', 'Image upload failed: ' . $e->getMessage());
+            $this->addFlash('error', 'Uploaden van afbeelding mislukt: ' . $e->getMessage());
         }
     }
 
@@ -348,13 +346,19 @@ class EventController extends AbstractController
         return $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
     }
 
+    /** Upload folder relative to public/, as stored on the record; created when missing */
     private function getUploadPath(string $type): string
     {
-        $path = $this->getParameter('kernel.project_dir') . '/public/uploads/events/' . $type;
-        if (!is_dir($path)) {
-            mkdir($path, 0777, true);
+        $path = 'uploads/events/' . $type;
+        if (!is_dir($this->publicDir() . '/' . $path)) {
+            mkdir($this->publicDir() . '/' . $path, 0777, true);
         }
         return $path;
+    }
+
+    private function publicDir(): string
+    {
+        return $this->getParameter('kernel.project_dir') . '/public';
     }
 
     #[Route('/{id}/delete', name: 'admin_event_delete', methods: ['POST'])]
@@ -363,7 +367,7 @@ class EventController extends AbstractController
         if ($this->isCsrfTokenValid('delete' . $event->getId(), $request->request->get('_token'))) {
             if ($event->getEventImage()) {
                 $image = $event->getEventImage();
-                $filePath = $image->getPath() . '/' . $image->getFilename();
+                $filePath = $image->getFilePath($this->publicDir());
                 if (file_exists($filePath)) {
                     @unlink($filePath);
                 }
@@ -371,7 +375,7 @@ class EventController extends AbstractController
             }
             $this->em->remove($event);
             $this->em->flush();
-            $this->addFlash('success', 'Event deleted successfully.');
+            $this->addFlash('success', 'Event verwijderd.');
         }
 
         if ($request->isXmlHttpRequest()) {

@@ -19,7 +19,7 @@ async function initAgendaLocationSearch() {
     try {
         const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
         const search = new PlaceAutocompleteElement();
-        search.placeholder = 'Search a place or address…';
+        search.placeholder = 'Zoek een plaats of adres…';
         // Light like the rest of the admin (Google's element follows the OS dark mode otherwise)
         search.style.colorScheme = 'light';
         search.style.width = '100%';
@@ -27,7 +27,7 @@ async function initAgendaLocationSearch() {
         // Google refused the search (e.g. "Places API (New)" not enabled for the key): say so
         search.addEventListener('gmp-error', function() {
             const error = document.getElementById('locationSearchError');
-            error.textContent = 'Google place search is not available for this API key (enable "Places API (New)" in Google Cloud). You can still type the location below.';
+            error.textContent = 'Zoeken naar plaatsen via Google werkt niet met deze API-sleutel (zet "Places API (New)" aan in Google Cloud). Je kunt de locatie hieronder nog steeds zelf invullen.';
             error.classList.remove('d-none');
         });
         search.addEventListener('gmp-select', async function({ placePrediction }) {

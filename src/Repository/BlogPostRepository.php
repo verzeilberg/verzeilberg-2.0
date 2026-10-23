@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\BlogPost;
 use App\Entity\Category;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 class BlogPostRepository extends ServiceEntityRepository
@@ -38,6 +39,32 @@ class BlogPostRepository extends ServiceEntityRepository
             ->setParameter('id', $id)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    /**
+     * The posts visitors may see (online, not deleted, within their online/offline dates), newest first,
+     * optionally in a category and/or matching a search term. Unlimited: meant for the paginator.
+     */
+    public function createPublicListQuery(?Category $category = null, ?string $term = null): QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('bp')
+            ->andWhere('bp.status = :status')
+            ->andWhere('bp.deleted = false')
+            ->andWhere('(bp.dateOnline IS NULL OR bp.dateOnline <= :now)')
+            ->andWhere('(bp.dateOffline IS NULL OR bp.dateOffline >= :now)')
+            ->setParameter('status', BlogPost::STATUS_ONLINE)
+            ->setParameter('now', new \DateTimeImmutable())
+            ->orderBy('bp.dateOnline', 'DESC')
+            ->addOrderBy('bp.id', 'DESC');
+        if ($category !== null) {
+            $qb->innerJoin('bp.categories', 'c')->andWhere('c = :category')->setParameter('category', $category);
+        }
+        if ($term !== null && trim($term) !== '') {
+            $qb->andWhere('(bp.title LIKE :term OR bp.content LIKE :term OR bp.introText LIKE :term)')
+                ->setParameter('term', '%' . addcslashes(trim($term), '\\%_') . '%');
+        }
+
+        return $qb;
     }
 
     public function findOnlinePosts(int $limit = 10, int $offset = 0): array

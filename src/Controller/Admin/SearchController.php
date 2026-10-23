@@ -11,10 +11,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/search')]
-#[IsGranted('ROLE_ADMIN')]
 class SearchController extends AbstractController
 {
     public function __construct(
@@ -39,7 +37,7 @@ class SearchController extends AbstractController
     public function delete(Request $request, int $id): JsonResponse
     {
         if (!$this->isCsrfTokenValid('delete' . $id, $request->headers->get('X-CSRF-Token') ?? $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $success = $this->searchPhraseService->deletePhrase($id);
@@ -48,6 +46,6 @@ class SearchController extends AbstractController
             return new JsonResponse(['success' => true]);
         }
 
-        return new JsonResponse(['success' => false, 'message' => 'Search phrase not found']);
+        return new JsonResponse(['success' => false, 'message' => 'Zoekterm niet gevonden']);
     }
 }

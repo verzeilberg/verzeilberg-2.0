@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    const latLngs = points.map(p => [p[0], p[1]]);
+    // decodePolyline() gives {lat, lng} objects
+    const latLngs = points.map(p => [p.lat, p.lng]);
     const polyline = L.polyline(latLngs, {color: '#FC4C02', weight: 4, opacity: 0.8}).addTo(map);
     map.fitBounds(polyline.getBounds());
 
@@ -32,5 +33,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     L.marker(latLngs[0], {icon: markerIcon('green')}).addTo(map).bindPopup('Start').openPopup();
-    L.marker(latLngs[latLngs.length - 1], {icon: markerIcon('red')}).addTo(map).bindPopup('Eind');
+    L.marker(latLngs[latLngs.length - 1], {icon: markerIcon('red')}).addTo(map).bindPopup('Finish');
 });

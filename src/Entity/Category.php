@@ -13,7 +13,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
 #[ORM\Table(name: 'blog_category')]
-#[UniqueEntity(fields: ['slug'], message: 'This slug is already in use')]
+#[UniqueEntity(fields: ['slug'], message: 'Deze slug is al in gebruik')]
 #[ORM\HasLifecycleCallbacks]
 class Category
 {
@@ -121,7 +121,9 @@ class Category
 
     public function getOnlinePostCount(): int
     {
-        return $this->blogPosts->filter(fn(BlogPost $p) => $p->isOnline())->count();
+        $now = new \DateTimeImmutable();
+
+        return $this->blogPosts->filter(fn(BlogPost $p) => $p->isVisibleOn($now))->count();
     }
 
     public function __toString(): string

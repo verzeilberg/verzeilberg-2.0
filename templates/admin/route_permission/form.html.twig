@@ -1,0 +1,72 @@
+{% extends 'admin/base.html.twig' %}
+
+{% form_theme form 'bootstrap_5_layout.html.twig' %}
+{% set isNew = routePermission.id is null %}
+
+{% block title %}{{ isNew ? 'Nieuw routerecht' : 'Routerecht bewerken' }} - Beheer{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-{{ isNew ? 'plus' : 'edit' }} me-2"></i>{{ isNew ? 'Nieuwe regel' : 'Regel bewerken: ' ~ routePermission.routePattern }}</h1>
+    <a href="{{ path('admin_route_permission_index') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Terug
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                {{ form_start(form) }}
+                {{ form_errors(form) }}
+                {{ form_row(form.routePattern) }}
+                <datalist id="admin-route-suggestions">
+                    {% for name, section in sections %}
+                        {% if section.pattern ends with '*' %}<option value="{{ section.pattern }}">{{ name }} (heel onderdeel)</option>{% endif %}
+                    {% endfor %}
+                    {% for name in routes|keys %}
+                        <option value="{{ name }}"></option>
+                    {% endfor %}
+                </datalist>
+                <div class="mb-3 small" id="route-pattern-preview" data-routes="{{ routes|keys|json_encode }}"></div>
+
+                {{ form_row(form.permission) }}
+                <p class="form-text mt-n2">Mis je er een? <a href="{{ path('admin_permission_new') }}" target="_blank">Maak een recht aan</a> en herlaad deze pagina.</p>
+
+                {{ form_row(form.methods) }}
+                {{ form_row(form.enabled) }}
+                {{ form_row(form.description) }}
+
+                <div class="form-actions-bar">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>{{ isNew ? 'Regel aanmaken' : 'Wijzigingen opslaan' }}
+                    </button>
+                    <a href="{{ path('admin_route_permission_index') }}" class="btn btn-secondary">Annuleren</a>
+                </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body small">
+                <h6>Voorbeelden</h6>
+                <table class="table table-sm mb-3">
+                    <tr><td><code>admin_blog_*</code></td><td>elke beheerpagina van de blog</td></tr>
+                    <tr><td><code>admin_blog_index</code></td><td>alleen het blogoverzicht</td></tr>
+                    <tr><td><code>admin_blog_delete</code></td><td>gaat bij verwijderen voor <code>admin_blog_*</code> (specifieker)</td></tr>
+                </table>
+                <p class="mb-0 text-muted">
+                    Gebruikers hebben ook <code>admin.access</code> nodig om het beheer in te komen. Het beheer van gebruikers,
+                    rollen en rechten blijft alleen voor admins, wat de regels ook zeggen.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/route-permission/form.js') }}"></script>
+{% endblock %}

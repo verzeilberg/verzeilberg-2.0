@@ -49,7 +49,7 @@ class MediaController extends AbstractController
     {
         $path = (string) $request->query->get('path', '');
         if (!$this->isCsrfTokenValid('media_delete' . $path, (string) $request->headers->get('X-CSRF-Token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid security token, reload the page.'], Response::HTTP_FORBIDDEN);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken, herlaad de pagina.'], Response::HTTP_FORBIDDEN);
         }
 
         try {
@@ -57,7 +57,7 @@ class MediaController extends AbstractController
         } catch (\InvalidArgumentException $e) {
             return new JsonResponse(['success' => false, 'message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        $this->addFlash('success', sprintf('"%s" has been deleted.', $path));
+        $this->addFlash('success', sprintf('"%s" is verwijderd.', $path));
 
         return new JsonResponse(['success' => true]);
     }
@@ -76,14 +76,14 @@ class MediaController extends AbstractController
     public function deleteUnused(Request $request): Response
     {
         if (!$this->isCsrfTokenValid('media_delete_unused', (string) $request->request->get('_token'))) {
-            $this->addFlash('error', 'Invalid security token, please try again.');
+            $this->addFlash('error', 'Ongeldig beveiligingstoken, probeer het opnieuw.');
 
             return $this->redirectToRoute('admin_media_check');
         }
 
         $paths = array_values(array_map('strval', $request->request->all('paths')));
         $deleted = $this->media->deleteUnusedFiles($paths);
-        $this->addFlash($deleted > 0 ? 'success' : 'warning', sprintf('%d of %d selected file(s) deleted.', $deleted, count($paths)));
+        $this->addFlash($deleted > 0 ? 'success' : 'warning', sprintf('%d van %d geselecteerde bestand(en) verwijderd.', $deleted, count($paths)));
 
         return $this->redirectToRoute('admin_media_check');
     }
@@ -92,14 +92,14 @@ class MediaController extends AbstractController
     public function removeMissing(Request $request): Response
     {
         if (!$this->isCsrfTokenValid('media_remove_missing', (string) $request->request->get('_token'))) {
-            $this->addFlash('error', 'Invalid security token, please try again.');
+            $this->addFlash('error', 'Ongeldig beveiligingstoken, probeer het opnieuw.');
 
             return $this->redirectToRoute('admin_media_check', ['_fragment' => 'missing']);
         }
 
         $keys = array_values(array_map('strval', $request->request->all('records')));
         $removed = $this->media->removeMissingRecords($keys);
-        $this->addFlash($removed > 0 ? 'success' : 'warning', sprintf('%d of %d selected record(s) removed.', $removed, count($keys)));
+        $this->addFlash($removed > 0 ? 'success' : 'warning', sprintf('%d van %d geselecteerde record(s) verwijderd.', $removed, count($keys)));
 
         return $this->redirectToRoute('admin_media_check', ['_fragment' => 'missing']);
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Admin;
 
+use App\Controller\BlogController as PublicBlogController;
 use App\Entity\BlogPost;
 use App\Entity\BlogComment;
 use App\Entity\Category;
@@ -16,6 +17,7 @@ use App\Form\BlogFileType;
 use App\Form\BlogYouTubeType;
 use App\Repository\BlogPostRepository;
 use App\Repository\BlogCommentRepository;
+use App\Service\ActivityNotifier;
 use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
@@ -25,12 +27,12 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\UriSigner;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/admin/blog')]
-#[IsGranted('ROLE_ADMIN')]
 class BlogController extends AbstractController
 {
     public function __construct(
@@ -101,7 +103,7 @@ class BlogController extends AbstractController
             $this->em->persist($post);
             $this->em->flush();
 
-            $this->addFlash('success', 'Blog post created successfully.');
+            $this->addFlash('success', 'Bericht aangemaakt.');
 
             return $this->redirectToRoute('admin_blog_edit', ['id' => $post->getId()]);
         }
@@ -118,7 +120,7 @@ class BlogController extends AbstractController
         $post = $this->blogPostRepository->findForAdmin($id);
 
         if (!$post) {
-            throw $this->createNotFoundException('Blog post not found');
+            throw $this->createNotFoundException('Bericht niet gevonden');
         }
 
         return $this->render('admin/blog/show.html.twig', [
@@ -127,12 +129,12 @@ class BlogController extends AbstractController
     }
 
     #[Route('/{id<\d+>}/edit', name: 'admin_blog_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, int $id): Response
+    public function edit(Request $request, int $id, UriSigner $uriSigner): Response
     {
         $post = $this->blogPostRepository->findForAdmin($id);
 
         if (!$post) {
-            throw $this->createNotFoundException('Blog post not found');
+            throw $this->createNotFoundException('Bericht niet gevonden');
         }
 
         $form = $this->createForm(BlogPostType::class, $post);
@@ -143,14 +145,23 @@ class BlogController extends AbstractController
 
             $this->em->flush();
 
-            $this->addFlash('success', 'Blog post updated successfully.');
+            $this->addFlash('success', 'Bericht opgeslagen.');
 
             return $this->redirectToRoute('admin_blog_edit', ['id' => $post->getId()]);
         }
 
+        // A post that isn't online can be shown to someone with a signed link that works for a while
+        $previewUntil = new \DateTimeImmutable(sprintf('+%d days', PublicBlogController::PREVIEW_DAYS));
+        $previewUrl = $post->isOnline() ? null : $uriSigner->sign(
+            $this->generateUrl('blog_preview', ['id' => $post->getId()], UrlGeneratorInterface::ABSOLUTE_URL),
+            $previewUntil
+        );
+
         return $this->render('admin/blog/edit.html.twig', [
             'form' => $form,
             'post' => $post,
+            'previewUrl' => $previewUrl,
+            'previewUntil' => $previewUntil,
         ]);
     }
 
@@ -160,7 +171,7 @@ class BlogController extends AbstractController
         $post = $this->blogPostRepository->findForAdmin($id);
 
         if (!$post) {
-            throw $this->createNotFoundException('Blog post not found');
+            throw $this->createNotFoundException('Bericht niet gevonden');
         }
 
         $isAjax = $request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json';
@@ -168,16 +179,16 @@ class BlogController extends AbstractController
         if (!$this->isCsrfTokenValid('delete' . $post->getId(), $request->request->get('_token'))) {
             // Nothing was deleted: don't report success
             if ($isAjax) {
-                return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+                return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken'], 403);
             }
-            $this->addFlash('error', 'The blog post could not be deleted. Please try again.');
+            $this->addFlash('error', 'Het bericht kon niet worden verwijderd. Probeer het opnieuw.');
 
             return $this->redirectToRoute('admin_blog_index');
         }
 
         $this->em->remove($post);
         $this->em->flush();
-        $this->addFlash('success', 'Blog post deleted successfully.');
+        $this->addFlash('success', 'Bericht verwijderd.');
 
         if ($isAjax) {
             return new JsonResponse(['success' => true]);
@@ -192,7 +203,7 @@ class BlogController extends AbstractController
         $post = $this->blogPostRepository->findForAdmin($id);
 
         if (!$post) {
-            return new JsonResponse(['success' => false, 'message' => 'Blog post not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Bericht niet gevonden']);
         }
 
         $status = (int) $request->request->get('status', BlogPost::STATUS_DRAFT);
@@ -203,7 +214,7 @@ class BlogController extends AbstractController
             BlogPost::STATUS_OFFLINE,
             BlogPost::STATUS_ARCHIVED
         ])) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid status']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldige status']);
         }
 
         $post->setStatus($status);
@@ -218,13 +229,13 @@ class BlogController extends AbstractController
         $post = $this->blogPostRepository->findForAdmin($id);
 
         if (!$post) {
-            return new JsonResponse(['success' => false, 'message' => 'Blog post not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Bericht niet gevonden']);
         }
 
         $file = $request->files->get('image');
 
         if (!$file instanceof UploadedFile) {
-            return new JsonResponse(['success' => false, 'message' => 'No file uploaded']);
+            return new JsonResponse(['success' => false, 'message' => 'Geen bestand geüpload']);
         }
 
         try {
@@ -234,11 +245,11 @@ class BlogController extends AbstractController
             $image->setMimeType($file->getMimeType());
             $image->setFileSize($file->getSize());
 
-            $file->move($image->getPath(), $image->getFilename());
+            $file->move($image->getFolder($this->publicDir()), $image->getFilename());
 
             // Try to get dimensions
             if (function_exists('getimagesize')) {
-                $size = @getimagesize($image->getPath() . '/' . $image->getFilename());
+                $size = @getimagesize($image->getFilePath($this->publicDir()));
                 if ($size) {
                     $image->setWidth($size[0]);
                     $image->setHeight($size[1]);
@@ -261,7 +272,7 @@ class BlogController extends AbstractController
                 ]
             ]);
         } catch (FileException $e) {
-            return new JsonResponse(['success' => false, 'message' => 'Upload failed']);
+            return new JsonResponse(['success' => false, 'message' => 'Uploaden mislukt']);
         }
     }
 
@@ -271,23 +282,21 @@ class BlogController extends AbstractController
         $post = $this->blogPostRepository->findForAdmin($id);
 
         if (!$post) {
-            return new JsonResponse(['success' => false, 'message' => 'Blog post not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Bericht niet gevonden']);
         }
 
         $imageId = $request->attributes->get('imageId');
         $image = $this->em->getRepository(BlogImage::class)->find($imageId);
         
         if (!$image) {
-            return new JsonResponse(['success' => false, 'message' => 'Image not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Afbeelding niet gevonden']);
         }
 
         $expectedTokenId = 'delete_image' . $image->getId();
         $receivedToken = $request->request->get('_token');
-        error_log("CSRF Debug - Expected: $expectedTokenId, Received: $receivedToken");
-        error_log("CSRF Debug - Token valid: " . ($this->isCsrfTokenValid($expectedTokenId, $receivedToken) ? 'true' : 'false'));
         
         if (!$this->isCsrfTokenValid($expectedTokenId, $receivedToken)) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         if ($post->getImages()->contains($image)) {
@@ -296,7 +305,7 @@ class BlogController extends AbstractController
             $this->em->flush();
 
             // Delete physical file
-            $filePath = $image->getPath() . '/' . $image->getFilename();
+            $filePath = $image->getFilePath($this->publicDir());
             if (file_exists($filePath)) {
                 @unlink($filePath);
             }
@@ -311,13 +320,13 @@ class BlogController extends AbstractController
         $post = $this->blogPostRepository->findForAdmin($id);
 
         if (!$post) {
-            return new JsonResponse(['success' => false, 'message' => 'Blog post not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Bericht niet gevonden']);
         }
 
         $order = json_decode($request->getContent(), true);
 
         if (!is_array($order)) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid data']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldige gegevens']);
         }
 
         foreach ($order as $index => $imageId) {
@@ -338,13 +347,13 @@ class BlogController extends AbstractController
         $post = $this->blogPostRepository->findForAdmin($id);
 
         if (!$post) {
-            return new JsonResponse(['success' => false, 'message' => 'Blog post not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Bericht niet gevonden']);
         }
 
         $file = $request->files->get('file');
 
         if (!$file instanceof UploadedFile) {
-            return new JsonResponse(['success' => false, 'message' => 'No file uploaded']);
+            return new JsonResponse(['success' => false, 'message' => 'Geen bestand geüpload']);
         }
 
         try {
@@ -354,7 +363,7 @@ class BlogController extends AbstractController
             $blogFile->setMimeType($file->getMimeType());
             $blogFile->setFileSize($file->getSize());
 
-            $file->move($blogFile->getPath(), $blogFile->getFilename());
+            $file->move($blogFile->getFolder($this->publicDir()), $blogFile->getFilename());
 
             $post->addFile($blogFile);
 
@@ -371,7 +380,7 @@ class BlogController extends AbstractController
                 ]
             ]);
         } catch (FileException $e) {
-            return new JsonResponse(['success' => false, 'message' => 'Upload failed']);
+            return new JsonResponse(['success' => false, 'message' => 'Uploaden mislukt']);
         }
     }
 
@@ -381,18 +390,18 @@ class BlogController extends AbstractController
         $post = $this->blogPostRepository->findForAdmin($id);
 
         if (!$post) {
-            return new JsonResponse(['success' => false, 'message' => 'Blog post not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Bericht niet gevonden']);
         }
 
         $fileId = $request->attributes->get('fileId');
         $file = $this->em->getRepository(BlogFile::class)->find($fileId);
         
         if (!$file) {
-            return new JsonResponse(['success' => false, 'message' => 'File not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Bestand niet gevonden']);
         }
 
         if (!$this->isCsrfTokenValid('delete_file' . $file->getId(), $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         if ($post->getFiles()->contains($file)) {
@@ -400,7 +409,7 @@ class BlogController extends AbstractController
             $this->em->remove($file);
             $this->em->flush();
 
-            $filePath = $file->getPath() . '/' . $file->getFilename();
+            $filePath = $file->getFilePath($this->publicDir());
             if (file_exists($filePath)) {
                 @unlink($filePath);
             }
@@ -415,19 +424,19 @@ class BlogController extends AbstractController
         $post = $this->blogPostRepository->findForAdmin($id);
 
         if (!$post) {
-            return new JsonResponse(['success' => false, 'message' => 'Blog post not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Bericht niet gevonden']);
         }
 
         $videoId = $request->request->get('videoId');
         $title = $request->request->get('title');
 
         if (empty($videoId)) {
-            return new JsonResponse(['success' => false, 'message' => 'Video ID required']);
+            return new JsonResponse(['success' => false, 'message' => 'Video-ID is verplicht']);
         }
 
         $youtube = new BlogYouTube();
         $youtube->setVideoId($videoId);
-        $youtube->setTitle($title ?: 'YouTube Video');
+        $youtube->setTitle($title ?: 'YouTube-video');
         $youtube->setSortOrder($post->getYouTubes()->count());
 
         $post->addYouTube($youtube);
@@ -453,18 +462,18 @@ class BlogController extends AbstractController
         $post = $this->blogPostRepository->findForAdmin($id);
 
         if (!$post) {
-            return new JsonResponse(['success' => false, 'message' => 'Blog post not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Bericht niet gevonden']);
         }
 
         $youtubeId = $request->attributes->get('youtubeId');
         $youtube = $this->em->getRepository(BlogYouTube::class)->find($youtubeId);
         
         if (!$youtube) {
-            return new JsonResponse(['success' => false, 'message' => 'YouTube not found']);
+            return new JsonResponse(['success' => false, 'message' => 'YouTube-video niet gevonden']);
         }
 
         if (!$this->isCsrfTokenValid('delete_youtube' . $youtube->getId(), $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         if ($post->getYouTubes()->contains($youtube)) {
@@ -488,7 +497,7 @@ class BlogController extends AbstractController
                 $image->setMimeType($file->getMimeType());
                 $image->setFileSize($file->getSize());
 
-                $file->move($image->getPath(), $image->getFilename());
+                $file->move($image->getFolder($this->publicDir()), $image->getFilename());
                 $image->setImageType('original');
 
                 $post->addImage($image);
@@ -506,7 +515,7 @@ class BlogController extends AbstractController
                 $blogFile->setMimeType($file->getMimeType());
                 $blogFile->setFileSize($file->getSize());
 
-                $file->move($blogFile->getPath(), $blogFile->getFilename());
+                $file->move($blogFile->getFolder($this->publicDir()), $blogFile->getFilename());
 
                 $post->addFile($blogFile);
                 $this->em->persist($blogFile);
@@ -521,13 +530,19 @@ class BlogController extends AbstractController
         return $safeFilename . '-' . uniqid() . '.' . $file->guessExtension();
     }
 
+    /** Upload folder relative to public/, as stored on the record; created when missing */
     private function getUploadPath(string $type): string
     {
-        $path = $this->getParameter('kernel.project_dir') . '/public/uploads/blog/' . $type;
-        if (!is_dir($path)) {
-            mkdir($path, 0777, true);
+        $path = 'uploads/blog/' . $type;
+        if (!is_dir($this->publicDir() . '/' . $path)) {
+            mkdir($this->publicDir() . '/' . $path, 0777, true);
         }
         return $path;
+    }
+
+    private function publicDir(): string
+    {
+        return $this->getParameter('kernel.project_dir') . '/public';
     }
 
     #[Route('/comments', name: 'admin_blog_comments', methods: ['GET'])]
@@ -573,10 +588,16 @@ class BlogController extends AbstractController
     }
 
     #[Route('/comment/{id}/approve', name: 'admin_blog_comment_approve', methods: ['POST'])]
-    public function approveComment(BlogComment $comment): JsonResponse
+    public function approveComment(BlogComment $comment, ActivityNotifier $activityNotifier): JsonResponse
     {
+        $wasApproved = $comment->isApproved();
         $comment->setApproved(true);
         $this->em->flush();
+
+        // The author of the comment it replies to hears of it once it is visible
+        if (!$wasApproved) {
+            $activityNotifier->commentPublished($comment);
+        }
 
         return new JsonResponse(['success' => true]);
     }
@@ -594,7 +615,7 @@ class BlogController extends AbstractController
     public function deleteComment(Request $request, BlogComment $comment): JsonResponse
     {
         if (!$this->isCsrfTokenValid('delete_comment' . $comment->getId(), $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $this->em->remove($comment);

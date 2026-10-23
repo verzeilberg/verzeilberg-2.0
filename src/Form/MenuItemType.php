@@ -22,49 +22,49 @@ class MenuItemType extends AbstractType
         $builder
             ->add('label', TextType::class, [
                 'label' => 'Label',
-                'attr' => ['placeholder' => 'Menu item label'],
+                'attr' => ['placeholder' => 'Label van het menu-item'],
             ])
             ->add('link', TextType::class, [
-                'label' => 'Link (URL or route)',
+                'label' => 'Link (URL of route)',
                 'required' => false,
-                'attr' => ['placeholder' => '/path or route_name'],
-                'help' => 'Leave empty for dropdown headers. Use route names like "app_home" or URLs.',
+                'attr' => ['placeholder' => '/pad of route_naam'],
+                'help' => 'Laat leeg voor kopjes in een dropdown. Gebruik routenamen zoals "app_home" of URL\'s.',
             ])
             ->add('icon', TextType::class, [
-                'label' => 'Icon Class',
+                'label' => 'Pictogramklasse',
                 'required' => false,
                 'attr' => ['placeholder' => 'fas fa-home'],
-                'help' => 'FontAwesome icon class (e.g., fas fa-home).',
+                'help' => 'FontAwesome-pictogramklasse (bijv. fas fa-home).',
             ])
             ->add('sortOrder', IntegerType::class, [
-                'label' => 'Sort Order',
+                'label' => 'Volgorde',
                 'attr' => ['min' => 0],
             ])
             ->add('authorizedFor', TextType::class, [
-                'label' => 'Authorized For (Role)',
+                'label' => 'Zichtbaar voor (rol)',
                 'required' => false,
                 'attr' => ['placeholder' => 'ROLE_ADMIN, ROLE_EDITOR'],
-                'help' => 'Comma-separated roles that can see this item. Empty = visible to all.',
+                'help' => 'Rollen die dit item zien, gescheiden door komma\'s. Leeg = zichtbaar voor iedereen.',
             ])
             ->add('enabled', CheckboxType::class, [
-                'label' => 'Enabled',
+                'label' => 'Actief',
                 'required' => false,
             ])
             ->add('openInNewTab', CheckboxType::class, [
-                'label' => 'Open in New Tab',
+                'label' => 'Openen in nieuw tabblad',
                 'required' => false,
             ])
             ->add('cssClass', TextType::class, [
-                'label' => 'CSS Class',
+                'label' => 'CSS-klasse',
                 'required' => false,
                 'attr' => ['placeholder' => 'custom-class'],
             ]);
 
         if ($menu) {
             $builder->add('parent', EntityType::class, [
-                'label' => 'Parent Item',
+                'label' => 'Bovenliggend item',
                 'required' => false,
-                'placeholder' => '— Root Level —',
+                'placeholder' => '— Hoofdniveau —',
                 'class' => MenuItem::class,
                 'choice_label' => fn(MenuItem $item) => str_repeat('— ', $item->getDepth()) . $item->getLabel(),
                 'query_builder' => fn($repo) => $repo->createQueryBuilder('mi')

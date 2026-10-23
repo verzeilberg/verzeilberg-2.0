@@ -21,7 +21,7 @@
         toastEl.className = 'toast align-items-center border-0 text-bg-' + (type === 'error' ? 'danger' : 'success');
         toastEl.setAttribute('role', type === 'error' ? 'alert' : 'status');
         toastEl.innerHTML = '<div class="d-flex"><div class="toast-body"></div>'
-            + '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div>';
+            + '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Sluiten"></button></div>';
         toastEl.querySelector('.toast-body').textContent = message;
         container.appendChild(toastEl);
         toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
@@ -65,7 +65,7 @@
             });
             if (invalid.length) {
                 restoreSnapshot();
-                showToast('Fields can only be placed in a fieldset.', 'error');
+                showToast('Velden kunnen alleen in een fieldset geplaatst worden.', 'error');
                 return;
             }
 
@@ -89,14 +89,14 @@
                 dataType: 'json'
             }).done(function(response) {
                 if (response && response.success) {
-                    showToast('Order saved.', 'success');
+                    showToast('Volgorde opgeslagen.', 'success');
                 } else {
                     restoreSnapshot();
-                    showToast((response && response.message) || 'The order could not be saved.', 'error');
+                    showToast((response && response.message) || 'De volgorde kon niet worden opgeslagen.', 'error');
                 }
             }).fail(function(xhr) {
                 restoreSnapshot();
-                showToast((xhr.responseJSON && xhr.responseJSON.message) || 'The order could not be saved.', 'error');
+                showToast((xhr.responseJSON && xhr.responseJSON.message) || 'De volgorde kon niet worden opgeslagen.', 'error');
             });
         });
     }

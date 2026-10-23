@@ -112,12 +112,16 @@ class SteamLibrarySync
             }
         }
 
-        // No longer in the library (refunded, family sharing ended, ...)
+        // No longer in the library (refunded, family sharing ended, ...); a game I reviewed stays, with its review
+        $removed = 0;
         foreach ($existing as $game) {
-            $this->em->remove($game);
+            if ($game->getReview() === null) {
+                $this->em->remove($game);
+                ++$removed;
+            }
         }
 
-        return [$added, $updated, count($existing)];
+        return [$added, $updated, $removed];
     }
 
     /** @return array{int, int} read, still to do */
@@ -176,6 +180,8 @@ class SteamLibrarySync
             $this->gameRepository->findBy([], ['lastPlayedAt' => 'DESC']),
             fn (SteamGame $game) => $game->needsAchievementRefresh()
         ));
+        // Private games (asked again every sync) after the others, so they never take the place of a game that changed
+        usort($due, fn (SteamGame $a, SteamGame $b) => $a->isAchievementsPrivate() <=> $b->isAchievementsPrivate());
 
         $read = 0;
         foreach (array_chunk(array_slice($due, 0, max(0, $limit)), self::ACHIEVEMENTS_BATCH) as $batch) {
@@ -184,7 +190,11 @@ class SteamLibrarySync
                 $byAppId[$game->getAppId()] = $game;
             }
             foreach ($this->client->getAchievements(array_keys($byAppId)) as $appId => $achievements) {
-                $byAppId[$appId]->setAchievements($achievements['unlocked'], $achievements['total']);
+                if ($achievements['unlocked'] === null) {
+                    $byAppId[$appId]->setAchievementsPrivate($achievements['total']);
+                } else {
+                    $byAppId[$appId]->setAchievements($achievements['unlocked'], (int) $achievements['total']);
+                }
                 ++$read;
             }
             $this->em->flush();

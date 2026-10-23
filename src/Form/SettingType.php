@@ -21,7 +21,7 @@ class SettingType extends AbstractType
         
         $builder
             ->add('value', $fieldType, [
-                'label' => 'Value',
+                'label' => 'Waarde',
                 'required' => false,
             ]);
 

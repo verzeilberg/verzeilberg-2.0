@@ -30,6 +30,9 @@ parameters:
     app.uploads_dir: '%kernel.project_dir%/public/uploads'
     app.uploads_url: '/uploads'
 
+    # Where notifications about new contact messages and blog comments go
+    app.notification_email: 'sander@verzeilberg.nl'
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -39,6 +42,7 @@ services:
             $athleteId: '%strava.athlete_id%'
             $activitiesPerPage: '%strava.activities_per_page%'
             $appTimezone: '%app.timezone%'
+            $notificationEmail: '%app.notification_email%'
             $clientId: '%strava.client_id%'
             $clientSecret: '%strava.client_secret%'
             $redirectUri: '%strava.redirect_uri%'

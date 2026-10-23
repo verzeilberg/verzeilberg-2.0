@@ -26,6 +26,7 @@
 .w-120px { width: 120px; }
 .w-130px { width: 130px; }
 .w-250px { width: 250px; }
+.min-w-0 { min-width: 0; }
 .min-w-150px { min-width: 150px; }
 .min-w-200px { min-width: 200px; }
 .min-w-250px { min-width: 250px; }

@@ -6,6 +6,7 @@ namespace App\Form;
 
 use App\Entity\Role;
 use App\Entity\User;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -24,38 +25,39 @@ class UserType extends AbstractType
 
         $builder
             ->add('email', EmailType::class, [
-                'label' => 'Email',
-                'attr' => ['placeholder' => 'user@example.com'],
+                'label' => 'E-mail',
+                'attr' => ['placeholder' => 'gebruiker@example.com'],
             ])
             ->add('fullName', TextType::class, [
-                'label' => 'Full Name',
-                'attr' => ['placeholder' => 'John Doe'],
+                'label' => 'Volledige naam',
+                'attr' => ['placeholder' => 'Jan Jansen'],
             ])
             ->add('doctrineRoles', EntityType::class, [
-                'label' => 'Roles',
+                'label' => 'Rollen',
                 'class' => Role::class,
-                'choice_label' => 'name',
+                'choice_label' => fn(Role $role) => $role->getName() . ($role->getDescription() ? ' — ' . $role->getDescription() : ''),
                 'multiple' => true,
-                'expanded' => false,
+                'expanded' => true,
                 'required' => false,
-                'attr' => ['class' => 'form-select', 'size' => 5],
-                'query_builder' => fn($repo) => $repo->createQueryBuilder('r')
+                'help' => 'ROLE_ADMIN mag alles. Andere rollen krijgen toegang via hun rechten.',
+                'query_builder' => fn(EntityRepository $repo) => $repo->createQueryBuilder('r')
+                    ->andWhere('r.deleted = false')
                     ->orderBy('r.name', 'ASC'),
             ]);
 
         if (!$isEdit) {
             $builder->add('plainPassword', RepeatedType::class, [
                 'type' => PasswordType::class,
-                'first_options' => ['label' => 'Password', 'attr' => ['placeholder' => 'Enter password']],
-                'second_options' => ['label' => 'Confirm Password', 'attr' => ['placeholder' => 'Confirm password']],
+                'first_options' => ['label' => 'Wachtwoord', 'attr' => ['placeholder' => 'Wachtwoord']],
+                'second_options' => ['label' => 'Herhaal wachtwoord', 'attr' => ['placeholder' => 'Herhaal wachtwoord']],
                 'mapped' => false,
                 'required' => true,
             ]);
         } else {
             $builder->add('plainPassword', RepeatedType::class, [
                 'type' => PasswordType::class,
-                'first_options' => ['label' => 'New Password (leave empty to keep current)', 'attr' => ['placeholder' => 'New password'], 'required' => false],
-                'second_options' => ['label' => 'Confirm New Password', 'attr' => ['placeholder' => 'Confirm new password'], 'required' => false],
+                'first_options' => ['label' => 'Nieuw wachtwoord (leeg laten om het huidige te houden)', 'attr' => ['placeholder' => 'Nieuw wachtwoord'], 'required' => false],
+                'second_options' => ['label' => 'Bevestig nieuw wachtwoord', 'attr' => ['placeholder' => 'Bevestig nieuw wachtwoord'], 'required' => false],
                 'mapped' => false,
                 'required' => false,
             ]);
@@ -64,8 +66,9 @@ class UserType extends AbstractType
         $builder->add('status', ChoiceType::class, [
                 'label' => 'Status',
                 'choices' => [
-                    'Active' => User::STATUS_ACTIVE,
-                    'Inactive' => User::STATUS_RETIRED,
+                    'Actief' => User::STATUS_ACTIVE,
+                    'Inactief' => User::STATUS_RETIRED,
+                    'Wacht op goedkeuring' => User::STATUS_PENDING,
                 ],
                 'required' => false,
                 'attr' => ['class' => 'form-select'],

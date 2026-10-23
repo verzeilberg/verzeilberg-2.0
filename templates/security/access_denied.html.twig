@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Geen toegang - Verzeilberg.nl{% endblock %}
+
+{% block page_title %}Geen toegang{% endblock %}
+
+{% block body %}
+<div class="form-page">
+    <div class="card text-center">
+        <div class="card-body article-body">
+            <i class="fas fa-lock fa-3x text-primary mb-3" aria-hidden="true"></i>
+            <h2 class="h3">Je hebt geen toegang tot deze pagina</h2>
+            <p class="text-muted">
+                Je account {% if app.user %}(<strong>{{ app.user.email }}</strong>) {% endif %}mag deze pagina niet openen.
+                Denk je dat dat wel zou moeten? Vraag een beheerder om je de juiste rol te geven.
+            </p>
+            <div class="d-grid mt-4">
+                <a href="{{ path('app_home') }}" class="btn btn-primary">Naar de homepage</a>
+            </div>
+        </div>
+    </div>
+    <p class="text-center mt-3">
+        {% set referer = app.request.headers.get('referer') %}
+        {% if referer and referer != app.request.uri %}
+            <a href="{{ referer }}">Ga terug</a> &middot;
+        {% endif %}
+        {% if is_granted('PERM_admin.access') %}
+            <a href="{{ path('admin_dashboard') }}">Beheerdashboard</a> &middot;
+        {% endif %}
+        <a href="{{ path('app_profile') }}">Mijn profiel</a>
+    </p>
+</div>
+{% endblock %}

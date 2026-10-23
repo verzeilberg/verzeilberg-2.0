@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Verzeilberg.nl blog</title>
+        <link>{{ url('blog_index') }}</link>
+        <atom:link href="{{ url('blog_feed') }}" rel="self" type="application/rss+xml"/>
+        <description>Wedstrijdverslagen, reizen en notities uit de werkplaats.</description>
+        <language>nl</language>
+{% if posts is not empty %}
+        <lastBuildDate>{{ (posts|first.dateOnline ?? posts|first.dateCreated)|date('r') }}</lastBuildDate>
+{% endif %}
+{% for post in posts %}
+        <item>
+            <title>{{ post.title }}</title>
+            <link>{{ url('blog_detail', {slug: post.slug}) }}</link>
+            <guid isPermaLink="true">{{ url('blog_detail', {slug: post.slug}) }}</guid>
+            <pubDate>{{ (post.dateOnline ?? post.dateCreated)|date('r') }}</pubDate>
+            <description>{{ post.introText|striptags|trim }}</description>
+{% for category in post.categories|filter(c => c.enabled) %}
+            <category>{{ category.name }}</category>
+{% endfor %}
+        </item>
+{% endfor %}
+    </channel>
+</rss>

@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Geen toegang - Verzeilberg.nl{% endblock %}
+{% block page_title %}Geen toegang{% endblock %}
+{% block page_lead %}Je mag deze pagina niet openen.{% endblock %}
+
+{% block body %}
+<div class="empty-state">
+    <i class="fas fa-lock"></i>
+    <p>
+        {% if is_granted('IS_AUTHENTICATED_REMEMBERED') %}
+            Je account heeft geen toegang tot deze pagina. Denk je dat dat wel zou moeten? Vraag het de beheerder van de site.
+        {% else %}
+            <a href="{{ path('app_login') }}">Log in</a> om te zien of je toegang hebt.
+        {% endif %}
+    </p>
+    <p class="mt-2"><a href="{{ path('app_home') }}">Terug naar de homepage</a></p>
+</div>
+{% endblock %}

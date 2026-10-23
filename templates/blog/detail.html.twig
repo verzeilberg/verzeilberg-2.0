@@ -2,120 +2,183 @@
 
 {% block title %}{{ post.title }} - Blog - Verzeilberg.nl{% endblock %}
 
-{% block hero_section %}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ post.title }}{% endblock %}
+{% block og_description %}{{ ogDescription }}{% endblock %}
+{% block og_image %}{{ ogImage ? absolute_url(ogImage.url) }}{% endblock %}
+{% block og_image_width %}{{ ogImage.width ?? '' }}{% endblock %}
+{% block og_image_height %}{{ ogImage.height ?? '' }}{% endblock %}
+
+{% block page_title %}{{ post.title }}{% endblock %}
+{% block page_lead %}
+    {{ (post.dateOnline ?? post.dateCreated)|nl_date('l j F Y') }}
+    {% if post.categories|length %} in {% for category in post.categories %}<a href="{{ path('blog_category', {slug: category.slug}) }}">{{ category.name }}</a>{{ not loop.last ? ', ' }}{% endfor %}{% endif %}
+{% endblock %}
+{% block page_actions %}
+    <a href="{{ path('blog_index') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Alle berichten</a>
+{% endblock %}
 
 {% block body %}
-<article class="row">
+{% if preview|default(false) %}
+    <div class="alert alert-warning"><i class="fas fa-eye me-2"></i>Voorbeeld: dit bericht staat nog niet online. Deel deze link nog niet.</div>
+{% endif %}
+<div class="row g-4">
     <div class="col-lg-8">
-        <header class="mb-4">
-            <h1 class="mb-3">{{ post.title }}</h1>
+        <article class="card mb-4">
+            {% set imageCount = post.images|length %}
+            {% if imageCount == 1 %}
+                {% set firstImage = post.images.first() %}
+                <img src="{{ firstImage.getPublicPath() }}" class="article-image" alt="{{ firstImage.alt ?? post.title }}">
+            {% elseif imageCount > 1 %}
+                {# Bootstrap carousel; the thumbnails are its indicators, so Bootstrap keeps the active one in sync #}
+                <div id="postCarousel" class="carousel slide post-carousel" data-bs-interval="false" aria-roledescription="carousel" aria-label="Foto's">
+                    <div class="carousel-inner">
+                        {% for image in post.images %}
+                            <figure class="carousel-item{{ loop.first ? ' active' }}" aria-roledescription="dia" aria-label="{{ loop.index }} / {{ imageCount }}">
+                                <a href="{{ image.getPublicPath() }}" target="_blank" rel="noopener" class="post-carousel-frame">
+                                    <img src="{{ image.getPublicPath() }}" alt="{{ image.alt ?? post.title }}"{{ not loop.first ? ' loading="lazy"' }}>
+                                </a>
+                                <figcaption class="post-carousel-caption">
+                                    <span>{{ image.description }}</span>
+                                    <span class="post-carousel-counter">{{ loop.index }} / {{ imageCount }}</span>
+                                </figcaption>
+                            </figure>
+                        {% endfor %}
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#postCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Vorige foto</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#postCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Volgende foto</span>
+                    </button>
+                    <div class="carousel-indicators post-carousel-thumbs">
+                        {% for image in post.images %}
+                            <button type="button" data-bs-target="#postCarousel" data-bs-slide-to="{{ loop.index0 }}"{{ loop.first ? ' class="active" aria-current="true"' }} aria-label="Foto {{ loop.index }}">
+                                <img src="{{ image.getPublicPath() }}" alt="" loading="lazy">
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            <div class="card-body article-body">
+                {% if not post.isOnline() %}
+                    {# Only authors can open a post that isn't online #}
+                    <p><span class="badge bg-{{ post.status == 2 ? 'warning' : 'secondary' }}">
+                        {% if post.status == 2 %}Offline{% elseif post.status == 3 %}Gearchiveerd{% else %}Concept{% endif %}
+                    </span></p>
+                {% endif %}
 
-            <div class="text-muted small">
-                <i class="fas fa-calendar me-1"></i>{{ post.dateCreated|date('F d, Y') }}
-                {% if post.dateOnline and post.dateOnline > post.dateCreated %}
-                    <i class="fas fa-clock me-2 ms-3"></i>Published {{ post.dateOnline|date('F d, Y') }}
+                {% if post.introText %}
+                    <p class="article-intro">{{ post.introText|striptags }}</p>
+                {% endif %}
+
+                <div class="prose content">
+                    {{ post.content|raw }}
+                </div>
+
+                {% if post.youTubes|length > 0 %}
+                    <section class="mt-4">
+                        <h2 class="h4 mb-3">Videos</h2>
+                        <div class="row g-3">
+                            {% for youtube in post.youTubes %}
+                                <div class="col-md-6">
+                                    <div class="ratio ratio-16x9">
+                                        <iframe src="{{ youtube.getEmbedUrl() }}" title="{{ youtube.title ?? 'Video' }}" allowfullscreen></iframe>
+                                    </div>
+                                    {% if youtube.title %}
+                                        <p class="small text-muted mt-1 mb-0">{{ youtube.title }}</p>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                {% endif %}
+
+                {% if post.files|length > 0 %}
+                    <section class="mt-4">
+                        <h2 class="h4 mb-3">Bijlagen</h2>
+                        <ul class="list-group">
+                            {% for file in post.files %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="{{ file.getPublicPath() }}" target="_blank" class="text-decoration-none">
+                                        <i class="fas fa-file me-2"></i>{{ file.name ?? file.filename }}
+                                    </a>
+                                    <span class="text-muted small">{{ file.getHumanReadableSize() }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </section>
                 {% endif %}
             </div>
+        </article>
 
-            <div class="d-flex flex-wrap gap-2 mt-2">
-                {% for category in post.categories %}
-                    <a href="{{ path('blog_category', {slug: category.slug}) }}" class="badge bg-info text-decoration-none">
-                        {{ category.name }}
-                    </a>
-                {% endfor %}
-                <span class="badge bg-{% if post.status == 1 %}success{% elseif post.status == 2 %}warning{% else %}secondary{% endif %}">
-                    {% if post.status == 1 %}Published{% elseif post.status == 2 %}Offline{% elseif post.status == 3 %}Archived{% else %}Draft{% endif %}
-                </span>
+        {% if not preview|default(false) %}
+        <section class="card" id="comments">
+            <div class="card-header">
+                <h2>{{ commentCount }} {{ commentCount == 1 ? 'reactie' : 'reacties' }}</h2>
             </div>
-        </header>
-
-        {% if post.images|length > 0 %}
-            <div class="mb-4">
-                {% set firstImage = post.images.first() %}
-                <img src="{{ firstImage.getPublicPath() }}" alt="{{ firstImage.alt ?? post.title }}" class="img-fluid rounded">
-            </div>
-        {% endif %}
-
-        <div class="content mb-5">
-            {{ post.content|raw }}
-        </div>
-
-        {% if post.youTubes|length > 0 %}
-            <section class="mb-5">
-                <h3>Videos</h3>
-                <div class="row">
-                    {% for youtube in post.youTubes %}
-                        <div class="col-md-6 mb-3">
-                            <div class="ratio ratio-16x9">
-                                <iframe src="{{ youtube.getEmbedUrl() }}" allowfullscreen></iframe>
-                            </div>
-                            {% if youtube.title %}
-                                <p class="small text-muted mt-1">{{ youtube.title }}</p>
-                            {% endif %}
+            <div class="card-body">
+                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                    <form action="{{ path('blog_detail', {slug: post.slug}) }}#comment-form" method="POST" class="mb-4" id="comment-form">
+                        <input type="hidden" name="_token" value="{{ csrf_token('comment_' ~ post.id) }}">
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Je reactie</label>
+                            <textarea class="form-control" id="comment" name="comment" rows="3" maxlength="{{ commentMaxLength }}" required>{{ replyToId ? '' : commentDraft }}</textarea>
                         </div>
-                    {% endfor %}
-                </div>
-            </section>
-        {% endif %}
+                        <button type="submit" class="btn btn-primary">Plaats reactie</button>
+                    </form>
+                {% else %}
+                    <p class="text-muted"><a href="{{ path('app_login') }}">Log in</a> om een reactie te plaatsen.</p>
+                {% endif %}
 
-        {% if post.files|length > 0 %}
-            <section class="mb-5">
-                <h3>Attachments</h3>
-                <ul class="list-group">
-                    {% for file in post.files %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="{{ file.getPublicPath() }}" target="_blank" class="text-decoration-none">
-                                <i class="fas fa-file me-2"></i>{{ file.name ?? file.filename }}
-                            </a>
-                            <span class="badge bg-secondary">{{ file.getHumanReadableSize() }}</span>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </section>
-        {% endif %}
-
-        <hr class="my-5">
-
-        <section class="mb-5">
-            <h3>{{ comments|length }} Comment{{ comments|length != 1 ? 's' : '' }}</h3>
-
-            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
-                <form action="{{ path('blog_detail', {slug: post.slug}) }}" method="POST" class="mb-4">
-                    <input type="hidden" name="_token" value="{{ csrf_token('comment_' ~ post.id) }}">
-                    <div class="mb-3">
-                        <label for="comment" class="form-label">Add a Comment</label>
-                        <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Post Comment</button>
-                </form>
-            {% else %}
-                <p class="text-muted"><a href="{{ path('app_login') }}">Log in</a> to leave a comment.</p>
-            {% endif %}
-
-            {% for comment in comments %}
-                {% include 'blog/partials/comment.html.twig' with {comment: comment, depth: 0} %}
-            {% endfor %}
+                {% for comment in comments %}
+                    {% include 'blog/partials/comment.html.twig' with {comment: comment, depth: 0} %}
+                {% endfor %}
+            </div>
         </section>
+        {% endif %}
     </div>
 
     <div class="col-lg-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">All Categories</h5>
-            </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    {% for category in categories %}
-                        <li class="list-group-item px-0">
-                            <a href="{{ path('blog_category', {slug: category.slug}) }}" class="text-decoration-none">
-                                {{ category.name }}
-                                <span class="badge bg-secondary float-end">{{ category.getOnlinePostCount() }}</span>
-                            </a>
-                        </li>
+        {% if recentPosts %}
+            <aside class="card mb-4">
+                <div class="card-header"><h2>Nieuwste berichten</h2></div>
+                <div class="list-group list-group-flush">
+                    {% for recent in recentPosts %}
+                        <a href="{{ path('blog_detail', {slug: recent.slug}) }}" class="list-group-item list-group-item-action">
+                            <strong class="d-block">{{ recent.title }}</strong>
+                            <small class="text-muted">{{ (recent.dateOnline ?? recent.dateCreated)|nl_date('j M Y') }}</small>
+                        </a>
                     {% endfor %}
-                </ul>
-            </div>
-        </div>
+                </div>
+            </aside>
+        {% endif %}
+
+        <aside class="filter-panel mb-4">
+            <h2 class="filter-heading">Categorieën</h2>
+            <ul class="filter-list">
+                {% for category in categories %}
+                    {% set active = post.categories.contains(category) %}
+                    <li>
+                        <a href="{{ path('blog_category', {slug: category.slug}) }}" {{ active ? 'class="active"' }}>
+                            <span>{{ category.name }}</span>
+                            <span class="filter-count">{{ category.getOnlinePostCount() }}</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="text-muted">Nog geen categorieën.</li>
+                {% endfor %}
+            </ul>
+        </aside>
     </div>
-</article>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% if post.images|length > 1 %}
+        <script src="{{ asset('js/modules/blog/carousel.js') }}"></script>
+    {% endif %}
 {% endblock %}

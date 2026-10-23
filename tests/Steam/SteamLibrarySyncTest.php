@@ -83,12 +83,37 @@ class SteamLibrarySyncTest extends KernelTestCase
 
         $this->assertSame([0, 1, 1, 0, 1], [$result->added, $result->updated, $result->removed, $result->details, $result->achievements]);
         $this->assertSame(0, count(array_filter($this->requests, fn ($url) => str_contains($url, 'appdetails'))), 'store details are kept');
-        $this->assertSame(['appid=10'], array_values(array_map(
-            fn ($url) => (string) preg_replace('/.*(appid=\d+).*/', '$1', $url),
-            array_filter($this->requests, fn ($url) => str_contains($url, 'GetPlayerAchievements'))
-        )), 'only the game that was played');
+        $this->assertSame(['10'], $this->achievementRequests(), 'only the game that was played');
         $this->assertSame(4, $this->games()['Factorio']->getAchievementsUnlocked());
         $this->assertArrayNotHasKey('Refunded', $this->games());
+    }
+
+    public function testGameMarkedPrivateInSteamGetsItsOwnStatusAndIsAskedLast(): void
+    {
+        $this->ownedGames = [$this->owned(251570, '7 Days to Die', 128161, '-2 days'), $this->owned(620, 'Portal 2', 900, '-1 year')];
+        $this->storeDetails = [251570 => $this->store('7 Days to Die'), 620 => $this->store('Portal 2')];
+        $this->achievements = [251570 => 'private', 620 => [5, 51]];
+        $this->schemaTotals = [251570 => 43];
+
+        $result = $this->sync()->sync();
+
+        $this->assertSame(2, $result->achievements);
+        $game = $this->games()['7 Days to Die'];
+        $this->assertTrue($game->isAchievementsPrivate());
+        $this->assertSame([null, 43], [$game->getAchievementsUnlocked(), $game->getAchievementsTotal()]);
+        $this->assertFalse($game->hasAchievements(), 'no progress bar without the progress');
+        $this->assertNull($game->getAchievementPercentage());
+
+        // Asked again every sync, after the games that changed; made public again in Steam = normal again
+        $this->requests = [];
+        $this->ownedGames[1] = $this->owned(620, 'Portal 2', 960, '-1 hour');
+        $this->achievements = [251570 => [20, 43], 620 => [6, 51]];
+        $this->sync()->sync();
+
+        $this->assertSame(['620', '251570'], $this->achievementRequests());
+        $game = $this->games()['7 Days to Die'];
+        $this->assertFalse($game->isAchievementsPrivate());
+        $this->assertSame(46, $game->getAchievementPercentage());
     }
 
     public function testDetailsAreSpreadOverRunsAndRateLimitedOnesAreRetried(): void
@@ -109,7 +134,7 @@ class SteamLibrarySyncTest extends KernelTestCase
         $result = $this->sync()->sync(detailsLimit: 3, achievementsLimit: 0);
         $this->assertSame([2, 1], [$result->details, $result->detailsPending], 'Game 2 and 1 now; Game 5 still rate limited');
         $this->assertSame(['Game 4', 'Game 3', 'Game 2', 'Game 1'], $this->namesWithDetails());
-        $this->assertStringContainsString('Next run: 1 detail(s)', $result->summary());
+        $this->assertStringContainsString('Volgende keer: nog 1 game(s) voor gegevens', $result->summary());
     }
 
     public function testCustomProfileNameAndUrlAreResolved(): void
@@ -119,7 +144,7 @@ class SteamLibrarySyncTest extends KernelTestCase
         }
 
         $this->expectException(SteamApiException::class);
-        $this->expectExceptionMessage('Steam profile "nobody" was not found');
+        $this->expectExceptionMessage('Steam-profiel "nobody" niet gevonden');
         $this->steamClient('nobody')->getSteamId();
     }
 
@@ -130,9 +155,9 @@ class SteamLibrarySyncTest extends KernelTestCase
             $this->sync()->sync();
             $this->fail('Private game details must stop the sync');
         } catch (SteamApiException $e) {
-            $this->assertStringContainsString('"Game details" to Public', $e->getMessage());
+            $this->assertStringContainsString('zet "Gamedetails" op Openbaar', $e->getMessage());
         }
-        $this->assertStringContainsString('Game details', (string) $this->account()->getLastSyncError());
+        $this->assertStringContainsString('Gamedetails', (string) $this->account()->getLastSyncError());
         $this->assertNull($this->account()->getLastSyncedAt());
 
         $this->privateGameDetails = false;
@@ -141,7 +166,7 @@ class SteamLibrarySyncTest extends KernelTestCase
             $this->sync()->sync();
             $this->fail('A refused key must stop the sync');
         } catch (SteamApiException $e) {
-            $this->assertStringContainsString('refused the API key', $e->getMessage());
+            $this->assertStringContainsString('weigerde de API-sleutel', $e->getMessage());
             $this->assertStringNotContainsString('secret-steam-key', $e->getMessage());
         }
     }
@@ -152,7 +177,7 @@ class SteamLibrarySyncTest extends KernelTestCase
         $this->assertFalse($client->isConfigured());
 
         $this->expectException(SteamApiException::class);
-        $this->expectExceptionMessage('set STEAM_API_KEY and STEAM_ID');
+        $this->expectExceptionMessage('vul STEAM_API_KEY en STEAM_ID in');
         $client->getSteamId();
     }
 
@@ -175,6 +200,14 @@ class SteamLibrarySyncTest extends KernelTestCase
         }
 
         return $games;
+    }
+
+    /** @return list<string> app ids whose achievements were requested, in order */
+    private function achievementRequests(): array
+    {
+        $urls = array_filter($this->requests, fn (string $url) => str_contains($url, 'GetPlayerAchievements'));
+
+        return array_values(array_map(fn (string $url) => (string) preg_replace('/.*appid=(\d+).*/', '$1', $url), $urls));
     }
 
     /** @return list<string> */

@@ -1,15 +1,15 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}{{ action == 'new' ? 'New' : 'Edit' }} Answer - Admin{% endblock %}
+{% block title %}{{ action == 'new' ? 'Nieuw antwoord' : 'Antwoord bewerken' }} - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>
         <i class="fas fa-{{ action == 'new' ? 'plus' : 'edit' }} me-2"></i>
-        {{ action == 'new' ? 'New' : 'Edit' }} Answer
+        {{ action == 'new' ? 'Nieuw antwoord' : 'Antwoord bewerken' }}
     </h1>
     <a href="{{ path('admin_checklist_answers') }}" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-1"></i>Back to Answers
+        <i class="fas fa-arrow-left me-1"></i>Terug naar antwoorden
     </a>
 </div>
 
@@ -21,22 +21,22 @@
                     {{ form_row(form.label, {
                         'label': 'Label',
                         'label_attr': {'class': 'form-label'},
-                        'attr': {'class': 'form-control', 'placeholder': 'Display label (e.g. Yes, No, Maybe)'}
+                        'attr': {'class': 'form-control', 'placeholder': 'Getoond label (bijv. Ja, Nee, Misschien)'}
                     }) }}
                 </div>
                 <div class="col-md-6">
                     {{ form_row(form.value, {
-                        'label': 'Value',
+                        'label': 'Waarde',
                         'label_attr': {'class': 'form-label'},
-                        'attr': {'class': 'form-control', 'placeholder': 'Internal value (e.g. 1, 0, yes, no)'}
+                        'attr': {'class': 'form-control', 'placeholder': 'Interne waarde (bijv. 1, 0, ja, nee)'}
                     }) }}
                 </div>
             </div>
-            <div class="d-flex gap-2">
+            <div class="form-actions-bar">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save me-1"></i>{{ action == 'new' ? 'Create' : 'Save' }} Answer
+                    <i class="fas fa-save me-1"></i>{{ action == 'new' ? 'Antwoord aanmaken' : 'Antwoord opslaan' }}
                 </button>
-                <a href="{{ path('admin_checklist_answers') }}" class="btn btn-outline-secondary">Cancel</a>
+                <a href="{{ path('admin_checklist_answers') }}" class="btn btn-outline-secondary">Annuleren</a>
             </div>
         {{ form_end(form) }}
     </div>

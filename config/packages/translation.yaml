@@ -1,5 +1,6 @@
 framework:
-    default_locale: en
+    # The site is Dutch: also the built-in messages (validation, login errors) come from the nl translations
+    default_locale: nl
     translator:
         default_path: '%kernel.project_dir%/translations'
         providers:

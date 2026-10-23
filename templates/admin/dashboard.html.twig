@@ -1,6 +1,6 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Dashboard - Admin{% endblock %}
+{% block title %}Dashboard - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,81 +8,90 @@
 </div>
 
 <div class="row g-4 mb-4">
+    {% if can_access('admin_menu_index') %}
     <div class="col-md-6 col-lg-3">
         <div class="card text-white bg-primary">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h6 class="card-title">Menus</h6>
+                        <h6 class="card-title">Menu's</h6>
                         <h2 class="mb-0">{{ menus|length|default(0) }}</h2>
                     </div>
                     <i class="fas fa-bars fa-3x opacity-50"></i>
                 </div>
                 <a href="{{ path('admin_menu_index') }}" class="text-white text-decoration-none small">
-                    View all <i class="fas fa-arrow-right ms-1"></i>
+                   Alles bekijken <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
         </div>
     </div>
+    {% endif %}
 
+    {% if can_access('admin_blog_index') %}
     <div class="col-md-6 col-lg-3">
         <div class="card text-white bg-success">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h6 class="card-title">Blog Posts</h6>
-                        <h2 class="mb-0">{{ blogPosts|length|default(0) }}</h2>
+                        <h6 class="card-title">Blogberichten</h6>
+                        <h2 class="mb-0">{{ totals.blogPosts }}</h2>
                     </div>
                     <i class="fas fa-blog fa-3x opacity-50"></i>
                 </div>
                 <a href="{{ path('admin_blog_index') }}" class="text-white text-decoration-none small">
-                    View all <i class="fas fa-arrow-right ms-1"></i>
+                   Alles bekijken <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
         </div>
     </div>
+    {% endif %}
 
+    {% if can_access('admin_category_index') %}
     <div class="col-md-6 col-lg-3">
         <div class="card text-white bg-info">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h6 class="card-title">Categories</h6>
-                        <h2 class="mb-0">{{ blogCategories|length|default(0) }}</h2>
+                        <h6 class="card-title">Categorieën</h6>
+                        <h2 class="mb-0">{{ totals.categories }}</h2>
                     </div>
                     <i class="fas fa-tags fa-3x opacity-50"></i>
                 </div>
                 <a href="{{ path('admin_category_index') }}" class="text-white text-decoration-none small">
-                    View all <i class="fas fa-arrow-right ms-1"></i>
+                   Alles bekijken <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
         </div>
     </div>
+    {% endif %}
 
+    {% if can_access('admin_event_index') %}
     <div class="col-md-6 col-lg-3">
         <div class="card text-white bg-warning">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Events</h6>
-                        <h2 class="mb-0">{{ events|length|default(0) }}</h2>
+                        <h2 class="mb-0">{{ totals.events }}</h2>
                     </div>
                     <i class="fas fa-calendar-alt fa-3x opacity-50"></i>
                 </div>
                 <a href="{{ path('admin_event_index') }}" class="text-white text-decoration-none small">
-                    View all <i class="fas fa-arrow-right ms-1"></i>
+                   Alles bekijken <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <div class="row">
+    {% if can_access('admin_event_index') %}
     <div class="col-md-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Events</h5>
-                <a href="{{ path('admin_event_index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                <h5 class="mb-0">Recente events</h5>
+                <a href="{{ path('admin_event_index') }}" class="btn btn-sm btn-outline-primary">Alles bekijken</a>
             </div>
             <div class="card-body">
                 {% if events is not empty %}
@@ -95,17 +104,19 @@
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p class="text-muted mb-0">No events yet. <a href="{{ path('admin_event_new') }}">Create one</a></p>
+                    <p class="text-muted mb-0">Nog geen events. <a href="{{ path('admin_event_new') }}">Maak er een aan</a></p>
                 {% endif %}
             </div>
         </div>
     </div>
+    {% endif %}
 
+    {% if can_access('admin_blog_index') %}
     <div class="col-md-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Blog Posts</h5>
-                <a href="{{ path('admin_blog_index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                <h5 class="mb-0">Recente blogberichten</h5>
+                <a href="{{ path('admin_blog_index') }}" class="btn btn-sm btn-outline-primary">Alles bekijken</a>
             </div>
             <div class="card-body">
                 {% if blogPosts is not empty %}
@@ -118,19 +129,21 @@
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p class="text-muted mb-0">No posts yet. <a href="{{ path('admin_blog_new') }}">Create one</a></p>
+                    <p class="text-muted mb-0">Nog geen berichten. <a href="{{ path('admin_blog_new') }}">Maak er een aan</a></p>
                 {% endif %}
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <div class="row mt-4">
+    {% if can_access('admin_blog_comments') %}
     <div class="col-md-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Comments</h5>
-                <a href="{{ path('admin_blog_comments') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                <h5 class="mb-0">Recente reacties</h5>
+                <a href="{{ path('admin_blog_comments') }}" class="btn btn-sm btn-outline-primary">Alles bekijken</a>
             </div>
             <div class="card-body">
                 {% if recentComments is not empty %}
@@ -139,18 +152,18 @@
                             <li class="list-group-item">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
-                                        <strong>{{ comment.author.getFullName() ?? comment.author.getUserIdentifier() }}</strong>
-                                        <small class="text-muted ms-2">on "{{ comment.blogPost.title|u.truncate(40) }}"</small>
+                                        <strong>{{ comment.author ? (comment.author.getFullName() ?? comment.author.getUserIdentifier()) : 'Oud-lid' }}</strong>
+                                        <small class="text-muted ms-2">bij "{{ comment.blogPost.title|u.truncate(40) }}"</small>
                                         <br>
                                         <small class="text-muted">{{ comment.content|striptags|u.truncate(80) }}</small>
                                     </div>
                                     <div class="text-end">
                                         <small class="text-muted d-block">{{ comment.dateCreated|date('Y-m-d H:i') }}</small>
                                         {% if not comment.isApproved %}
-                                            <button type="button" class="btn btn-success btn-sm mt-1 approve-comment" data-comment-id="{{ comment.id }}" title="Approve">
+                                            <button type="button" class="btn btn-success btn-sm mt-1 approve-comment" data-comment-id="{{ comment.id }}" title="Goedkeuren">
                                                 <i class="fas fa-check"></i>
                                             </button>
-                                            <button type="button" class="btn btn-danger btn-sm mt-1 ms-1 reject-comment" data-comment-id="{{ comment.id }}" title="Reject">
+                                            <button type="button" class="btn btn-danger btn-sm mt-1 ms-1 reject-comment" data-comment-id="{{ comment.id }}" title="Afwijzen">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         {% endif %}
@@ -160,17 +173,19 @@
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p class="text-muted mb-0">No comments yet.</p>
+                    <p class="text-muted mb-0">Nog geen reacties.</p>
                 {% endif %}
             </div>
         </div>
     </div>
+    {% endif %}
 
+    {% if can_access('admin_menu_index') %}
     <div class="col-md-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Menus</h5>
-                <a href="{{ path('admin_menu_index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                <h5 class="mb-0">Recente menu's</h5>
+                <a href="{{ path('admin_menu_index') }}" class="btn btn-sm btn-outline-primary">Alles bekijken</a>
             </div>
             <div class="card-body">
                 {% if menus is not empty %}
@@ -183,11 +198,12 @@
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p class="text-muted mb-0">No menus yet. <a href="{{ path('admin_menu_new') }}">Create one</a></p>
+                    <p class="text-muted mb-0">Nog geen menu's. <a href="{{ path('admin_menu_new') }}">Maak er een aan</a></p>
                 {% endif %}
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
 

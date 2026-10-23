@@ -1,0 +1,174 @@
+{% extends 'admin/base.html.twig' %}
+{% import 'games/_macros.html.twig' as steam %}
+
+{% block title %}{{ game.name }} - Steam - Beheer{% endblock %}
+
+{% block body %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1 class="mb-0"><i class="fab fa-steam me-2"></i>{{ game.name }}</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ path('admin_steam_game', {id: game.id, show: show, refresh: 1}) }}" class="btn btn-outline-primary" title="Opnieuw bij Steam opvragen in plaats van de antwoorden van de laatste 10 minuten te gebruiken">
+            <i class="fas fa-sync-alt me-1"></i>Vernieuwen
+        </a>
+        {% if account %}
+            <a href="{{ account.profileUrl|trim('/', 'right') }}/stats/appid/{{ game.appId }}" target="_blank" rel="noopener" class="btn btn-outline-secondary"><i class="fas fa-chart-bar me-1"></i>Statistieken op Steam</a>
+        {% endif %}
+        <a href="{{ game.storeUrl }}" target="_blank" rel="noopener" class="btn btn-outline-secondary"><i class="fas fa-store me-1"></i>Winkelpagina</a>
+        <a href="{{ path('admin_steam_index') }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Terug naar Steam</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    {# The game: what the sync stored #}
+    <div class="col-lg-4">
+        <div class="card">
+            <img src="{{ game.headerImage }}" alt="{{ game.name }}" class="card-img-top steam-game-header">
+            <div class="card-body">
+                <dl class="row small mb-0 steam-facts">
+                    <dt class="col-6">Speeltijd</dt><dd class="col-6">{{ steam.playtime(game.playtimeForever) }}</dd>
+                    <dt class="col-6">Afgelopen 2 weken</dt><dd class="col-6">{{ game.playtimeTwoWeeks ? steam.playtime(game.playtimeTwoWeeks) : '–' }}</dd>
+                    <dt class="col-6">Laatst gespeeld</dt><dd class="col-6">{{ game.lastPlayedAt ? game.lastPlayedAt|date('d-m-Y H:i') : 'nooit' }}</dd>
+                    <dt class="col-6">In bibliotheek sinds</dt><dd class="col-6">{{ game.addedAt|date('d-m-Y') }}</dd>
+                    {% if game.releaseDate %}<dt class="col-6">Uitgebracht</dt><dd class="col-6">{{ game.releaseDate }}</dd>{% endif %}
+                    {% if game.developers %}<dt class="col-6">Ontwikkelaar</dt><dd class="col-6">{{ game.developers|join(', ') }}</dd>{% endif %}
+                    {% if game.publishers %}<dt class="col-6">Uitgever</dt><dd class="col-6">{{ game.publishers|join(', ') }}</dd>{% endif %}
+                    {% if game.metacriticScore %}<dt class="col-6">Metacritic</dt><dd class="col-6"><span class="badge {{ game.metacriticScore >= 75 ? 'text-bg-success' : (game.metacriticScore >= 50 ? 'text-bg-warning' : 'text-bg-danger') }}">{{ game.metacriticScore }}</span></dd>{% endif %}
+                    {% if game.website %}<dt class="col-6">Website</dt><dd class="col-6 text-truncate"><a href="{{ game.website }}" target="_blank" rel="noopener">{{ game.website|replace({'https://': '', 'http://': ''})|trim('/', 'right') }}</a></dd>{% endif %}
+                </dl>
+                {% if game.genres %}
+                    <div class="d-flex flex-wrap gap-1 mt-3">{% for genre in game.genres %}<span class="badge text-bg-light border">{{ genre }}</span>{% endfor %}</div>
+                {% endif %}
+                {% if game.shortDescription %}<p class="small text-muted mt-3 mb-0">{{ game.shortDescription }}</p>{% endif %}
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <span class="small">{{ game.hidden ? 'Verborgen op de openbare pagina\'s' : 'Zichtbaar op de openbare pagina\'s' }}</span>
+                <form method="post" action="{{ path('admin_steam_game_visibility', {id: game.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('steam_visibility' ~ game.id) }}">
+                    <input type="hidden" name="back" value="{{ app.request.requestUri }}">
+                    <button type="submit" class="btn btn-sm {{ game.hidden ? 'btn-outline-secondary' : 'btn-outline-success' }}">
+                        <i class="fas {{ game.hidden ? 'fa-eye-slash' : 'fa-eye' }} me-1"></i>{{ game.hidden ? 'Tonen' : 'Verbergen' }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# My review, then the statistics live from Steam #}
+    <div class="col-lg-8">
+        {{ include('admin/steam/_review_form.html.twig') }}
+
+        {% if error %}
+            <div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>{{ error }}</div>
+        {% elseif stats %}
+            {% for message in stats.errors %}
+                <div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>{{ message }}</div>
+            {% endfor %}
+
+            <div class="card mb-4" id="achievementsSummary">
+                <div class="card-body">
+                    {% if stats.status == 'ok' %}
+                        <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-2">
+                            <div>
+                                <div class="text-muted small">Prestaties</div>
+                                <div class="fs-3 fw-bold">{{ stats.unlocked }} van {{ stats.total }} <span class="text-muted fs-5">({{ stats.percentage }}%)</span></div>
+                            </div>
+                            {% if stats.rarestUnlocked %}
+                                <div class="text-end small">
+                                    <div class="text-muted">Zeldzaamste ontgrendeld</div>
+                                    <strong>{{ stats.rarestUnlocked.name }}</strong> <span class="text-muted">({{ stats.rarestUnlocked.globalPercent|number_format(1) }}% van de spelers)</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="progress steam-progress-lg" role="progressbar" aria-label="Ontgrendelde prestaties" aria-valuenow="{{ stats.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar {{ stats.percentage == 100 ? 'bg-warning' : '' }}" style="width: {{ stats.percentage }}%"></div>
+                        </div>
+                    {% elseif stats.status == 'private' %}
+                        <h2 class="h5"><i class="fas fa-lock me-2 text-muted"></i>Je voortgang is privé in Steam</h2>
+                        <p class="mb-0 small text-muted">De game staat als privé gemarkeerd in je Steam-bibliotheek, dus Steam deelt je prestaties niet. Om ze te tonen: rechtsklik op de game in je bibliotheek, <strong>Beheren</strong>, vink <strong>Als privé markeren</strong> uit en klik daarna op Vernieuwen. De prestaties van de game staan hieronder.</p>
+                    {% elseif stats.status == 'none' %}
+                        <p class="mb-0 text-muted"><i class="fas fa-info-circle me-2"></i>Deze game heeft geen Steam-prestaties.</p>
+                    {% else %}
+                        <p class="mb-0 text-muted"><i class="fas fa-info-circle me-2"></i>De prestaties konden nu niet worden opgehaald; probeer zo meteen Vernieuwen.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if stats.achievements %}
+                <div class="card mb-4">
+                    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h2 class="h5 mb-0">Prestaties</h2>
+                        {% if stats.status == 'ok' %}
+                            <ul class="nav nav-pills nav-sm">
+                                {% for key, label in {all: 'Alle', unlocked: 'Ontgrendeld', locked: 'Vergrendeld'} %}
+                                    <li class="nav-item">
+                                        <a class="nav-link py-1 px-2 {{ show == key ? 'active' }}" href="{{ path('admin_steam_game', {id: game.id, show: key}) }}" {{ show == key ? 'aria-current="page"' }}>
+                                            {{ label }} <span class="badge {{ show == key ? 'text-bg-light' : 'text-bg-secondary' }}">{{ stats.filter(key)|length }}</span>
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% for achievement in stats.filter(stats.status == 'ok' ? show : 'all') %}
+                            <li class="list-group-item d-flex gap-3 align-items-center steam-achievement {{ achievement.achieved ? 'is-unlocked' : 'is-locked' }}">
+                                {% if achievement.icon %}
+                                    <img src="{{ achievement.icon }}" alt="" width="64" height="64" loading="lazy" class="steam-achievement-icon">
+                                {% else %}
+                                    <span class="steam-achievement-icon d-inline-flex align-items-center justify-content-center bg-body-tertiary"><i class="fas fa-trophy text-muted"></i></span>
+                                {% endif %}
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="fw-semibold">
+                                        {{ achievement.name }}
+                                        {% if achievement.hidden %}<span class="badge text-bg-secondary ms-1" title="Een verborgen prestatie: Steam toont de beschrijving zodra hij ontgrendeld is">Verborgen</span>{% endif %}
+                                    </div>
+                                    <div class="small text-muted">{{ achievement.description ?? (achievement.hidden ? 'Verborgen prestatie' : '') }}</div>
+                                    {% if achievement.achieved %}
+                                        <div class="small text-success"><i class="fas fa-check me-1"></i>Ontgrendeld{{ achievement.unlockedAt ? ' ' ~ achievement.unlockedAt|nl_date('j M Y @ H:i') }}</div>
+                                    {% elseif stats.status == 'ok' %}
+                                        <div class="small text-muted"><i class="fas fa-lock me-1"></i>Vergrendeld</div>
+                                    {% endif %}
+                                </div>
+                                {% if achievement.globalPercent is not null %}
+                                    {% set percent = achievement.globalPercent %}
+                                    <div class="text-end steam-rarity" title="{{ percent|number_format(1) }}% van alle spelers heeft deze prestatie">
+                                        <div class="small fw-semibold">{{ percent|number_format(1) }}%</div>
+                                        <div class="progress steam-progress mb-1" role="progressbar" aria-label="Spelers met deze prestatie" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100">
+                                            <div class="progress-bar bg-secondary" style="width: {{ percent }}%"></div>
+                                        </div>
+                                        {% if percent < 5 %}<span class="badge text-bg-danger">Zeer zeldzaam</span>{% elseif percent < 15 %}<span class="badge text-bg-warning">Zeldzaam</span>{% endif %}
+                                    </div>
+                                {% endif %}
+                            </li>
+                        {% else %}
+                            <li class="list-group-item text-muted">Geen {{ {unlocked: 'ontgrendelde ', locked: 'vergrendelde '}[show] ?? '' }}prestaties.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            {% if stats.stats %}
+                <div class="card mb-4">
+                    <div class="card-header"><h2 class="h5 mb-0">Gamestatistieken</h2></div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <tbody>
+                                {% for stat in stats.stats %}
+                                    <tr><td>{{ stat.name }}</td><td class="text-end">{{ stat.value|number_format(stat.value == stat.value|round ? 0 : 2, ',', '.') }}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
+
+            <p class="small text-muted">Opgehaald bij Steam om {{ stats.fetchedAt|date('H:i') }}. Je voortgang wordt maximaal 10 minuten bewaard, de lijst met prestaties en de percentages een dag.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/delete-modal.js') }}"></script>
+{% endblock %}

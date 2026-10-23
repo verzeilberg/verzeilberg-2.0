@@ -29,4 +29,18 @@ class UploadedFilePathTest extends TestCase
         $this->assertSame('/uploads/events/events/poster.png', (new BlogImage())->setPath('/uploads/events/events')->setFilename('poster.png')->getPublicPath());
         $this->assertSame('https://placehold.co/800x400/png', (new BlogImage())->setPath('https://placehold.co/800x400/')->setFilename('png')->getPublicPath());
     }
+
+    public function testRelativeFolderIsUnderPublic(): void
+    {
+        $image = (new BlogImage())->setPath('uploads/blog/images')->setFilename('photo.jpg');
+        $this->assertSame('/uploads/blog/images/photo.jpg', $image->getPublicPath());
+        $this->assertSame('/home/site/public/uploads/blog/images', $image->getFolder('/home/site/public/'));
+        $this->assertSame('/home/site/public/uploads/blog/images/photo.jpg', $image->getFilePath('/home/site/public'));
+    }
+
+    public function testAbsoluteFolderStaysOnDisk(): void
+    {
+        $file = (new BlogFile())->setPath('/var/www/old/public/uploads/blog/files/')->setFilename('report.pdf');
+        $this->assertSame('/var/www/old/public/uploads/blog/files/report.pdf', $file->getFilePath('/home/site/public'));
+    }
 }

@@ -1,0 +1,29 @@
+{# Filters next to the blog list: search and categories (same pattern as the event filters) #}
+<aside class="filter-panel">
+    <div class="filter-group">
+        <h2 class="filter-heading"><label for="blogSearch">Berichten zoeken</label></h2>
+        <form action="{{ path('blog_search') }}" method="GET" role="search">
+            <div class="input-group">
+                <input type="search" id="blogSearch" name="q" class="form-control" placeholder="Titel of tekst" value="{{ searchTerm ?? '' }}">
+                <button class="btn btn-primary" type="submit" title="Zoeken"><i class="fas fa-search"></i></button>
+            </div>
+        </form>
+    </div>
+
+    <div class="filter-group">
+        <h2 class="filter-heading">Categorieën</h2>
+        <ul class="filter-list">
+            {% set allActive = (currentCategory is not defined or currentCategory is null) and searchTerm is not defined %}
+            <li><a href="{{ path('blog_index') }}" {{ allActive ? 'aria-current="page"' }}>Alle berichten</a></li>
+            {% for category in categories %}
+                {% set active = currentCategory is defined and currentCategory and currentCategory.id == category.id %}
+                <li>
+                    <a href="{{ path('blog_category', {slug: category.slug}) }}" {{ active ? 'aria-current="page"' }}>
+                        <span>{{ category.name }}</span>
+                        <span class="filter-count">{{ category.getOnlinePostCount() }}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</aside>

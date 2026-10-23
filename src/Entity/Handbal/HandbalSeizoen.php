@@ -31,12 +31,12 @@ class HandbalSeizoen
 
     #[ORM\Column(name: 'start_datum', type: 'date')]
     #[Assert\NotNull]
-    #[Assert\LessThanOrEqual(propertyPath: 'eindDatum', message: 'Start datum mag niet na eind datum liggen.')]
+    #[Assert\LessThanOrEqual(propertyPath: 'eindDatum', message: 'Startdatum mag niet na einddatum liggen.')]
     private \DateTimeInterface $startDatum;
 
     #[ORM\Column(name: 'eind_datum', type: 'date')]
     #[Assert\NotNull]
-    #[Assert\GreaterThanOrEqual(propertyPath: 'startDatum', message: 'Eind datum mag niet voor start datum liggen.')]
+    #[Assert\GreaterThanOrEqual(propertyPath: 'startDatum', message: 'Einddatum mag niet voor startdatum liggen.')]
     private \DateTimeInterface $eindDatum;
 
     #[ORM\Column(type: 'boolean', options: ['default' => true])]

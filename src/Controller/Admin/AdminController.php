@@ -12,10 +12,8 @@ use App\Repository\EventRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin')]
-#[IsGranted('ROLE_ADMIN')]
 class AdminController extends AbstractController
 {
     public function __construct(
@@ -32,9 +30,14 @@ class AdminController extends AbstractController
         return $this->render('admin/dashboard.html.twig', [
             'menus' => $this->menuRepository->findAllActive(),
             'blogPosts' => $this->blogPostRepository->findLatest(5),
-            'blogCategories' => $this->categoryRepository->findAllActive(),
             'events' => $this->eventRepository->findLatest(5),
             'recentComments' => $this->blogCommentRepository->findLatest(5),
+            // Totals for the tiles: the same records as the list behind each "View all" link (its default "all" filter)
+            'totals' => [
+                'blogPosts' => $this->blogPostRepository->count([]),
+                'categories' => $this->categoryRepository->count([]),
+                'events' => $this->eventRepository->count([]),
+            ],
         ]);
     }
 }

@@ -20,86 +20,86 @@ class EmailAccountType extends AbstractType
     {
         $builder
             ->add('name', TextType::class, [
-                'label' => 'Account Name',
-                'attr' => ['placeholder' => 'Personal Gmail'],
+                'label' => 'Accountnaam',
+                'attr' => ['placeholder' => 'Persoonlijke Gmail'],
             ])
             ->add('email', EmailType::class, [
-                'label' => 'Email Address',
+                'label' => 'E-mailadres',
                 'attr' => ['placeholder' => 'you@gmail.com'],
             ])
             ->add('imapHost', TextType::class, [
-                'label' => 'IMAP Host',
+                'label' => 'IMAP-host',
                 'attr' => ['placeholder' => 'imap.gmail.com'],
             ])
             ->add('imapPort', IntegerType::class, [
-                'label' => 'IMAP Port',
+                'label' => 'IMAP-poort',
                 'attr' => ['placeholder' => '993'],
             ])
             ->add('encryption', TextType::class, [
-                'label' => 'Encryption',
+                'label' => 'Versleuteling',
                 'attr' => ['placeholder' => 'ssl'],
-                'help' => 'ssl, tls, or none',
+                'help' => 'ssl, tls of none',
             ])
             ->add('username', TextType::class, [
-                'label' => 'Username',
+                'label' => 'Gebruikersnaam',
                 'attr' => ['placeholder' => 'you@gmail.com'],
             ])
             ->add('password', PasswordType::class, [
-                'label' => 'Password / App Password',
-                'attr' => ['placeholder' => 'App password', 'autocomplete' => 'new-password'],
+                'label' => 'Wachtwoord / app-wachtwoord',
+                'attr' => ['placeholder' => 'App-wachtwoord', 'autocomplete' => 'new-password'],
                 'required' => false,
-                'help' => 'Leave empty to keep current password.',
+                'help' => 'Laat leeg om het huidige wachtwoord te houden.',
             ])
             ->add('sentFolder', TextType::class, [
-                'label' => 'Sent Folder',
+                'label' => 'Map verzonden items',
                 'required' => false,
                 'attr' => ['placeholder' => 'INBOX.Sent'],
             ])
             ->add('draftsFolder', TextType::class, [
-                'label' => 'Drafts Folder',
+                'label' => 'Map concepten',
                 'required' => false,
                 'attr' => ['placeholder' => 'INBOX.Drafts'],
             ])
             ->add('trashFolder', TextType::class, [
-                'label' => 'Trash Folder',
+                'label' => 'Map prullenbak',
                 'required' => false,
                 'attr' => ['placeholder' => 'INBOX.Trash'],
             ])
             ->add('useImapForSmtp', CheckboxType::class, [
-                'label' => 'Use IMAP credentials for SMTP',
+                'label' => 'IMAP-gegevens ook voor SMTP gebruiken',
                 'required' => false,
                 'attr' => ['class' => 'form-check-input'],
-                'help' => 'If checked, uses IMAP host/port/credentials for sending too.',
+                'help' => 'Als dit aan staat, worden IMAP-host, -poort en -inloggegevens ook voor verzenden gebruikt.',
             ])
             ->add('smtpHost', TextType::class, [
-                'label' => 'SMTP Host',
+                'label' => 'SMTP-host',
                 'required' => false,
                 'attr' => ['placeholder' => 'smtp.gmail.com'],
             ])
             ->add('smtpPort', IntegerType::class, [
-                'label' => 'SMTP Port',
+                'label' => 'SMTP-poort',
                 'required' => false,
                 'attr' => ['placeholder' => '587'],
             ])
             ->add('smtpEncryption', TextType::class, [
-                'label' => 'SMTP Encryption',
+                'label' => 'SMTP-versleuteling',
                 'required' => false,
                 'attr' => ['placeholder' => 'tls'],
-                'help' => 'tls, ssl, or none',
+                'help' => 'tls, ssl of none',
             ])
             ->add('smtpUsername', TextType::class, [
-                'label' => 'SMTP Username',
+                'label' => 'SMTP-gebruikersnaam',
                 'required' => false,
                 'attr' => ['placeholder' => 'you@gmail.com'],
             ])
             ->add('smtpPassword', PasswordType::class, [
-                'label' => 'SMTP Password',
+                'label' => 'SMTP-wachtwoord',
                 'required' => false,
-                'attr' => ['placeholder' => 'App password', 'autocomplete' => 'new-password'],
-                'help' => 'Leave empty to keep current password.',
+                'attr' => ['placeholder' => 'App-wachtwoord', 'autocomplete' => 'new-password'],
+                'help' => 'Laat leeg om het huidige wachtwoord te houden.',
             ])
             ->add('enabled', CheckboxType::class, [
-                'label' => 'Enabled',
+                'label' => 'Actief',
                 'required' => false,
                 'attr' => ['class' => 'form-check-input'],
             ]);

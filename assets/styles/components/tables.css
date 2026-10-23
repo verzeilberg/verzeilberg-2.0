@@ -17,3 +17,12 @@
     background: inherit;
     z-index: 1;
 }
+
+/* Sortable column header (admin tables): the arrow of an unsorted column stays faint */
+.sort-header-idle {
+    opacity: 0.3;
+}
+
+.sort-header:hover .sort-header-idle {
+    opacity: 0.7;
+}

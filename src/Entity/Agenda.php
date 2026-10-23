@@ -34,7 +34,7 @@ class Agenda
 
     /** Hex colour, e.g. "#0d6efd" */
     #[ORM\Column(length: 7)]
-    #[Assert\Regex(pattern: '/^#[0-9a-fA-F]{6}$/', message: 'Choose a valid colour.')]
+    #[Assert\Regex(pattern: '/^#[0-9a-fA-F]{6}$/', message: 'Kies een geldige kleur.')]
     private string $color = '#0d6efd';
 
     /** Shown read-only on the site (/agenda) and its iCal feed is public */

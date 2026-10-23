@@ -77,7 +77,7 @@ class AgendaIcalTest extends KernelTestCase
     public function testOnlyHttpAndWebcalLinksCanBeDownloaded(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Only http(s) and webcal links');
+        $this->expectExceptionMessage('Alleen http(s)- en webcal-links');
         $this->ical->download('file:///etc/passwd');
     }
 

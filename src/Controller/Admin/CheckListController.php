@@ -15,6 +15,7 @@ use App\Form\CheckListItemType;
 use App\Form\AnswerType;
 use App\Form\CheckListFieldTypeType;
 use App\Entity\User;
+use App\Security\Voter\CheckListVoter;
 use App\Service\CheckListConditionEvaluator;
 use App\Service\CheckListExporter;
 use App\Service\CheckListService;
@@ -26,10 +27,12 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+/**
+ * Users with "checklist.manage" (and admins) manage every checklist; users with "checklist.own" only their own
+ * (see CheckListVoter). Field types and editing the shared answers are for "checklist.manage" only.
+ */
 #[Route('/admin/checklist')]
-#[IsGranted('ROLE_ADMIN')]
 class CheckListController extends AbstractController
 {
     public function __construct(
@@ -42,7 +45,7 @@ class CheckListController extends AbstractController
     {
         $page = $request->query->getInt('page', 1);
         /** @var PaginationInterface $pagination */
-        $pagination = $this->checkListService->getCheckLists($page, 20);
+        $pagination = $this->checkListService->getCheckLists($page, 20, $this->ownerFilter());
 
         return $this->render('admin/checklist/index.html.twig', [
             'pagination' => $pagination,
@@ -54,7 +57,7 @@ class CheckListController extends AbstractController
     {
         $page = $request->query->getInt('page', 1);
         /** @var PaginationInterface $pagination */
-        $pagination = $this->checkListService->getArchivedCheckLists($page, 20);
+        $pagination = $this->checkListService->getArchivedCheckLists($page, 20, $this->ownerFilter());
 
         return $this->render('admin/checklist/archive.html.twig', [
             'pagination' => $pagination,
@@ -70,7 +73,7 @@ class CheckListController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->checkListService->saveCheckList($checkList, $this->getUser());
-            $this->addFlash('success', 'Checklist created successfully.');
+            $this->addFlash('success', 'Checklist aangemaakt.');
 
             return $this->redirectToRoute('admin_checklist_edit', ['id' => $checkList->getId()]);
         }
@@ -82,20 +85,21 @@ class CheckListController extends AbstractController
     }
 
     #[Route('/{id<\d+>}/edit', name: 'admin_checklist_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, int $id): Response
+    public function edit(Request $request, int $id, PaginatorInterface $paginator): Response
     {
         $checkList = $this->checkListService->getCheckListByIdWithRelations($id);
 
         if (!$checkList) {
-            throw $this->createNotFoundException('Checklist not found');
+            throw $this->createNotFoundException('Checklist niet gevonden');
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
 
         $form = $this->createForm(CheckListType::class, $checkList);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->checkListService->updateCheckList($checkList, $this->getUser());
-            $this->addFlash('success', 'Checklist updated successfully.');
+            $this->addFlash('success', 'Checklist opgeslagen.');
 
             return $this->redirectToRoute('admin_checklist_edit', ['id' => $checkList->getId()]);
         }
@@ -103,8 +107,10 @@ class CheckListController extends AbstractController
         $fields = $this->checkListService->getCheckListFieldsByCheckListWithChildren($checkList);
 
         $page = $request->query->getInt('page', 1);
+        // In the checklist's default order, like the answers list
+        $items = $this->checkListService->findItemsForList($checkList, '', [], $checkList->getDefaultOrder());
         /** @var PaginationInterface $pagination */
-        $pagination = $this->checkListService->getCheckListItemsByCheckListPaginated($checkList, $page, $checkList->getItemsPerPage());
+        $pagination = $paginator->paginate($items, $page, $checkList->getItemsPerPage());
 
         // Fieldsets only group fields and have no value, so they never get a column
         $overviewFields = array_values(array_filter(
@@ -128,13 +134,14 @@ class CheckListController extends AbstractController
         $checkList = $this->checkListService->getCheckListByIdWithRelations($id);
 
         if (!$checkList) {
-            throw $this->createNotFoundException('Checklist not found');
+            throw $this->createNotFoundException('Checklist niet gevonden');
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
 
         $fields = $this->checkListService->getCheckListFieldsByCheckListWithChildren($checkList);
 
-        $listQuery = $this->getListQuery($request);
-        $items = $this->checkListService->findItemsForList($checkList, ...$listQuery);
+        $listQuery = $this->getListQuery($request, $checkList);
+        $items = $this->checkListService->findItemsForList($checkList, $listQuery['search'], $listQuery['filters'], $listQuery['order']);
         /** @var PaginationInterface $pagination */
         $pagination = $paginator->paginate($items, $request->query->getInt('page', 1), $checkList->getItemsPerPage());
 
@@ -165,17 +172,26 @@ class CheckListController extends AbstractController
      * Search, filter and sort parameters of the answers list (also used by the export).
      * Not "sort"/"direction": KnpPaginator would try to sort the array itself on those.
      *
-     * @return array{search: string, filters: array<string, string>, orderBy: string, orderDir: string}
+     * The order: a clicked column first, then the checklist's default order (which alone applies without a click).
+     * orderBy/orderDir are the first level, for the column headers.
+     *
+     * @return array{search: string, filters: array<string, string>, order: list<array{by: string, dir: string}>, orderBy: string, orderDir: string}
      */
-    private function getListQuery(Request $request): array
+    private function getListQuery(Request $request, CheckList $checkList): array
     {
         $filters = $request->query->all('filter');
+        $order = $checkList->getDefaultOrder();
+        if ($request->query->has('order_by')) {
+            $clicked = ['by' => (string) $request->query->get('order_by'), 'dir' => $request->query->get('order_dir') === 'desc' ? 'desc' : 'asc'];
+            $order = [$clicked, ...array_values(array_filter($order, fn (array $level) => $level['by'] !== $clicked['by']))];
+        }
 
         return [
             'search' => trim((string) $request->query->get('q', '')),
             'filters' => array_filter(array_map(fn ($value) => is_string($value) ? $value : '', $filters), fn (string $value) => $value !== ''),
-            'orderBy' => (string) $request->query->get('order_by', 'created'),
-            'orderDir' => $request->query->get('order_dir') === 'desc' ? 'desc' : 'asc',
+            'order' => $order,
+            'orderBy' => $order[0]['by'],
+            'orderDir' => $order[0]['dir'],
         ];
     }
 
@@ -185,11 +201,13 @@ class CheckListController extends AbstractController
         $checkList = $this->checkListService->getCheckListById($id);
 
         if (!$checkList) {
-            throw $this->createNotFoundException('Checklist not found');
+            throw $this->createNotFoundException('Checklist niet gevonden');
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
 
         // Export the same selection as the answers list shows (search, filters, sorting)
-        $items = $this->checkListService->findItemsForList($checkList, ...$this->getListQuery($request));
+        $listQuery = $this->getListQuery($request, $checkList);
+        $items = $this->checkListService->findItemsForList($checkList, $listQuery['search'], $listQuery['filters'], $listQuery['order']);
 
         return $exporter->createResponse($checkList, $format, $items);
     }
@@ -200,8 +218,9 @@ class CheckListController extends AbstractController
         $item = $this->checkListService->getCheckListItemById($id);
 
         if (!$item) {
-            throw $this->createNotFoundException('Item not found');
+            throw $this->createNotFoundException('Item niet gevonden');
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $item->getCheckList());
 
         $checkList = $item->getCheckList();
         $fields = $this->checkListService->getCheckListFieldsByCheckListWithChildren($checkList);
@@ -226,14 +245,15 @@ class CheckListController extends AbstractController
     public function archiveItem(Request $request, int $id): JsonResponse
     {
         if (!$this->isCsrfTokenValid('archive' . $id, $request->headers->get('X-CSRF-Token') ?? $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $checkList = $this->checkListService->getCheckListById($id);
 
         if (!$checkList) {
-            return new JsonResponse(['success' => false, 'message' => 'Checklist not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Checklist niet gevonden']);
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
 
         $this->checkListService->archiveCheckList($checkList);
 
@@ -244,17 +264,18 @@ class CheckListController extends AbstractController
     public function duplicate(Request $request, int $id): JsonResponse
     {
         if (!$this->isCsrfTokenValid('duplicate' . $id, $request->headers->get('X-CSRF-Token') ?? $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $checkList = $this->checkListService->getCheckListById($id);
 
         if (!$checkList) {
-            return new JsonResponse(['success' => false, 'message' => 'Checklist not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Checklist niet gevonden']);
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
 
-        $copy = $this->checkListService->duplicateCheckList($checkList);
-        $this->addFlash('success', sprintf('Checklist duplicated as "%s".', $copy->getName()));
+        $copy = $this->checkListService->duplicateCheckList($checkList, $this->getAppUser());
+        $this->addFlash('success', sprintf('Checklist gekopieerd als "%s".', $copy->getName()));
 
         return new JsonResponse(['success' => true]);
     }
@@ -263,14 +284,15 @@ class CheckListController extends AbstractController
     public function unarchive(Request $request, int $id): JsonResponse
     {
         if (!$this->isCsrfTokenValid('unarchive' . $id, $request->headers->get('X-CSRF-Token') ?? $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $checkList = $this->checkListService->getCheckListById($id);
 
         if (!$checkList) {
-            return new JsonResponse(['success' => false, 'message' => 'Checklist not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Checklist niet gevonden']);
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
 
         $this->checkListService->unArchiveCheckList($checkList);
 
@@ -281,14 +303,15 @@ class CheckListController extends AbstractController
     public function delete(Request $request, int $id): JsonResponse
     {
         if (!$this->isCsrfTokenValid('delete' . $id, $request->headers->get('X-CSRF-Token') ?? $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $checkList = $this->checkListService->getCheckListById($id);
 
         if (!$checkList) {
-            return new JsonResponse(['success' => false, 'message' => 'Checklist not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Checklist niet gevonden']);
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
 
         $this->checkListService->deleteCheckList($checkList);
 
@@ -303,8 +326,9 @@ class CheckListController extends AbstractController
         $checkList = $this->checkListService->getCheckListById($id);
 
         if (!$checkList) {
-            throw $this->createNotFoundException('Checklist not found');
+            throw $this->createNotFoundException('Checklist niet gevonden');
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
 
         $field = $this->checkListService->createCheckListField();
         $form = $this->createForm(CheckListFieldFormType::class, $field, [
@@ -315,7 +339,7 @@ class CheckListController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->checkListService->saveCheckListField($field, $checkList);
-            $this->addFlash('success', 'Field created successfully.');
+            $this->addFlash('success', 'Veld aangemaakt.');
 
             return $this->redirectToRoute('admin_checklist_edit', ['id' => $checkList->getId(), '_fragment' => 'fields']);
         }
@@ -338,8 +362,9 @@ class CheckListController extends AbstractController
         $field = $this->checkListService->getCheckListFieldByIdWithRelations($id);
 
         if (!$field) {
-            throw $this->createNotFoundException('Field not found');
+            throw $this->createNotFoundException('Veld niet gevonden');
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $field->getCheckList());
 
         $checkList = $field->getCheckList();
 
@@ -428,7 +453,7 @@ class CheckListController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->checkListService->updateCheckListField($field);
-            $this->addFlash('success', 'Field updated successfully.');
+            $this->addFlash('success', 'Veld opgeslagen.');
 
             return $this->redirectToRoute('admin_checklist_edit', ['id' => $checkList->getId(), '_fragment' => 'fields']);
         }
@@ -450,14 +475,15 @@ class CheckListController extends AbstractController
     public function deleteField(Request $request, int $id): Response
     {
         if (!$this->isCsrfTokenValid('delete_field' . $id, $request->headers->get('X-CSRF-Token') ?? $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $field = $this->checkListService->getCheckListFieldById($id);
 
         if (!$field) {
-            return new JsonResponse(['success' => false, 'message' => 'Field not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Veld niet gevonden']);
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $field->getCheckList());
 
         $checkList = $field->getCheckList();
         $checkListId = $checkList->getId();
@@ -477,17 +503,18 @@ class CheckListController extends AbstractController
         $checkList = $this->checkListService->getCheckListById($id);
 
         if (!$checkList) {
-            throw $this->createNotFoundException('Checklist not found');
+            throw $this->createNotFoundException('Checklist niet gevonden');
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
 
         if (!$this->isCsrfTokenValid('reorder_fields' . $id, $request->headers->get('X-CSRF-Token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid security token. Reload the page and try again.'], 403);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken. Herlaad de pagina en probeer het opnieuw.'], 403);
         }
 
         $data = json_decode($request->getContent(), true);
 
         if (!isset($data['order']) || !is_array($data['order'])) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid data.'], 400);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldige gegevens.'], 400);
         }
 
         // Validate everything first, so an invalid tree changes nothing
@@ -495,7 +522,7 @@ class CheckListController extends AbstractController
         foreach ($data['order'] as $entry) {
             $field = $this->checkListService->getCheckListFieldById((int) ($entry['id'] ?? 0));
             if (!$field || $field->getCheckList()->getId() !== $id) {
-                return new JsonResponse(['success' => false, 'message' => 'Unknown field in the order.'], 400);
+                return new JsonResponse(['success' => false, 'message' => 'Onbekend veld in de volgorde.'], 400);
             }
 
             $parent = null;
@@ -503,12 +530,12 @@ class CheckListController extends AbstractController
             if ($parentId > 0) {
                 $parent = $this->checkListService->getCheckListFieldById($parentId);
                 if (!$parent || $parent->getCheckList()->getId() !== $id) {
-                    return new JsonResponse(['success' => false, 'message' => 'Unknown fieldset in the order.'], 400);
+                    return new JsonResponse(['success' => false, 'message' => 'Onbekende veldgroep in de volgorde.'], 400);
                 }
                 if ($parent->getFormType() !== 'fieldset') {
                     return new JsonResponse([
                         'success' => false,
-                        'message' => sprintf('"%s" cannot be placed in "%s": fields can only be placed in a fieldset.', $field->getName(), $parent->getName()),
+                        'message' => sprintf('"%s" kan niet in "%s" worden geplaatst: velden kunnen alleen in een veldgroep staan.', $field->getName(), $parent->getName()),
                     ], 422);
                 }
             }
@@ -532,8 +559,9 @@ class CheckListController extends AbstractController
         $checkList = $this->checkListService->getCheckListById($id);
 
         if (!$checkList) {
-            throw $this->createNotFoundException('Checklist not found');
+            throw $this->createNotFoundException('Checklist niet gevonden');
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
 
         $item = $this->checkListService->createCheckListItem();
         $fields = $this->checkListService->getCheckListFieldsByCheckListWithChildren($checkList);
@@ -543,7 +571,7 @@ class CheckListController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->checkListService->storeItemUploads($item, $checkList, $form, $fields);
             $this->checkListService->saveCheckListItem($item, $checkList, $this->getAppUser());
-            $this->addFlash('success', 'Item created successfully.');
+            $this->addFlash('success', 'Item aangemaakt.');
 
             return $this->redirectToRoute('admin_checklist_edit', ['id' => $checkList->getId(), '_fragment' => 'items']);
         }
@@ -564,8 +592,9 @@ class CheckListController extends AbstractController
         $item = $this->checkListService->getCheckListItemByIdWithAnswers($id);
 
         if (!$item) {
-            throw $this->createNotFoundException('Item not found');
+            throw $this->createNotFoundException('Item niet gevonden');
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $item->getCheckList());
 
         $checkList = $item->getCheckList();
         $fields = $this->checkListService->getCheckListFieldsByCheckListWithChildren($checkList);
@@ -576,7 +605,7 @@ class CheckListController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->checkListService->storeItemUploads($item, $checkList, $form, $fields);
             $this->checkListService->updateCheckListItem($item, $this->getAppUser());
-            $this->addFlash('success', 'Item updated successfully.');
+            $this->addFlash('success', 'Item opgeslagen.');
 
             return $this->redirectToRoute('admin_checklist_edit', ['id' => $checkList->getId(), '_fragment' => 'items']);
         }
@@ -594,14 +623,15 @@ class CheckListController extends AbstractController
     public function deleteItem(Request $request, int $id): Response
     {
         if (!$this->isCsrfTokenValid('delete_item' . $id, $request->headers->get('X-CSRF-Token') ?? $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $item = $this->checkListService->getCheckListItemById($id);
 
         if (!$item) {
-            return new JsonResponse(['success' => false, 'message' => 'Item not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Item niet gevonden']);
         }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $item->getCheckList());
 
         $checkList = $item->getCheckList();
         $checkListId = $checkList->getId();
@@ -619,6 +649,8 @@ class CheckListController extends AbstractController
     #[Route('/field-types', name: 'admin_checklist_field_types', methods: ['GET'])]
     public function fieldTypes(): Response
     {
+        $this->denyAccessUnlessGranted(CheckListVoter::PERM_MANAGE_ALL);
+
         $fieldTypes = $this->checkListService->getAllFieldTypes();
 
         return $this->render('admin/checklist/field_types.html.twig', [
@@ -629,13 +661,15 @@ class CheckListController extends AbstractController
     #[Route('/field-types/new', name: 'admin_checklist_field_type_new', methods: ['GET', 'POST'])]
     public function newFieldType(Request $request): Response
     {
+        $this->denyAccessUnlessGranted(CheckListVoter::PERM_MANAGE_ALL);
+
         $fieldType = $this->checkListService->createFieldType();
         $form = $this->createForm(CheckListFieldTypeType::class, $fieldType);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->checkListService->saveFieldType($fieldType);
-            $this->addFlash('success', 'Field type created successfully.');
+            $this->addFlash('success', 'Veldtype aangemaakt.');
 
             return $this->redirectToRoute('admin_checklist_field_types');
         }
@@ -649,10 +683,12 @@ class CheckListController extends AbstractController
     #[Route('/field-types/{id<\d+>}/edit', name: 'admin_checklist_field_type_edit', methods: ['GET', 'POST'])]
     public function editFieldType(Request $request, int $id): Response
     {
+        $this->denyAccessUnlessGranted(CheckListVoter::PERM_MANAGE_ALL);
+
         $fieldType = $this->checkListService->findFieldTypeById($id);
 
         if (!$fieldType) {
-            throw $this->createNotFoundException('Field type not found');
+            throw $this->createNotFoundException('Veldtype niet gevonden');
         }
 
         $form = $this->createForm(CheckListFieldTypeType::class, $fieldType);
@@ -660,7 +696,7 @@ class CheckListController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->checkListService->saveFieldType($fieldType);
-            $this->addFlash('success', 'Field type updated successfully.');
+            $this->addFlash('success', 'Veldtype opgeslagen.');
 
             return $this->redirectToRoute('admin_checklist_field_types');
         }
@@ -692,7 +728,7 @@ class CheckListController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->checkListService->saveAnswer($answer);
-            $this->addFlash('success', 'Answer created successfully.');
+            $this->addFlash('success', 'Antwoord aangemaakt.');
 
             return $this->redirectToRoute('admin_checklist_answers');
         }
@@ -706,10 +742,12 @@ class CheckListController extends AbstractController
     #[Route('/answers/{id<\d+>}/edit', name: 'admin_checklist_answer_edit', methods: ['GET', 'POST'])]
     public function editAnswer(Request $request, int $id): Response
     {
+        $this->denyAccessUnlessGranted(CheckListVoter::PERM_MANAGE_ALL);
+
         $answer = $this->checkListService->getAnswerById($id);
 
         if (!$answer) {
-            throw $this->createNotFoundException('Answer not found');
+            throw $this->createNotFoundException('Antwoord niet gevonden');
         }
 
         $form = $this->createForm(AnswerType::class, $answer);
@@ -717,7 +755,7 @@ class CheckListController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->checkListService->saveAnswer($answer);
-            $this->addFlash('success', 'Answer updated successfully.');
+            $this->addFlash('success', 'Antwoord opgeslagen.');
 
             return $this->redirectToRoute('admin_checklist_answers');
         }
@@ -732,20 +770,28 @@ class CheckListController extends AbstractController
     #[Route('/answers/{id<\d+>}/delete', name: 'admin_checklist_answer_delete', methods: ['POST'])]
     public function deleteAnswer(Request $request, int $id): JsonResponse
     {
+        $this->denyAccessUnlessGranted(CheckListVoter::PERM_MANAGE_ALL);
+
         if (!$this->isCsrfTokenValid('delete_answer' . $id, $request->headers->get('X-CSRF-Token') ?? $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $answer = $this->checkListService->getAnswerById($id);
 
         if (!$answer) {
-            return new JsonResponse(['success' => false, 'message' => 'Answer not found']);
+            return new JsonResponse(['success' => false, 'message' => 'Antwoord niet gevonden']);
         }
 
         $this->em->remove($answer);
         $this->em->flush();
 
         return new JsonResponse(['success' => true]);
+    }
+
+    /** Owners only see their own checklists; managers see all */
+    private function ownerFilter(): ?User
+    {
+        return $this->isGranted(CheckListVoter::PERM_MANAGE_ALL) ? null : $this->getAppUser();
     }
 
     private function getAppUser(): ?User

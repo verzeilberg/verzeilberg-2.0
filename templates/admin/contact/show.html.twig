@@ -1,6 +1,6 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Contactformulier #{{ contact.id }} - Admin{% endblock %}
+{% block title %}Contactformulier #{{ contact.id }} - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -58,9 +58,9 @@
             <div class="card-body">
                 <div class="d-grid gap-2">
                     <a href="{{ path('admin_contact_reply', {id: contact.id}) }}" class="btn btn-primary">
-                        <i class="fas fa-reply me-1"></i>Antwoorden
+                        <i class="fas fa-reply me-1"></i>Beantwoorden
                     </a>
-                    <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{{ path('admin_contact_delete', {id: contact.id}) }}" data-delete-token="{{ csrf_token('delete' ~ contact.id) }}" data-delete-message="Weet u zeker dat u dit contactformulier wilt verwijderen?">
+                    <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteModal" data-delete-url="{{ path('admin_contact_delete', {id: contact.id}) }}" data-delete-token="{{ csrf_token('delete' ~ contact.id) }}" data-delete-message="Weet je zeker dat je dit contactformulier wilt verwijderen?">
                         <i class="fas fa-trash-alt me-1"></i>Verwijderen
                     </button>
                 </div>

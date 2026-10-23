@@ -1,0 +1,71 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Rechten - Beheer{% endblock %}
+
+{% block body %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-key me-2"></i>Rechten</h1>
+    <a href="{{ path('admin_permission_new') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>Nieuw recht
+    </a>
+</div>
+
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+    Een recht is iets wat een gebruiker mag doen, bijv. <code>blog.edit</code>. Geef rechten aan
+    <a href="{{ path('admin_role_index') }}">rollen</a>, en rollen aan gebruikers. Gebruik ze in
+    <a href="{{ path('admin_route_permission_index') }}">routerechten</a> om onderdelen van het beheer open te zetten,
+    of in code: <code>is_granted('PERM_blog.edit')</code>. ROLE_ADMIN heeft alle rechten.
+</div>
+
+{% for group, permissions in groups %}
+    <h2 class="h6 text-uppercase text-muted mt-4">{{ group }}</h2>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <tbody>
+                {% for permission in permissions %}
+                <tr>
+                    <td style="width: 25%"><code>{{ permission.name }}</code></td>
+                    <td>{{ permission.description }}</td>
+                    <td style="width: 25%">
+                        {% for role in permission.roles %}
+                            <a href="{{ path('admin_role_edit', {id: role.id}) }}" class="badge bg-secondary text-decoration-none me-1">{{ role.name }}</a>
+                        {% else %}
+                            <span class="text-muted small">Geen rol</span>
+                        {% endfor %}
+                    </td>
+                    <td style="width: 20%">
+                        {% for rule in permission.routePermissions %}
+                            <code class="small d-block">{{ rule.routePattern }}</code>
+                        {% endfor %}
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ path('admin_permission_edit', {id: permission.id}) }}" class="btn btn-sm btn-outline-primary" title="Bewerken">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        {% if permission.name != adminAccessPermission %}
+                        <button type="button" class="btn btn-sm btn-outline-danger js-ajax-delete"
+                                data-delete-url="{{ path('admin_permission_delete', {id: permission.id}) }}"
+                                data-delete-message="&quot;{{ permission.name }}&quot; verwijderen? Het wordt weggehaald bij {{ permission.roles|length }} rol(len){% if permission.routePermissions|length %} en de {{ permission.routePermissions|length }} bijbehorende routeregel(s) worden verwijderd{% endif %}."
+                                data-error-message="Recht verwijderen mislukt"
+                                data-csrf-token="{{ csrf_token('delete' ~ permission.id) }}"
+                                title="Verwijderen">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-light border">Nog geen rechten. <a href="{{ path('admin_permission_new') }}">Maak het eerste aan</a>, bijv. <code>admin.access</code>.</div>
+{% endfor %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/components/ajax-delete.js') }}"></script>
+{% endblock %}

@@ -20,10 +20,12 @@ class AccessToken
     #[ORM\Column(name: 'expires_at', type: 'datetime_immutable')]
     private \DateTimeImmutable $expiresAt;
 
-    #[ORM\Column(name: 'refresh_token', type: 'string', length: 255)]
+    /** Stored encrypted, see EncryptedStringType */
+    #[ORM\Column(name: 'refresh_token', type: 'encrypted_string')]
     private string $refreshToken;
 
-    #[ORM\Column(name: 'access_token', type: 'string', length: 255)]
+    /** Stored encrypted, see EncryptedStringType */
+    #[ORM\Column(name: 'access_token', type: 'encrypted_string')]
     private string $accessToken;
 
     public function getId(): ?int

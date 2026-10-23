@@ -40,7 +40,7 @@ class AgendaGoogleController extends AbstractController
     public function connect(Request $request): Response
     {
         if (!$this->client->isConfigured()) {
-            $this->addFlash('error', 'Google is not configured yet: set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET (see the instructions on this page).');
+            $this->addFlash('error', 'Google is nog niet ingesteld: vul GOOGLE_CLIENT_ID en GOOGLE_CLIENT_SECRET in (zie de uitleg op deze pagina).');
 
             return $this->redirectToRoute('admin_agenda_agendas');
         }
@@ -56,12 +56,12 @@ class AgendaGoogleController extends AbstractController
     {
         $expected = (string) $request->getSession()->remove(self::STATE_SESSION_KEY);
         if ($expected === '' || !hash_equals($expected, (string) $request->query->get('state', ''))) {
-            $this->addFlash('error', 'The Google connection could not be verified (invalid state). Please try again.');
+            $this->addFlash('error', 'De koppeling met Google kon niet worden gecontroleerd (ongeldige state). Probeer het opnieuw.');
 
             return $this->redirectToRoute('admin_agenda_agendas');
         }
         if ($request->query->has('error')) {
-            $this->addFlash('warning', 'Google access was not granted.');
+            $this->addFlash('warning', 'Google heeft geen toegang gegeven.');
 
             return $this->redirectToRoute('admin_agenda_agendas');
         }
@@ -76,7 +76,7 @@ class AgendaGoogleController extends AbstractController
             return $this->redirectToRoute('admin_agenda_agendas');
         }
 
-        $this->addFlash('success', sprintf('Google account %s connected. Choose which calendars to show.', $account->getEmail()));
+        $this->addFlash('success', sprintf('Google-account %s gekoppeld. Kies welke agenda\'s je wilt tonen.', $account->getEmail()));
 
         return $this->redirectToRoute('admin_agenda_google_calendars', ['id' => $account->getId()]);
     }
@@ -100,7 +100,7 @@ class AgendaGoogleController extends AbstractController
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('google_calendars' . $account->getId(), (string) $request->request->get('_token'))) {
-                throw $this->createAccessDeniedException('Invalid CSRF token');
+                throw $this->createAccessDeniedException('Ongeldig beveiligingstoken');
             }
             $chosen = array_flip(array_map('strval', $request->request->all('calendars')));
             $messages = [];
@@ -119,12 +119,12 @@ class AgendaGoogleController extends AbstractController
                 } elseif (!isset($chosen[$calendar['id']]) && $agenda !== null) {
                     // No longer from Google: the agenda and its items stay, as a normal agenda
                     $agenda->linkToGoogle(null, null);
-                    $messages[] = sprintf('"%s" is no longer synced with Google.', $agenda->getTitle());
+                    $messages[] = sprintf('"%s" wordt niet meer met Google gesynchroniseerd.', $agenda->getTitle());
                 }
             }
             $this->em->flush();
             foreach ($messages as $message) {
-                $this->addFlash(str_contains($message, 'failed') ? 'error' : 'success', $message);
+                $this->addFlash(str_contains($message, 'mislukt') ? 'error' : 'success', $message);
             }
 
             return $this->redirectToRoute('admin_agenda_agendas');
@@ -142,7 +142,7 @@ class AgendaGoogleController extends AbstractController
     public function disconnect(Request $request, GoogleAccount $account): JsonResponse
     {
         if (!$this->isCsrfTokenValid('google_disconnect' . $account->getId(), $request->headers->get('X-CSRF-Token') ?? (string) $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken'], 403);
         }
 
         $this->client->revoke($account);
@@ -151,7 +151,7 @@ class AgendaGoogleController extends AbstractController
         }
         $this->em->remove($account);
         $this->em->flush();
-        $this->addFlash('success', sprintf('Google account %s disconnected.', $account->getEmail()));
+        $this->addFlash('success', sprintf('Google-account %s ontkoppeld.', $account->getEmail()));
 
         return new JsonResponse(['success' => true]);
     }
@@ -161,18 +161,18 @@ class AgendaGoogleController extends AbstractController
     public function sync(Request $request, ?int $id = null): JsonResponse
     {
         if (!$this->isCsrfTokenValid('google_sync' . $id, $request->headers->get('X-CSRF-Token') ?? (string) $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid CSRF token'], 403);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken'], 403);
         }
 
         if ($id !== null) {
             $agenda = $this->agendaRepository->find($id) ?? throw $this->createNotFoundException();
             $message = $this->syncMessage($agenda);
-            $this->addFlash(str_contains($message, 'failed') ? 'error' : 'success', $message);
+            $this->addFlash(str_contains($message, 'mislukt') ? 'error' : 'success', $message);
         } else {
             foreach ($this->sync->syncAll() as $title => $result) {
                 $this->addFlash(is_string($result) ? 'error' : 'success', is_string($result)
-                    ? sprintf('Updating "%s" failed: %s', $title, $result)
-                    : sprintf('"%s" updated: %d new, %d changed, %d removed.', $title, $result['created'], $result['updated'], $result['deleted']));
+                    ? sprintf('Bijwerken van "%s" mislukt: %s', $title, $result)
+                    : sprintf('"%s" bijgewerkt: %d nieuw, %d gewijzigd, %d verwijderd.', $title, $result['created'], $result['updated'], $result['deleted']));
             }
         }
 
@@ -184,9 +184,9 @@ class AgendaGoogleController extends AbstractController
         try {
             $result = $this->sync->sync($agenda);
 
-            return sprintf('"%s" updated from Google: %d new, %d changed, %d removed.', $agenda->getTitle(), $result['created'], $result['updated'], $result['deleted']);
+            return sprintf('"%s" bijgewerkt vanuit Google: %d nieuw, %d gewijzigd, %d verwijderd.', $agenda->getTitle(), $result['created'], $result['updated'], $result['deleted']);
         } catch (GoogleApiException $e) {
-            return sprintf('Updating "%s" failed: %s', $agenda->getTitle(), $e->getMessage());
+            return sprintf('Bijwerken van "%s" mislukt: %s', $agenda->getTitle(), $e->getMessage());
         }
     }
 

@@ -18,17 +18,17 @@ class AgendaType extends AbstractType
     {
         $builder
             ->add('title', TextType::class, [
-                'label' => 'Title',
+                'label' => 'Titel',
                 'attr' => ['class' => 'form-control', 'maxlength' => 255],
             ])
             ->add('color', ColorType::class, [
-                'label' => 'Colour',
+                'label' => 'Kleur',
                 'attr' => ['class' => 'form-control form-control-color'],
             ])
             ->add('public', CheckboxType::class, [
-                'label' => 'Show on the site',
+                'label' => 'Tonen op de site',
                 'required' => false,
-                'help' => 'Public agendas are shown (read-only) on /agenda and their iCal feed can be found there.',
+                'help' => 'Openbare agenda\'s worden (alleen-lezen) getoond op /agenda; daar staat ook de iCal-feed.',
                 'attr' => ['class' => 'form-check-input'],
                 'label_attr' => ['class' => 'form-check-label'],
             ]);

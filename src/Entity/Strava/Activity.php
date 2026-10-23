@@ -468,10 +468,8 @@ class Activity
     public function getPace(): string
     {
         if ($this->distance > 0) {
-            $paceSeconds = $this->movingTime / ($this->distance / 1000);
-            $paceMinutes = floor($paceSeconds / 60);
-            $paceSecs = floor($paceSeconds % 60);
-            return sprintf('%d:%02d', $paceMinutes, $paceSecs);
+            $paceSeconds = (int) floor($this->movingTime / ($this->distance / 1000));
+            return sprintf('%d:%02d', intdiv($paceSeconds, 60), $paceSeconds % 60);
         }
         return '0:00';
     }

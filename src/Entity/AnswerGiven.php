@@ -97,6 +97,6 @@ class AnswerGiven
 
     public function __toString(): string
     {
-        return $this->answer ?? ($this->answerValue?->getLabel() ?? 'Answer #' . $this->id);
+        return $this->answer ?? ($this->answerValue?->getLabel() ?? 'Antwoord #' . $this->id);
     }
 }

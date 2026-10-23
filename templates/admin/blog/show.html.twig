@@ -1,16 +1,16 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}{{ post.title }} - Admin{% endblock %}
+{% block title %}{{ post.title }} - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1><i class="fas fa-eye me-2"></i>{{ post.title }}</h1>
     <div>
         <a href="{{ path('admin_blog_edit', {id: post.id}) }}" class="btn btn-outline-primary me-2">
-            <i class="fas fa-edit me-1"></i>Edit
+            <i class="fas fa-edit me-1"></i>Bewerken
         </a>
         <a href="{{ path('admin_blog_index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-1"></i>Back
+            <i class="fas fa-arrow-left me-1"></i>Terug
         </a>
     </div>
 </div>
@@ -19,18 +19,18 @@
     <div class="col-lg-8">
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Content</h5>
+                <h5 class="mb-0">Inhoud</h5>
                 <span class="badge bg-{% if post.status == 1 %}success{% elseif post.status == 2 %}warning{% elseif post.status == 3 %}danger{% else %}secondary{% endif %}">
                     {% if post.status == 1 %}Online
                     {% elseif post.status == 2 %}Offline
-                    {% elseif post.status == 3 %}Archived
-                    {% else %}Draft{% endif %}
+                    {% elseif post.status == 3 %}Gearchiveerd
+                    {% else %}Concept{% endif %}
                 </span>
             </div>
             <div class="card-body">
                 {% if post.introText %}
                     <div class="mb-4 p-3 bg-light rounded">
-                        <h6>Introduction</h6>
+                        <h6>Introductie</h6>
                         <p class="mb-0">{{ post.introText|nl2br }}</p>
                     </div>
                 {% endif %}
@@ -43,7 +43,7 @@
         {% if post.images|length > 0 %}
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Images ({{ post.images|length }})</h5>
+                <h5 class="mb-0">Afbeeldingen ({{ post.images|length }})</h5>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -68,7 +68,7 @@
         {% if post.files|length > 0 %}
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Files ({{ post.files|length }})</h5>
+                <h5 class="mb-0">Bestanden ({{ post.files|length }})</h5>
             </div>
             <div class="card-body">
                 <div class="list-group">
@@ -89,7 +89,7 @@
         {% if post.youTubes|length > 0 %}
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">YouTube Videos ({{ post.youTubes|length }})</h5>
+                <h5 class="mb-0">YouTube-video's ({{ post.youTubes|length }})</h5>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -100,7 +100,7 @@
                             <div class="card-body">
                                 <h6 class="card-title">{{ youtube.title }}</h6>
                                 <a href="{{ youtube.getEmbedUrl() }}" class="btn btn-sm btn-primary" target="_blank">
-                                    <i class="fab fa-youtube me-1"></i>Watch
+                                    <i class="fab fa-youtube me-1"></i>Bekijken
                                 </a>
                             </div>
                         </div>
@@ -115,7 +115,7 @@
     <div class="col-lg-4">
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Post Details</h5>
+                <h5 class="mb-0">Berichtdetails</h5>
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
@@ -130,28 +130,28 @@
                         <span class="badge bg-{% if post.status == 1 %}success{% elseif post.status == 2 %}warning{% elseif post.status == 3 %}danger{% else %}secondary{% endif %}">
                             {% if post.status == 1 %}Online
                             {% elseif post.status == 2 %}Offline
-                            {% elseif post.status == 3 %}Archived
-                            {% else %}Draft{% endif %}
+                            {% elseif post.status == 3 %}Gearchiveerd
+                            {% else %}Concept{% endif %}
                         </span>
                     </dd>
 
-                    <dt class="col-sm-4">Created</dt>
+                    <dt class="col-sm-4">Aangemaakt</dt>
                     <dd class="col-sm-8">{{ post.dateCreated|date('Y-m-d H:i') }}</dd>
 
                     {% if post.dateChanged %}
-                    <dt class="col-sm-4">Modified</dt>
+                    <dt class="col-sm-4">Gewijzigd</dt>
                     <dd class="col-sm-8">{{ post.dateChanged|date('Y-m-d H:i') }}</dd>
                     {% endif %}
 
                     {% if post.dateOnline %}
-                    <dt class="col-sm-4">Publish Date</dt>
+                    <dt class="col-sm-4">Publicatiedatum</dt>
                     <dd class="col-sm-8">{{ post.dateOnline|date('Y-m-d') }}
                         {% if post.timeOnline %} {{ post.timeOnline|date('H:i') }}{% endif %}
                     </dd>
                     {% endif %}
 
                     {% if post.dateOffline %}
-                    <dt class="col-sm-4">Unpublish Date</dt>
+                    <dt class="col-sm-4">Offline-datum</dt>
                     <dd class="col-sm-8">{{ post.dateOffline|date('Y-m-d') }}
                         {% if post.timeOffline %} {{ post.timeOffline|date('H:i') }}{% endif %}
                     </dd>
@@ -162,7 +162,7 @@
 
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Categories</h5>
+                <h5 class="mb-0">Categorieën</h5>
             </div>
             <div class="card-body">
                 {% if post.categories|length > 0 %}
@@ -172,27 +172,27 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted mb-0">No categories</p>
+                <p class="text-muted mb-0">Geen categorieën</p>
                 {% endif %}
             </div>
         </div>
 
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Statistics</h5>
+                <h5 class="mb-0">Statistieken</h5>
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
-                    <dt class="col-sm-6">Images</dt>
+                    <dt class="col-sm-6">Afbeeldingen</dt>
                     <dd class="col-sm-6">{{ post.images|length }}</dd>
 
-                    <dt class="col-sm-6">Files</dt>
+                    <dt class="col-sm-6">Bestanden</dt>
                     <dd class="col-sm-6">{{ post.files|length }}</dd>
 
-                    <dt class="col-sm-6">YouTube Videos</dt>
+                    <dt class="col-sm-6">YouTube-video's</dt>
                     <dd class="col-sm-6">{{ post.youTubes|length }}</dd>
 
-                    <dt class="col-sm-6">Comments</dt>
+                    <dt class="col-sm-6">Reacties</dt>
                     <dd class="col-sm-6">{{ post.getCommentCount() }}</dd>
                 </dl>
             </div>
@@ -200,15 +200,15 @@
 
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Actions</h5>
+                <h5 class="mb-0">Acties</h5>
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
                     <a href="{{ path('blog_detail', {slug: post.slug}) }}" target="_blank" class="btn btn-outline-primary">
-                        <i class="fas fa-external-link me-1"></i>View on Site
+                        <i class="fas fa-external-link me-1"></i>Bekijk op site
                     </a>
                     <a href="{{ path('admin_blog_edit', {id: post.id}) }}" class="btn btn-primary">
-                        <i class="fas fa-edit me-1"></i>Edit Post
+                        <i class="fas fa-edit me-1"></i>Bericht bewerken
                     </a>
                 </div>
             </div>

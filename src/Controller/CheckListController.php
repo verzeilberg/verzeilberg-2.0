@@ -10,6 +10,8 @@ use App\Entity\User;
 use App\Form\CheckListItemType;
 use App\Repository\CheckListItemRepository;
 use App\Repository\CheckListRepository;
+use App\Repository\FriendshipRepository;
+use App\Security\Voter\CheckListVoter;
 use App\Service\CheckListConditionEvaluator;
 use App\Service\CheckListService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,6 +33,7 @@ class CheckListController extends AbstractController
         private CheckListService $checkListService,
         private CheckListRepository $checkListRepository,
         private CheckListItemRepository $checkListItemRepository,
+        private FriendshipRepository $friendshipRepository,
     ) {
     }
 
@@ -38,7 +41,7 @@ class CheckListController extends AbstractController
     public function index(): Response
     {
         return $this->render('checklist/index.html.twig', [
-            'checkLists' => $this->checkListRepository->findOpenForSubmissions($this->getAppUser() !== null),
+            'checkLists' => $this->checkListRepository->findOpenForSubmissions($this->getAppUser()),
         ]);
     }
 
@@ -83,7 +86,7 @@ class CheckListController extends AbstractController
                 return $this->redirectToRoute('app_checklist_thanks', ['id' => $checkList->getId()]);
             }
 
-            $this->addFlash('success', 'Thank you, your answers have been saved.');
+            $this->addFlash('success', 'Bedankt, je antwoorden zijn opgeslagen.');
 
             return $this->redirectToRoute('app_checklist_mine', ['id' => $checkList->getId()]);
         }
@@ -149,7 +152,7 @@ class CheckListController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $this->checkListService->storeItemUploads($item, $checkList, $form, $fields);
             $this->checkListService->updateCheckListItem($item, $this->getAppUser());
-            $this->addFlash('success', 'Your answers have been updated.');
+            $this->addFlash('success', 'Je antwoorden zijn bijgewerkt.');
 
             return $this->redirectToRoute('app_checklist_item', ['id' => $item->getId()]);
         }
@@ -171,12 +174,12 @@ class CheckListController extends AbstractController
     public function itemFile(int $id, string $field): Response
     {
         $item = $this->isGranted('ROLE_ADMIN')
-            ? ($this->checkListService->getCheckListItemById($id) ?? throw $this->createNotFoundException('Item not found'))
+            ? ($this->checkListService->getCheckListItemById($id) ?? throw $this->createNotFoundException('Item niet gevonden'))
             : $this->getOwnItem($id);
 
         $path = $this->checkListService->getUploadAbsolutePath($item->getItemContent()['field_' . $field] ?? null);
         if ($path === null || !is_file($path)) {
-            throw $this->createNotFoundException('File not found');
+            throw $this->createNotFoundException('Bestand niet gevonden');
         }
 
         $response = new BinaryFileResponse($path);
@@ -191,18 +194,27 @@ class CheckListController extends AbstractController
 
     /**
      * A checklist that may be filled in by the current visitor. Admin-only and archived checklists don't exist here;
-     * a "logged-in users" checklist sends an anonymous visitor to the login page first.
+     * a "logged-in users" or "friends" checklist sends an anonymous visitor to the login page first, and a
+     * "friends" checklist is "not found" for anyone but the owner's friends (and who manages it).
      */
     private function getOpenCheckList(int $id): CheckList
     {
         $checkList = $this->checkListService->getCheckListById($id);
 
         if (!$checkList || !$checkList->isOpenForSubmissions()) {
-            throw $this->createNotFoundException('Checklist not found');
+            throw $this->createNotFoundException('Checklist niet gevonden');
         }
 
-        if ($checkList->getAccess() === CheckList::ACCESS_USER) {
+        if (in_array($checkList->getAccess(), [CheckList::ACCESS_USER, CheckList::ACCESS_FRIENDS], true)) {
             $this->denyAccessUnlessGranted('ROLE_USER');
+        }
+
+        if ($checkList->getAccess() === CheckList::ACCESS_FRIENDS) {
+            $owner = $checkList->getOwner();
+            $isFriend = $owner !== null && $this->friendshipRepository->areFriends($this->requireUser(), $owner);
+            if (!$isFriend && !$this->isGranted(CheckListVoter::MANAGE, $checkList)) {
+                throw $this->createNotFoundException('Checklist niet gevonden');
+            }
         }
 
         return $checkList;
@@ -215,7 +227,7 @@ class CheckListController extends AbstractController
         $item = $this->checkListService->getCheckListItemById($id);
 
         if (!$item || $item->getCreatedBy() === null || $item->getCreatedBy()->getId() !== $this->requireUser()->getId()) {
-            throw $this->createNotFoundException('Item not found');
+            throw $this->createNotFoundException('Item niet gevonden');
         }
         $this->getOpenCheckList((int) $item->getCheckList()->getId());
 

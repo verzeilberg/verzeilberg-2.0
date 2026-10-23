@@ -73,7 +73,7 @@ class AgendaItem
     public function validatePeriod(ExecutionContextInterface $context): void
     {
         if ($this->endAt < $this->startAt) {
-            $context->buildViolation('The end must be after the start.')->atPath('endAt')->addViolation();
+            $context->buildViolation('Het einde moet na het begin liggen.')->atPath('endAt')->addViolation();
         }
     }
 

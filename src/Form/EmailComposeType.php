@@ -20,17 +20,17 @@ class EmailComposeType extends AbstractType
     {
         $builder
             ->add('account', EntityType::class, [
-                'label' => 'From Account',
+                'label' => 'Van account',
                 'class' => EmailAccount::class,
                 'choice_label' => 'name',
-                'placeholder' => 'Select account',
+                'placeholder' => 'Kies een account',
                 'query_builder' => fn($repo) => $repo->createQueryBuilder('a')
                     ->andWhere('a.enabled = true')
                     ->orderBy('a.name', 'ASC'),
             ])
             ->add('to', EmailType::class, [
-                'label' => 'To',
-                'attr' => ['placeholder' => 'recipient@example.com'],
+                'label' => 'Aan',
+                'attr' => ['placeholder' => 'ontvanger@example.com'],
                 'required' => true,
             ])
             ->add('cc', EmailType::class, [
@@ -44,20 +44,20 @@ class EmailComposeType extends AbstractType
                 'attr' => ['placeholder' => 'bcc@example.com'],
             ])
             ->add('subject', TextType::class, [
-                'label' => 'Subject',
-                'attr' => ['placeholder' => 'Email subject'],
+                'label' => 'Onderwerp',
+                'attr' => ['placeholder' => 'Onderwerp van de e-mail'],
             ])
             ->add('bodyText', TextareaType::class, [
-                'label' => 'Body (Text)',
-                'attr' => ['rows' => 10, 'placeholder' => 'Email body...'],
+                'label' => 'Bericht (tekst)',
+                'attr' => ['rows' => 10, 'placeholder' => 'Je bericht...'],
             ])
             ->add('bodyHtml', TextareaType::class, [
-                'label' => 'Body (HTML)',
+                'label' => 'Bericht (HTML)',
                 'required' => false,
-                'attr' => ['rows' => 15, 'placeholder' => '<p>HTML email body...</p>'],
+                'attr' => ['rows' => 15, 'placeholder' => '<p>HTML-bericht...</p>'],
             ])
             ->add('attachments', FileType::class, [
-                'label' => 'Attachments',
+                'label' => 'Bijlagen',
                 'required' => false,
                 'multiple' => true,
                 'attr' => ['class' => 'form-control'],

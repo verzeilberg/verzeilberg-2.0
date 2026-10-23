@@ -208,6 +208,6 @@ class UserDetails
 
     public function __toString(): string
     {
-        return $this->getFullName() ?: 'User Details';
+        return $this->getFullName() ?: 'Gebruikersgegevens';
     }
 }

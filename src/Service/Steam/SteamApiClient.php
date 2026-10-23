@@ -47,7 +47,7 @@ class SteamApiClient
             return $this->resolvedSteamId;
         }
         if (!$this->isConfigured()) {
-            throw new SteamApiException('Steam is not configured: set STEAM_API_KEY and STEAM_ID.');
+            throw new SteamApiException('Steam is niet ingesteld: vul STEAM_API_KEY en STEAM_ID in.');
         }
 
         $value = trim((string) $this->steamId);
@@ -60,7 +60,7 @@ class SteamApiClient
 
         $data = $this->api('ISteamUser/ResolveVanityURL/v1', ['vanityurl' => $value]);
         if ((int) ($data['response']['success'] ?? 0) !== 1 || !isset($data['response']['steamid'])) {
-            throw new SteamApiException(sprintf('Steam profile "%s" was not found. Use the 17-digit Steam ID or the name from your profile URL.', $value));
+            throw new SteamApiException(sprintf('Steam-profiel "%s" niet gevonden. Gebruik de Steam-ID van 17 cijfers of de naam uit je profiel-URL.', $value));
         }
 
         return $this->resolvedSteamId = (string) $data['response']['steamid'];
@@ -76,7 +76,7 @@ class SteamApiClient
         $data = $this->api('ISteamUser/GetPlayerSummaries/v2', ['steamids' => $this->getSteamId()]);
         $player = $data['response']['players'][0] ?? null;
         if (!is_array($player)) {
-            throw new SteamApiException('Steam did not return the profile.');
+            throw new SteamApiException('Steam gaf het profiel niet terug.');
         }
 
         return [
@@ -105,7 +105,7 @@ class SteamApiClient
         ]);
         // A private "game details" setting gives an empty response instead of an error
         if (!isset($data['response']['game_count'])) {
-            throw new SteamApiException('Steam returned no games: set "Game details" to Public in the Steam privacy settings.');
+            throw new SteamApiException('Steam gaf geen games terug: zet "Gamedetails" op Openbaar in de privacyinstellingen van Steam.');
         }
 
         return array_values(array_filter($data['response']['games'] ?? [], fn ($game) => is_array($game) && isset($game['appid'])));
@@ -147,11 +147,12 @@ class SteamApiClient
 
     /**
      * Unlocked and total achievements per game, requested concurrently. A game without achievements gives 0/0;
+     * a game whose progress Steam keeps private gives unlocked null (total from the game's public achievement list);
      * a failed request is left out.
      *
      * @param list<int> $appIds
      *
-     * @return array<int, array{unlocked: int, total: int}>
+     * @return array<int, array{unlocked: ?int, total: ?int}>
      *
      * @throws SteamApiException when the Steam ID can't be determined
      */
@@ -164,6 +165,7 @@ class SteamApiClient
         }
 
         $achievements = [];
+        $private = [];
         foreach ($responses as $appId => $response) {
             try {
                 $status = $response->getStatusCode();
@@ -180,10 +182,44 @@ class SteamApiClient
             } elseif ($status === 400 && str_contains(strtolower((string) ($stats['error'] ?? '')), 'no stats')) {
                 // "Requested app has no stats": the game has no achievements
                 $achievements[$appId] = ['unlocked' => 0, 'total' => 0];
+            } elseif ($status === 403 && str_contains(strtolower((string) ($stats['error'] ?? '')), 'not public')) {
+                // "Profile is not public" for this game only: it's marked private in the Steam library
+                $private[] = $appId;
             }
         }
 
+        foreach ($this->getAchievementCounts($private) as $appId => $total) {
+            $achievements[$appId] = ['unlocked' => null, 'total' => $total];
+        }
+
         return $achievements;
+    }
+
+    /**
+     * Number of achievements of games, from their public achievement lists (no player data), requested concurrently.
+     *
+     * @param list<int> $appIds
+     *
+     * @return array<int, ?int> null when the list couldn't be read
+     */
+    private function getAchievementCounts(array $appIds): array
+    {
+        $responses = [];
+        foreach ($appIds as $appId) {
+            $responses[$appId] = $this->request('ISteamUserStats/GetSchemaForGame/v2', ['appid' => $appId]);
+        }
+
+        $counts = [];
+        foreach ($responses as $appId => $response) {
+            try {
+                $list = $response->getStatusCode() === 200 ? ($response->toArray(false)['game']['availableGameStats']['achievements'] ?? null) : null;
+            } catch (HttpException) {
+                $list = null;
+            }
+            $counts[$appId] = is_array($list) ? count($list) : null;
+        }
+
+        return $counts;
     }
 
     /**
@@ -199,23 +235,27 @@ class SteamApiClient
         try {
             $status = $response->getStatusCode();
             if ($status === 401 || $status === 403) {
-                throw new SteamApiException('Steam refused the API key (check STEAM_API_KEY).');
+                throw new SteamApiException('Steam weigerde de API-sleutel (controleer STEAM_API_KEY).');
             }
             if ($status === 429) {
-                throw new SteamApiException('Steam is limiting the number of requests; try again later.');
+                throw new SteamApiException('Steam beperkt het aantal verzoeken; probeer het later opnieuw.');
             }
             if ($status >= 400) {
-                throw new SteamApiException(sprintf('Steam answered with HTTP %d for %s.', $status, $method));
+                throw new SteamApiException(sprintf('Steam antwoordde met HTTP %d voor %s.', $status, $method));
             }
 
             return $response->toArray();
         } catch (HttpException) {
-            throw new SteamApiException(sprintf('Steam could not be reached or gave an invalid answer (%s).', $method));
+            throw new SteamApiException(sprintf('Steam was niet bereikbaar of gaf een ongeldig antwoord (%s).', $method));
         }
     }
 
-    /** @param array<string, scalar> $query */
-    private function request(string $method, array $query): ResponseInterface
+    /**
+     * Starts a Web API request (with the key) without waiting for it, so several can run at the same time.
+     *
+     * @param array<string, scalar> $query
+     */
+    public function request(string $method, array $query): ResponseInterface
     {
         return $this->httpClient->request('GET', self::API_URL . '/' . $method . '/', [
             'query' => ['key' => (string) $this->apiKey, 'format' => 'json'] + $query,

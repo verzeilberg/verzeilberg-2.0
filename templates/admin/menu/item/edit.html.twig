@@ -1,12 +1,12 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Edit Menu Item - Admin{% endblock %}
+{% block title %}Menu-item bewerken - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="fas fa-edit me-2"></i>Edit Menu Item: {{ item.label }}</h1>
+    <h1><i class="fas fa-edit me-2"></i>Menu-item bewerken: {{ item.label }}</h1>
     <a href="{{ path('admin_menu_show', {id: menu.id}) }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-left me-1"></i>Back to Menu
+        <i class="fas fa-arrow-left me-1"></i>Terug naar menu
     </a>
 </div>
 
@@ -76,11 +76,11 @@
                 </div>
             </div>
 
-            <div class="d-flex gap-2">
+            <div class="form-actions-bar">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save me-1"></i>Save Changes
+                    <i class="fas fa-save me-1"></i>Wijzigingen opslaan
                 </button>
-                <a href="{{ path('admin_menu_show', {id: menu.id}) }}" class="btn btn-secondary">Cancel</a>
+                <a href="{{ path('admin_menu_show', {id: menu.id}) }}" class="btn btn-secondary">Annuleren</a>
             </div>
         {{ form_end(form) }}
     </div>

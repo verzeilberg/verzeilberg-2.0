@@ -1,6 +1,6 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}{{ account.name }} - Messages{% endblock %}
+{% block title %}{{ account.name }} - Berichten{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -11,7 +11,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><i class="fas fa-envelope me-2"></i>{{ account.name }}</h1>
         <a href="{{ path('admin_imap_index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left me-1"></i>Back
+            <i class="fas fa-arrow-left me-1"></i>Terug
         </a>
     </div>
 
@@ -20,11 +20,11 @@
         <div class="col-lg-3 col-xl-2">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">Folders</h6>
+                    <h6 class="mb-0">Mappen</h6>
                     <button type="button" class="btn btn-sm btn-outline-primary refresh-folders" 
                             data-id="{{ account.id }}"
                             data-csrf-token="{{ csrf_token('sync' ~ account.id) }}"
-                            title="Refresh folders">
+                            title="Mappen vernieuwen">
                         <i class="fas fa-sync"></i>
                     </button>
                 </div>
@@ -46,15 +46,15 @@
         <div class="col-lg-9 col-xl-10">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <span class="badge bg-primary me-2">{{ pagination.getTotalItemCount() }} messages</span>
+                    <span class="badge bg-primary me-2">{{ pagination.getTotalItemCount() }} berichten</span>
                     <a href="{{ path('admin_imap_compose_account', {id: account.id}) }}" class="btn btn-sm btn-primary ms-2">
-                        <i class="fas fa-edit me-1"></i>Compose
+                        <i class="fas fa-edit me-1"></i>Nieuwe e-mail
                     </a>
                     <button type="button" class="btn btn-sm btn-success sync-folder" 
                             data-id="{{ account.id }}" 
                             data-folder="{{ currentFolder }}"
                             data-csrf-token="{{ csrf_token('sync' ~ account.id) }}">
-                        <i class="fas fa-sync me-1"></i>Sync
+                        <i class="fas fa-sync me-1"></i>Synchroniseren
                     </button>
                 </div>
             </div>
@@ -63,13 +63,13 @@
                 <div class="card">
                     <div class="card-body text-center py-5">
                         <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <h5>No messages in "{{ currentFolder }}"</h5>
-                        <p class="text-muted">Click "Sync" to fetch emails from the server.</p>
+                        <h5>Geen berichten in "{{ currentFolder }}"</h5>
+                        <p class="text-muted">Klik op "Synchroniseren" om e-mails van de server op te halen.</p>
                         <button type="button" class="btn btn-success sync-folder" 
                                 data-id="{{ account.id }}" 
                                 data-folder="{{ currentFolder }}"
                                 data-csrf-token="{{ csrf_token('sync' ~ account.id) }}">
-                            <i class="fas fa-sync me-1"></i>Sync Folder
+                            <i class="fas fa-sync me-1"></i>Map synchroniseren
                         </button>
                     </div>
                 </div>
@@ -84,9 +84,9 @@
                 <div class="card mb-3">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted"><i class="fas fa-trash me-1"></i>Trash folder - select messages to delete permanently</span>
+                            <span class="text-muted"><i class="fas fa-trash me-1"></i>Prullenbak - selecteer berichten om definitief te verwijderen</span>
                             <button type="button" class="btn btn-danger" id="bulkDeleteBtn" disabled>
-                                <i class="fas fa-trash-alt me-1"></i>Delete Permanently
+                                <i class="fas fa-trash-alt me-1"></i>Definitief verwijderen
                             </button>
                         </div>
                     </div>
@@ -104,11 +104,11 @@
                                             <input type="checkbox" id="selectAllMessages" class="form-check-input">
                                             {% endif %}
                                         </th>
-                                        <th class="min-w-150px">From</th>
-                                        <th class="subject-col">Subject</th>
-                                        <th class="w-130px">Received</th>
-                                        <th class="w-80px">Flags</th>
-                                        <th class="text-end w-100px col-sticky-end">Actions</th>
+                                        <th class="min-w-150px">Van</th>
+                                        <th class="subject-col">Onderwerp</th>
+                                        <th class="w-130px">Ontvangen</th>
+                                        <th class="w-80px">Labels</th>
+                                        <th class="text-end w-100px col-sticky-end">Acties</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -119,7 +119,7 @@
                                             <input type="checkbox" class="form-check-input message-checkbox" value="{{ message.id }}" data-subject="{{ message.subject|escape('html_attr') }}">
                                             {% else %}
                                             {% if message.attachments and message.attachments|length > 0 %}
-                                                <i class="fas fa-paperclip text-muted" title="Has attachments"></i>
+                                                <i class="fas fa-paperclip text-muted" title="Heeft bijlagen"></i>
                                             {% endif %}
                                             {% endif %}
                                         </td>
@@ -134,10 +134,10 @@
                                         </td>
                                         <td class="subject-col py-2">
                                             <div class="d-flex flex-column">
-                                                <strong class="text-truncate mw-100">{{ message.subject ?: '(no subject)' }}</strong>
+                                                <strong class="text-truncate mw-100">{{ message.subject ?: '(geen onderwerp)' }}</strong>
                                             </div>
                                         </td>
-                                        <td class="py-2">{{ message.receivedAt ? message.receivedAt|date('d M Y H:i') : 'Unknown' }}</td>
+                                        <td class="py-2">{{ message.receivedAt ? message.receivedAt|nl_date('d M Y H:i') : 'Onbekend' }}</td>
                                         <td class="py-2">
                                             {% if message.isFlagged %}<span class="badge bg-warning text-dark me-1"><i class="fas fa-flag"></i></span>{% endif %}
                                             {% if message.isAnswered %}<span class="badge bg-info me-1"><i class="fas fa-reply"></i></span>{% endif %}
@@ -146,21 +146,21 @@
                                         </td>
                                         <td class="text-end py-2">
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <a href="{{ path('admin_imap_message_show', {id: message.id}) }}" class="btn btn-outline-primary" title="View">
+                                                <a href="{{ path('admin_imap_message_show', {id: message.id}) }}" class="btn btn-outline-primary" title="Bekijken">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 {% if not message.isRead %}
                                                     <button type="button" class="btn btn-outline-secondary mark-read" 
                                                             data-id="{{ message.id }}" 
                                                             data-csrf-token="{{ csrf_token('read' ~ message.id) }}"
-                                                            title="Mark as Read">
+                                                            title="Markeren als gelezen">
                                                         <i class="fas fa-envelope-open"></i>
                                                     </button>
                                                 {% else %}
                                                     <button type="button" class="btn btn-outline-secondary mark-unread" 
                                                             data-id="{{ message.id }}" 
                                                             data-csrf-token="{{ csrf_token('unread' ~ message.id) }}"
-                                                            title="Mark as Unread">
+                                                            title="Markeren als ongelezen">
                                                         <i class="fas fa-envelope"></i>
                                                     </button>
                                                 {% endif %}
@@ -168,7 +168,7 @@
                                                         data-id="{{ message.id }}" 
                                                         data-subject="{{ message.subject|escape('html_attr') }}"
                                                         data-csrf-token="{{ csrf_token('delete' ~ message.id) }}"
-                                                        title="Delete">
+                                                        title="Verwijderen">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -181,7 +181,7 @@
                     </div>
                 </div>
 
-                <nav aria-label="Messages pagination" class="mt-3">
+                <nav aria-label="Paginering berichten" class="mt-3">
                     {{ knp_pagination_render(pagination, 'pagination/imap_pagination.html.twig') }}
                 </nav>
             {% endif %}

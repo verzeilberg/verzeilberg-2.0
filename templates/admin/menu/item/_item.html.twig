@@ -6,7 +6,7 @@
     data-level="{{ level }}">
     
     <div class="d-flex align-items-center gap-2">
-        <span class="drag-handle text-muted" title="Drag to reorder">
+        <span class="drag-handle text-muted" title="Sleep om te ordenen">
             <i class="fas fa-grip-lines"></i>
         </span>
         
@@ -23,17 +23,17 @@
                 <small class="text-muted ms-2">{{ item.link }}</small>
             {% endif %}
             {% if not item.enabled %}
-                <span class="badge bg-secondary ms-2">Disabled</span>
+                <span class="badge bg-secondary ms-2">Inactief</span>
             {% endif %}
             {% if item.authorizedFor %}
                 <span class="badge bg-info text-dark ms-2">{{ item.authorizedFor }}</span>
             {% endif %}
-            <small class="text-muted ms-2">Order: {{ item.sortOrder }}</small>
+            <small class="text-muted ms-2">Volgorde: <span class="js-order">{{ item.sortOrder }}</span></small>
         </div>
 
         <div class="btn-group btn-group-sm">
             <a href="{{ path('admin_menu_item_edit', {id: item.menu.id, item: item.id}) }}" 
-               class="btn btn-outline-secondary" title="Edit">
+               class="btn btn-outline-secondary" title="Bewerken">
                 <i class="fas fa-edit"></i>
             </a>
             {% if hasChildren %}
@@ -44,10 +44,10 @@
             {% endif %}
             <button type="button" class="btn btn-outline-danger js-ajax-delete"
                     data-delete-url="{{ path('admin_menu_item_delete', {id: item.menu.id, item: item.id}) }}"
-                    data-delete-message="Are you sure you want to delete the menu item &quot;{{ item.label }}&quot; and all its children? This action cannot be undone."
-                    data-error-message="Failed to delete menu item"
+                    data-delete-message="Weet je zeker dat je het menu-item &quot;{{ item.label }}&quot; en alle onderliggende items wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
+                    data-error-message="Menu-item verwijderen mislukt"
                     data-csrf-token="{{ csrf_token('delete' ~ item.id) }}"
-                    title="Delete">
+                    title="Verwijderen">
                 <i class="fas fa-trash"></i>
             </button>
         </div>

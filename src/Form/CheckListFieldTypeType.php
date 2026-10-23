@@ -19,7 +19,7 @@ class CheckListFieldTypeType extends AbstractType
     {
         $builder
             ->add('name', TextType::class, [
-                'label' => 'Name',
+                'label' => 'Naam',
                 'constraints' => [
                     new NotBlank(),
                     new Length(max: 255),
@@ -27,19 +27,19 @@ class CheckListFieldTypeType extends AbstractType
                 'attr' => ['class' => 'form-control'],
             ])
             ->add('formType', ChoiceType::class, [
-                'label' => 'Form Type',
+                'label' => 'Formuliertype',
                 'choices' => [
-                    'Text' => 'text',
-                    'Number' => 'number',
-                    'Textarea' => 'textarea',
-                    'Checkbox' => 'checkbox',
-                    'Select' => 'select',
-                    'Radio' => 'radio',
-                    'Date' => 'date',
-                    'Time' => 'time',
-                    'Email' => 'email',
-                    'File' => 'file',
-                    'Hidden' => 'hidden',
+                    'Tekst' => 'text',
+                    'Getal' => 'number',
+                    'Tekstvak' => 'textarea',
+                    'Selectievakje' => 'checkbox',
+                    'Keuzelijst' => 'select',
+                    'Keuzerondjes' => 'radio',
+                    'Datum' => 'date',
+                    'Tijd' => 'time',
+                    'E-mail' => 'email',
+                    'Bestand' => 'file',
+                    'Verborgen' => 'hidden',
                 ],
                 'attr' => ['class' => 'form-select'],
             ]);

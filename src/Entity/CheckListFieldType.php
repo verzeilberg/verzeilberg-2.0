@@ -12,7 +12,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: CheckListFieldTypeRepository::class)]
 #[ORM\Table(name: 'checklist_field_types')]
-#[UniqueEntity(fields: ['name'], message: 'A field type with this name already exists')]
+#[UniqueEntity(fields: ['name'], message: 'Er bestaat al een veldtype met deze naam')]
 class CheckListFieldType
 {
     #[ORM\Id]

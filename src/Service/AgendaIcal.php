@@ -45,7 +45,7 @@ class AgendaIcal
         }
         $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
         if (!in_array($scheme, ['http', 'https'], true) || !parse_url($url, PHP_URL_HOST)) {
-            throw new \InvalidArgumentException('Only http(s) and webcal links can be imported.');
+            throw new \InvalidArgumentException('Alleen http(s)- en webcal-links kunnen worden geïmporteerd.');
         }
 
         try {
@@ -55,16 +55,16 @@ class AgendaIcal
                 $content .= $chunk->getContent();
                 if (strlen($content) > self::MAX_DOWNLOAD_BYTES) {
                     $response->cancel();
-                    throw new \InvalidArgumentException('The calendar is too large (more than 5 MB).');
+                    throw new \InvalidArgumentException('De agenda is te groot (meer dan 5 MB).');
                 }
             }
             if ($response->getStatusCode() >= 400) {
-                throw new \InvalidArgumentException(sprintf('The calendar could not be downloaded (HTTP %d).', $response->getStatusCode()));
+                throw new \InvalidArgumentException(sprintf('De agenda kon niet worden gedownload (HTTP %d).', $response->getStatusCode()));
             }
         } catch (\InvalidArgumentException $e) {
             throw $e;
         } catch (\Throwable $e) {
-            throw new \InvalidArgumentException('The calendar could not be downloaded: ' . $e->getMessage(), 0, $e);
+            throw new \InvalidArgumentException('De agenda kon niet worden gedownload: ' . $e->getMessage(), 0, $e);
         }
 
         return $content;
@@ -83,10 +83,10 @@ class AgendaIcal
         try {
             $calendar = Reader::read($ics, Reader::OPTION_FORGIVING);
         } catch (\Throwable $e) {
-            throw new \InvalidArgumentException('This is not a valid iCal (.ics) calendar.', 0, $e);
+            throw new \InvalidArgumentException('Dit is geen geldige iCal-agenda (.ics).', 0, $e);
         }
         if (!$calendar instanceof VCalendar) {
-            throw new \InvalidArgumentException('This is not a valid iCal (.ics) calendar.');
+            throw new \InvalidArgumentException('Dit is geen geldige iCal-agenda (.ics).');
         }
 
         $timezone = new \DateTimeZone($this->appTimezone);
@@ -219,13 +219,13 @@ class AgendaIcal
 
     private function applyEvent(AgendaItem $item, VEvent $event, \DateTimeZone $timezone): void
     {
-        $item->setTitle(mb_substr(trim((string) ($event->SUMMARY ?? '')), 0, 255) ?: '(no title)');
+        $item->setTitle(mb_substr(trim((string) ($event->SUMMARY ?? '')), 0, 255) ?: '(geen titel)');
         $item->setDescription(isset($event->DESCRIPTION) ? trim((string) $event->DESCRIPTION) ?: null : null);
         $item->setLocation(isset($event->LOCATION) ? mb_substr(trim((string) $event->LOCATION), 0, 255) ?: null : null);
 
         $startProperty = $event->select('DTSTART')[0] ?? null;
         if (!$startProperty instanceof DateTimeProperty) {
-            throw new \InvalidArgumentException('Event without a valid start.');
+            throw new \InvalidArgumentException('Afspraak zonder geldige starttijd.');
         }
         $start = \DateTimeImmutable::createFromInterface($startProperty->getDateTime($timezone));
         $end = isset($event->DTEND)

@@ -10,6 +10,8 @@
     justify-content: center;
     font-weight: 600;
     font-size: 0.875rem;
+    flex-shrink: 0;
+    object-fit: cover;
 }
 
 .profile-avatar {
@@ -17,4 +19,13 @@
     height: 120px;
     object-fit: cover;
     font-size: 3rem;
+}
+
+/* The smaller avatar on a user directory card */
+.directory-avatar {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    object-fit: cover;
+    font-size: 1.5rem;
 }

@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const csrfToken = button.getAttribute('data-csrf-token');
 
         document.getElementById('deleteModalMessage').textContent = button.getAttribute('data-delete-message') || 'Weet je zeker dat je dit item wilt verwijderen?';
-        document.getElementById('deleteModalTitle').textContent = button.getAttribute('data-confirm-title') || 'Confirm Deletion';
-        document.getElementById('confirmDeleteLabel').textContent = button.getAttribute('data-confirm-label') || 'Delete';
+        document.getElementById('deleteModalTitle').textContent = button.getAttribute('data-confirm-title') || 'Verwijderen bevestigen';
+        document.getElementById('confirmDeleteLabel').textContent = button.getAttribute('data-confirm-label') || 'Verwijderen';
         document.getElementById('confirmDeleteIcon').className = 'fas ' + (button.getAttribute('data-confirm-icon') || 'fa-trash') + ' me-1';
 
         const confirmBtn = document.getElementById('confirmDeleteBtn');
@@ -41,13 +41,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (data.success) {
                         location.reload();
                     } else {
-                        alert(data.message || 'Er is een fout opgetreden');
+                        // AppDialog closes this modal first
+                        AppDialog.alert(data.message || 'Er is een fout opgetreden');
                     }
-                    bootstrap.Modal.getInstance(deleteModal).hide();
                 })
                 .catch(() => {
-                    alert('Er is een fout opgetreden');
-                    bootstrap.Modal.getInstance(deleteModal).hide();
+                    AppDialog.alert('Er is een fout opgetreden');
                 });
         };
     });

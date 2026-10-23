@@ -4,78 +4,66 @@ declare(strict_types=1);
 
 namespace App\Form;
 
+use App\Entity\Permission;
 use App\Entity\RoutePermission;
+use App\Security\AdminRouteAccess;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Callback;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 class RoutePermissionType extends AbstractType
 {
-    public function __construct(private RouterInterface $router)
+    public function __construct(private AdminRouteAccess $adminRouteAccess)
     {
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $adminRoutes = $this->getAdminRoutes();
-
         $builder
-            ->add('routePattern', ChoiceType::class, [
-                'label' => 'Route Pattern',
-                'choices' => $adminRoutes,
-                'placeholder' => 'Select a route...',
-                'required' => false,
-                'attr' => ['class' => 'form-select font-monospace'],
-                'help' => 'Select an admin route or type a custom pattern. {id} matches any value.',
-            ])
-            ->add('permissionName', TextType::class, [
-                'label' => 'Permission Name',
+            ->add('routePattern', TextType::class, [
+                'label' => 'Route(s)',
                 'attr' => [
-                    'placeholder' => 'BLOG_CREATE',
-                    'class' => 'form-control font-monospace text-uppercase',
+                    'class' => 'font-monospace',
+                    'placeholder' => 'admin_blog_*',
+                    'list' => 'admin-route-suggestions',
+                    'autocomplete' => 'off',
                 ],
-                'help' => 'Permission name (without PERM_ prefix).',
+                'help' => 'Een routenaam, of gebruik * als jokerteken: admin_blog_* geldt voor elke blogbeheerpagina.',
             ])
-            ->add('description', TextareaType::class, [
-                'label' => 'Description',
-                'required' => false,
-                'attr' => ['rows' => 3, 'class' => 'form-control'],
+            ->add('permission', EntityType::class, [
+                'label' => 'Recht dat toegang geeft',
+                'class' => Permission::class,
+                'choice_label' => fn(Permission $p) => $p->getName() . ($p->getDescription() ? ' — ' . $p->getDescription() : ''),
+                'group_by' => fn(Permission $p) => $p->getGroup(),
+                'placeholder' => 'Kies een recht...',
+                'query_builder' => fn(EntityRepository $repo) => $repo->createQueryBuilder('p')
+                    ->andWhere('p.deleted = false')
+                    ->orderBy('p.name', 'ASC'),
             ])
             ->add('methods', ChoiceType::class, [
-                'label' => 'HTTP Methods',
-                'choices' => [
-                    'GET' => 'GET',
-                    'POST' => 'POST',
-                    'PUT' => 'PUT',
-                    'PATCH' => 'PATCH',
-                    'DELETE' => 'DELETE',
-                ],
+                'label' => 'Alleen voor deze HTTP-methoden',
+                'choices' => array_combine(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']),
                 'multiple' => true,
                 'expanded' => true,
                 'required' => false,
-                'attr' => ['class' => 'form-check-input'],
-                'help' => 'Select methods. Leave empty for all methods.',
+                'help' => 'Laat alles uit voor elke methode. Vink alleen GET aan om bekijken toe te staan maar opslaan niet.',
             ])
-            ->add('priority', IntegerType::class, [
-                'label' => 'Priority',
+            ->add('enabled', CheckboxType::class, [
+                'label' => 'Actief',
                 'required' => false,
-                'attr' => ['class' => 'form-control', 'placeholder' => '0'],
-                'help' => 'Higher priority rules checked first.',
             ])
-            ->add('enabled', ChoiceType::class, [
-                'label' => 'Status',
-                'choices' => [
-                    'Enabled' => true,
-                    'Disabled' => false,
-                ],
-                'expanded' => false,
+            ->add('description', TextareaType::class, [
+                'label' => 'Notitie',
                 'required' => false,
-                'attr' => ['class' => 'form-select'],
+                'attr' => ['rows' => 2],
             ]);
     }
 
@@ -83,24 +71,33 @@ class RoutePermissionType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => RoutePermission::class,
+            'constraints' => [new Callback($this->validateRoutePattern(...))],
         ]);
     }
 
-    private function getAdminRoutes(): array
+    public function validateRoutePattern(RoutePermission $rule, ExecutionContextInterface $context): void
     {
-        $routes = [];
-        $routeCollection = $this->router->getRouteCollection();
-
-        foreach ($routeCollection as $name => $route) {
-            if (str_starts_with($name, 'admin_')) {
-                $path = $route->getPath();
-                $methods = $route->getMethods();
-                $methodStr = $methods ? ' [' . implode(',', $methods) . ']' : '';
-                $routes[$name . $methodStr] = $path;
-            }
+        if ($rule->getRoutePattern() === '') {
+            return;
         }
 
-        ksort($routes);
-        return $routes;
+        $matched = array_filter(
+            array_keys($this->adminRouteAccess->getAdminRoutes()),
+            fn(string $route) => $rule->matchesRouteName($route),
+        );
+
+        if ($matched === []) {
+            $context->buildViolation('Dit past bij geen enkele beheerroute. Kies er een uit de suggesties of controleer de spelling.')
+                ->atPath('routePattern')
+                ->addViolation();
+            return;
+        }
+
+        $adminOnly = array_filter($matched, AdminRouteAccess::isAdminOnlyRoute(...));
+        if (count($adminOnly) === count($matched)) {
+            $context->buildViolation('Het beheer van gebruikers, rollen en rechten is altijd alleen voor ROLE_ADMIN; een regel kan dat niet openzetten.')
+                ->atPath('routePattern')
+                ->addViolation();
+        }
     }
 }

@@ -22,6 +22,32 @@ class BlogCommentRepository extends ServiceEntityRepository
         return parent::find($id, $lockMode, $lockVersion);
     }
 
+    /**
+     * The newest comments of a user that everyone can see, on posts that are online (for their page).
+     *
+     * @return list<BlogComment>
+     */
+    public function findRecentPublishedBy(User $author, int $limit = 5): array
+    {
+        $now = new \DateTimeImmutable();
+        $comments = $this->createQueryBuilder('c')
+            ->innerJoin('c.blogPost', 'bp')
+            ->addSelect('bp')
+            ->andWhere('c.author = :author')
+            ->andWhere('c.isApproved = true')
+            ->andWhere('c.deleted = false')
+            ->setParameter('author', $author)
+            ->orderBy('c.dateCreated', 'DESC')
+            // A few extra: a reply under a comment that isn't published drops out below
+            ->setMaxResults($limit * 3)
+            ->getQuery()
+            ->getResult();
+
+        $visible = array_filter($comments, fn (BlogComment $comment) => $comment->isPublished() && $comment->getBlogPost()->isVisibleOn($now));
+
+        return array_slice(array_values($visible), 0, $limit);
+    }
+
     public function findApprovedByPost(BlogPost $post): array
     {
         return $this->createQueryBuilder('c')

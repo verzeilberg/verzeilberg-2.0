@@ -49,7 +49,7 @@ class AgendaController extends AbstractController
     {
         $agenda = $this->agendaRepository->findOneBy(['feedToken' => $token, 'deleted' => false]);
         if (!$agenda) {
-            throw $this->createNotFoundException('Feed not found');
+            throw $this->createNotFoundException('Feed niet gevonden');
         }
 
         $response = new Response($ical->export($agenda, $request->getHost()));

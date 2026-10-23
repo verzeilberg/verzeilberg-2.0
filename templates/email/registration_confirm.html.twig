@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bevestig je e-mailadres - Verzeilberg.nl</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h1 style="color: #0d6efd;">Bevestig je e-mailadres</h1>
+
+    <p>Hallo {{ user.fullName }},</p>
+
+    <p>Bedankt voor je registratie op Verzeilberg.nl. Klik op de knop hieronder om je e-mailadres te bevestigen. Daarna keurt een beheerder je account goed; je krijgt een e-mail zodra je kunt inloggen.</p>
+
+    <p style="text-align: center; margin: 30px 0;">
+        <a href="{{ confirmLink }}" style="background-color: #0d6efd; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            E-mailadres bevestigen
+        </a>
+    </p>
+
+    <p>Of kopieer deze link naar je browser:</p>
+    <p style="word-break: break-all; color: #6c757d;">{{ confirmLink }}</p>
+
+    <p>Heb je je niet geregistreerd? Dan kun je deze e-mail negeren; het account wordt na 30 dagen vanzelf verwijderd.</p>
+
+    <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+    <p style="color: #6c757d; font-size: 0.875rem;">Verzeilberg.nl</p>
+</body>
+</html>

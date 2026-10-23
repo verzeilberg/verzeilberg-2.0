@@ -1,0 +1,145 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hardlopen {{ year }} - Verzeilberg.nl{% endblock %}
+{% block page_title %}Hardlopen{% endblock %}
+{% block page_lead %}Kilometers, wedstrijden en persoonlijke records, uit Strava.{% endblock %}
+
+{% set months = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'] %}
+
+{% block body %}
+{% if years is empty %}
+    <div class="empty-state">
+        <i class="fas fa-running"></i>
+        <p>Nog geen loopjes. Kijk later nog eens.</p>
+    </div>
+{% else %}
+    <nav class="d-flex flex-wrap gap-2 mb-4" aria-label="Jaar">
+        {% for y in years %}
+            <a href="{{ path('app_running', {year: y}) }}" class="btn btn-sm {{ y == year ? 'btn-primary' : 'btn-outline-primary' }}" {{ y == year ? 'aria-current="page"' }}>{{ y }}</a>
+        {% endfor %}
+    </nav>
+
+    <div class="row g-3 section">
+        {% for label, value in {
+            'Kilometers': totals.km|number_format(0, ',', '.'),
+            'Loopjes': totals.runs,
+            'Uren': (totals.seconds / 3600)|round|number_format(0, ',', '.'),
+            'Wedstrijden': totals.races,
+        } %}
+            <div class="col-6 col-md-3">
+                <div class="stat-tile">
+                    <div class="stat-tile-value">{{ value }}</div>
+                    <div class="stat-tile-label">{{ label }} in {{ year }}</div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="row g-4 section">
+        <div class="col-lg-6">
+            <section class="card h-100">
+                <div class="card-header"><h2>Kilometers per maand, {{ year }}</h2></div>
+                <div class="card-body">
+                    <div class="chart-container"><canvas id="monthChart" role="img" aria-label="Staafdiagram van de gelopen kilometers per maand in {{ year }}"></canvas></div>
+                    <details class="mt-2">
+                        <summary class="small text-muted">Toon als tabel</summary>
+                        <table class="table table-sm mt-2 mb-0">
+                            <thead><tr><th>Maand</th><th class="text-end">km</th></tr></thead>
+                            <tbody>
+                                {% for km in totals.kmPerMonth %}
+                                    <tr><td>{{ months[loop.index0] }}</td><td class="text-end">{{ km|number_format(1, ',', '.') }}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </details>
+                </div>
+            </section>
+        </div>
+        <div class="col-lg-6">
+            <section class="card h-100">
+                <div class="card-header"><h2>Kilometers per jaar</h2></div>
+                <div class="card-body">
+                    <div class="chart-container"><canvas id="yearChart" role="img" aria-label="Staafdiagram van de gelopen kilometers per jaar"></canvas></div>
+                    <details class="mt-2">
+                        <summary class="small text-muted">Toon als tabel</summary>
+                        <table class="table table-sm mt-2 mb-0">
+                            <thead><tr><th>Jaar</th><th class="text-end">km</th></tr></thead>
+                            <tbody>
+                                {% for y, km in kmPerYear %}
+                                    <tr><td>{{ y }}</td><td class="text-end">{{ km|number_format(1, ',', '.') }}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </details>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <section class="card h-100">
+                <div class="card-header"><h2>Persoonlijke records</h2></div>
+                {% if records is empty %}
+                    <div class="card-body text-muted">Nog geen loopjes over de gebruikelijke afstanden.</div>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead><tr><th>Afstand</th><th class="text-end">Tijd</th><th class="text-end">Tempo</th><th>Wanneer</th></tr></thead>
+                            <tbody>
+                                {% for record in records %}
+                                    <tr>
+                                        <td>{{ record.distance }}</td>
+                                        <td class="text-end">{{ record.seconds|run_time }}</td>
+                                        <td class="text-end">{{ (record.seconds / record.km)|run_time }} /km</td>
+                                        <td>
+                                            {% if record.event %}<a href="{{ path('app_event_show', {slug: record.event.slug}) }}">{{ record.event.title }}</a>{% else %}{{ record.date|nl_date('j M Y') }}{% if record.race %}, wedstrijd{% endif %}{% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </section>
+        </div>
+        <div class="col-lg-6">
+            <section class="card h-100">
+                <div class="card-header"><h2>Wedstrijden in {{ year }}</h2></div>
+                {% if races is empty %}
+                    <div class="card-body text-muted">Geen wedstrijden dit jaar.</div>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead><tr><th>Datum</th><th>Wedstrijd</th><th class="text-end">km</th><th class="text-end">Tijd</th></tr></thead>
+                            <tbody>
+                                {% for race in races %}
+                                    <tr>
+                                        <td class="text-nowrap">{{ race.date|nl_date('j M') }}</td>
+                                        <td>{% if race.event %}<a href="{{ path('app_event_show', {slug: race.event.slug}) }}">{{ race.name }}</a>{% else %}{{ race.name }}{% endif %}</td>
+                                        <td class="text-end">{{ race.km|number_format(1, ',', '.') }}</td>
+                                        <td class="text-end">{{ race.seconds|run_time }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% if years is not empty %}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+        <script src="{{ asset('js/modules/running/charts.js') }}"
+                data-months="{{ months|json_encode|e('html_attr') }}"
+                data-month-km="{{ totals.kmPerMonth|json_encode|e('html_attr') }}"
+                data-years="{{ kmPerYear|keys|json_encode|e('html_attr') }}"
+                data-year-km="{{ kmPerYear|json_encode|e('html_attr') }}"
+                data-year="{{ year }}"></script>
+    {% endif %}
+{% endblock %}

@@ -41,26 +41,26 @@ class AgendaItemType extends AbstractType
                 'attr' => ['class' => 'form-select'],
             ])
             ->add('title', TextType::class, [
-                'label' => 'Title',
+                'label' => 'Titel',
                 'attr' => ['class' => 'form-control', 'maxlength' => 255],
             ])
             ->add('allDay', CheckboxType::class, [
-                'label' => 'Whole day',
+                'label' => 'Hele dag',
                 'required' => false,
                 'attr' => ['class' => 'form-check-input js-all-day'],
                 'label_attr' => ['class' => 'form-check-label'],
             ])
-            ->add('startDate', DateType::class, ['label' => 'Start date', 'mapped' => false, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'attr' => ['class' => 'form-control']])
-            ->add('startTime', TimeType::class, ['label' => 'Start time', 'mapped' => false, 'required' => false, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'attr' => ['class' => 'form-control js-time']])
-            ->add('endDate', DateType::class, ['label' => 'End date', 'mapped' => false, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'attr' => ['class' => 'form-control']])
-            ->add('endTime', TimeType::class, ['label' => 'End time', 'mapped' => false, 'required' => false, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'attr' => ['class' => 'form-control js-time']])
+            ->add('startDate', DateType::class, ['label' => 'Startdatum', 'mapped' => false, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'attr' => ['class' => 'form-control']])
+            ->add('startTime', TimeType::class, ['label' => 'Starttijd', 'mapped' => false, 'required' => false, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'attr' => ['class' => 'form-control js-time']])
+            ->add('endDate', DateType::class, ['label' => 'Einddatum', 'mapped' => false, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'attr' => ['class' => 'form-control']])
+            ->add('endTime', TimeType::class, ['label' => 'Eindtijd', 'mapped' => false, 'required' => false, 'widget' => 'single_text', 'input' => 'datetime_immutable', 'attr' => ['class' => 'form-control js-time']])
             ->add('location', TextType::class, [
-                'label' => 'Location',
+                'label' => 'Locatie',
                 'required' => false,
                 'attr' => ['class' => 'form-control', 'maxlength' => 255],
             ])
             ->add('description', TextareaType::class, [
-                'label' => 'Description',
+                'label' => 'Beschrijving',
                 'required' => false,
                 'attr' => ['class' => 'form-control', 'rows' => 4],
             ]);
@@ -102,12 +102,12 @@ class AgendaItemType extends AbstractType
             $startTime = $form->get('startTime')->getData();
             $endTime = $form->get('endTime')->getData();
             if (!$startTime instanceof \DateTimeImmutable) {
-                $form->get('startTime')->addError(new FormError('Enter a start time, or choose "Whole day".'));
+                $form->get('startTime')->addError(new FormError('Vul een starttijd in, of kies "Hele dag".'));
 
                 return;
             }
             if (!$endTime instanceof \DateTimeImmutable) {
-                $form->get('endTime')->addError(new FormError('Enter an end time, or choose "Whole day".'));
+                $form->get('endTime')->addError(new FormError('Vul een eindtijd in, of kies "Hele dag".'));
 
                 return;
             }

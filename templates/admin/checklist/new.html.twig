@@ -1,12 +1,12 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}New Checklist - Admin{% endblock %}
+{% block title %}Nieuwe checklist - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="fas fa-plus me-2"></i>New Checklist</h1>
+    <h1><i class="fas fa-plus me-2"></i>Nieuwe checklist</h1>
     <a href="{{ path('admin_checklist_index') }}" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-1"></i>Back to Checklists
+        <i class="fas fa-arrow-left me-1"></i>Terug naar checklists
     </a>
 </div>
 
@@ -16,41 +16,63 @@
             <div class="row mb-3">
                 <div class="col-md-8">
                     {{ form_row(form.name, {
-                        'label': 'Name',
+                        'label': 'Naam',
                         'label_attr': {'class': 'form-label'},
-                        'attr': {'class': 'form-control', 'placeholder': 'Enter checklist name'}
+                        'attr': {'class': 'form-control', 'placeholder': 'Naam van de checklist'}
                     }) }}
                 </div>
             </div>
             <div class="row mb-3">
                 <div class="col-md-4">
                     {{ form_row(form.access, {
-                        'label': 'Access',
+                        'label': 'Toegang',
                         'label_attr': {'class': 'form-label'}
                     }) }}
                 </div>
                 <div class="col-md-4">
                     {{ form_row(form.layoutColumns, {
-                        'label': 'Layout',
+                        'label': 'Indeling',
                         'label_attr': {'class': 'form-label'}
                     }) }}
                 </div>
                 <div class="col-md-4">
                     {{ form_row(form.itemsPerPage, {
-                        'label': 'Items per page',
+                        'label': 'Items per pagina',
                         'label_attr': {'class': 'form-label'}
                     }) }}
                 </div>
             </div>
-            <div class="d-flex gap-2">
+            <div class="border-top pt-4 mt-4 mb-4">
+                <h3 class="h6 mb-2">Sorteren</h3>
+                <p class="text-muted small mb-3">Hoe de items in de overzichten staan. Bij gelijke waarden beslist het volgende niveau. Klik je op een kolomkop, dan sorteer je tijdelijk anders.</p>
+                {# A level for every choice; js/modules/checklist/order-levels.js shows the next one after a choice #}
+                <div class="js-order-levels">
+                    {% for level in 1..(form.children|keys|filter(name => name starts with 'orderBy')|length) %}
+                        <div class="row mb-3 js-order-level">
+                            <div class="col-md-8">
+                                {{ form_row(form['orderBy' ~ level], {'label_attr': {'class': 'form-label'}}) }}
+                            </div>
+                            <div class="col-md-4 js-order-dir">
+                                {{ form_row(form['orderDir' ~ level], {'label_attr': {'class': 'form-label'}}) }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-actions-bar">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save me-1"></i>Save Checklist
+                    <i class="fas fa-save me-1"></i>Checklist opslaan
                 </button>
                 <a href="{{ path('admin_checklist_index') }}" class="btn btn-outline-secondary">
-                    Cancel
+                    Annuleren
                 </a>
             </div>
         {{ form_end(form) }}
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/checklist/order-levels.js') }}"></script>
 {% endblock %}

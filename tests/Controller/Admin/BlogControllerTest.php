@@ -197,7 +197,7 @@ class BlogControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
 
         $title = 'New Test Post ' . uniqid();
-        $form = $crawler->selectButton('Save')->form([
+        $form = $crawler->selectButton('Opslaan als concept')->form([
             'blog_post[title]' => $title,
             'blog_post[introText]' => 'Test intro text',
             'blog_post[content]' => 'Test content body',
@@ -212,7 +212,7 @@ class BlogControllerTest extends WebTestCase
         $this->assertResponseRedirects();
         $this->client->followRedirect();
         $this->assertResponseIsSuccessful();
-        $this->assertStringContainsString('Blog post created successfully', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('Bericht aangemaakt.', $this->client->getResponse()->getContent());
 
         $newPost = $this->em->getRepository(BlogPost::class)->findOneBy(['title' => $title]);
         $this->assertNotNull($newPost);
@@ -226,7 +226,7 @@ class BlogControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
 
         $title = 'Online Test Post ' . uniqid();
-        $form = $crawler->selectButton('Save')->form([
+        $form = $crawler->selectButton('Opslaan als concept')->form([
             'blog_post[title]' => $title,
             'blog_post[introText]' => 'Test intro',
             'blog_post[content]' => 'Test content',
@@ -268,7 +268,7 @@ class BlogControllerTest extends WebTestCase
         $crawler = $this->client->request('GET', '/admin/blog/' . $post->getId() . '/edit');
         $this->assertResponseIsSuccessful();
 
-        $form = $crawler->selectButton('Save')->form([
+        $form = $crawler->selectButton('Wijzigingen opslaan')->form([
             'blog_post[title]' => 'Updated Title',
             'blog_post[introText]' => 'Updated intro',
             'blog_post[content]' => 'Updated content',
@@ -279,7 +279,7 @@ class BlogControllerTest extends WebTestCase
         $this->assertResponseRedirects();
 
         $this->client->followRedirect();
-        $this->assertStringContainsString('Blog post updated successfully', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('Bericht opgeslagen.', $this->client->getResponse()->getContent());
 
         $post = $this->reload($post);
         $this->assertEquals('Updated Title', $post->getTitle());
@@ -366,7 +366,7 @@ class BlogControllerTest extends WebTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertFalse($response['success']);
-        $this->assertEquals('Invalid status', $response['message']);
+        $this->assertEquals('Ongeldige status', $response['message']);
     }
 
     public function testImageUpload(): void
@@ -441,7 +441,7 @@ class BlogControllerTest extends WebTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertFalse($response['success']);
-        $this->assertEquals('Video ID required', $response['message']);
+        $this->assertEquals('Video-ID is verplicht', $response['message']);
     }
 
     public function testYouTubeDelete(): void
@@ -489,7 +489,7 @@ class BlogControllerTest extends WebTestCase
         $crawler = $this->client->request('GET', '/admin/blog/new');
         $this->assertResponseIsSuccessful();
 
-        $form = $crawler->selectButton('Save')->form([
+        $form = $crawler->selectButton('Opslaan als concept')->form([
             'blog_post[title]' => $title,
             'blog_post[introText]' => 'Test intro',
             'blog_post[content]' => 'Test content',
@@ -500,7 +500,7 @@ class BlogControllerTest extends WebTestCase
 
         // Shown as a form error, not a database error
         $this->assertResponseStatusCodeSame(422);
-        $this->assertStringContainsString('This slug is already in use', $this->client->getResponse()->getContent());
+        $this->assertStringContainsString('Deze slug is al in gebruik', $this->client->getResponse()->getContent());
     }
 
     public function testBlogPostEntityMethods(): void

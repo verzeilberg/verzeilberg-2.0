@@ -5,13 +5,13 @@
     <link rel="stylesheet" href="https://unpkg.com/trix@2.0.0/dist/trix.css">
 {% endblock %}
 
-{% block title %}New Blog Post - Admin{% endblock %}
+{% block title %}Nieuw blogbericht - Beheer{% endblock %}
 
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="fas fa-plus me-2"></i>New Blog Post</h1>
+    <h1><i class="fas fa-plus me-2"></i>Nieuw blogbericht</h1>
     <a href="{{ path('admin_blog_index') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-left me-1"></i>Back
+        <i class="fas fa-arrow-left me-1"></i>Terug
     </a>
 </div>
 
@@ -49,19 +49,19 @@
                         {{ form_errors(form.categories) }}
                     </div>
 
-                    <div class="d-flex gap-2">
+                    <div class="form-actions-bar">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i>Save Draft
+                            <i class="fas fa-save me-1"></i>Opslaan als concept
                         </button>
                         <button type="submit" name="publish" value="1" class="btn btn-success">
-                            <i class="fas fa-globe me-1"></i>Publish Now
+                            <i class="fas fa-globe me-1"></i>Nu publiceren
                         </button>
-                        <a href="{{ path('admin_blog_index') }}" class="btn btn-secondary">Cancel</a>
+                        <a href="{{ path('admin_blog_index') }}" class="btn btn-secondary">Annuleren</a>
                     </div>
 
                     <hr class="my-4">
 
-                    <h5 class="mb-3">Publish Settings</h5>
+                    <h5 class="mb-3">Publicatie-instellingen</h5>
 
                     <div class="mb-3">
                         {{ form_label(form.status) }}
@@ -104,9 +104,9 @@
         {% if post.id %}
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Images</h5>
+                    <h5 class="mb-0">Afbeeldingen</h5>
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#imageUploadModal">
-                        <i class="fas fa-upload me-1"></i>Upload
+                        <i class="fas fa-upload me-1"></i>Uploaden
                     </button>
                 </div>
                 <div class="card-body">
@@ -117,17 +117,17 @@
                                     <img src="{{ image.getPublicPath() }}" class="card-img-top" alt="{{ image.name }}">
                                     <div class="card-body p-2">
                                         <input type="hidden" name="blog_post[images][{{ loop.index0 }}][id]" value="{{ image.id }}">
-                                        <input type="text" name="blog_post[images][{{ loop.index0 }}][name]" value="{{ image.name }}" class="form-control form-control-sm mb-1" placeholder="Image name">
-                                        <input type="text" name="blog_post[images][{{ loop.index0 }}][alt]" value="{{ image.alt }}" class="form-control form-control-sm mb-1" placeholder="Alt text">
-                                        <input type="number" name="blog_post[images][{{ loop.index0 }}][sortOrder]" value="{{ image.sortOrder }}" class="form-control form-control-sm mb-1" placeholder="Sort order">
+                                        <input type="text" name="blog_post[images][{{ loop.index0 }}][name]" value="{{ image.name }}" class="form-control form-control-sm mb-1" placeholder="Naam afbeelding">
+                                        <input type="text" name="blog_post[images][{{ loop.index0 }}][alt]" value="{{ image.alt }}" class="form-control form-control-sm mb-1" placeholder="Alt-tekst">
+                                        <input type="number" name="blog_post[images][{{ loop.index0 }}][sortOrder]" value="{{ image.sortOrder }}" class="form-control form-control-sm mb-1" placeholder="Volgorde">
                                         <button type="button" class="btn btn-sm btn-danger w-100 remove-form-image">
-                                            <i class="fas fa-trash"></i> Remove
+                                            <i class="fas fa-trash"></i> Verwijderen
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         {% else %}
-                            <p class="text-muted text-center">No images uploaded yet</p>
+                            <p class="text-muted text-center">Nog geen afbeeldingen geüpload</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -135,9 +135,9 @@
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Files</h5>
+                    <h5 class="mb-0">Bestanden</h5>
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#fileUploadModal">
-                        <i class="fas fa-upload me-1"></i>Upload
+                        <i class="fas fa-upload me-1"></i>Uploaden
                     </button>
                 </div>
                 <div class="card-body">
@@ -153,7 +153,7 @@
                                 </button>
                             </div>
                         {% else %}
-                            <p class="text-muted text-center">No files uploaded yet</p>
+                            <p class="text-muted text-center">Nog geen bestanden geüpload</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -161,9 +161,9 @@
 
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">YouTube Videos</h5>
+                    <h5 class="mb-0">YouTube-video's</h5>
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#youtubeModal">
-                        <i class="fas fa-plus me-1"></i>Add Video
+                        <i class="fas fa-plus me-1"></i>Video toevoegen
                     </button>
                 </div>
                 <div class="card-body">
@@ -181,7 +181,7 @@
                                 </div>
                             {% endfor %}
                         {% else %}
-                            <p class="text-muted text-center">No videos added yet</p>
+                            <p class="text-muted text-center">Nog geen video's toegevoegd</p>
                         {% endif %}
                     </div>
                 </div>
@@ -189,7 +189,7 @@
         {% else %}
             <div class="alert alert-info">
                 <i class="fas fa-info-circle me-2"></i>
-                Save the blog post first to add images, files, and YouTube videos.
+                Sla het blogbericht eerst op om afbeeldingen, bestanden en YouTube-video's toe te voegen.
             </div>
         {% endif %}
     </div>
@@ -200,19 +200,19 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Upload Image</h5>
+                <h5 class="modal-title">Afbeelding uploaden</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="imageUploadForm" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Select Image</label>
+                        <label class="form-label">Kies afbeelding</label>
                         <input type="file" name="image" class="form-control" accept="image/*" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Upload</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                    <button type="submit" class="btn btn-primary">Uploaden</button>
                 </div>
             </form>
         </div>
@@ -224,19 +224,19 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Upload File</h5>
+                <h5 class="modal-title">Bestand uploaden</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="fileUploadForm" enctype="multipart/form-data">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Select File</label>
+                        <label class="form-label">Kies bestand</label>
                         <input type="file" name="file" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Upload</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                    <button type="submit" class="btn btn-primary">Uploaden</button>
                 </div>
             </form>
         </div>
@@ -248,46 +248,29 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add YouTube Video</h5>
+                    <h5 class="modal-title">YouTube-video toevoegen</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="youtubeForm">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label">Video ID <small class="text-muted">(e.g., dQw4w9WgXcQ)</small></label>
+                            <label class="form-label">Video ID <small class="text-muted">(bijv. dQw4w9WgXcQ)</small></label>
                             <input type="text" name="videoId" class="form-control" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Title</label>
+                            <label class="form-label">Titel</label>
                             <input type="text" name="title" class="form-control">
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+                        <button type="submit" class="btn btn-primary">Toevoegen</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Error Modal -->
-    <div class="modal fade" id="errorModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Error</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="errorModalMessage"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
 {% endblock %}
 
 {% block javascripts %}

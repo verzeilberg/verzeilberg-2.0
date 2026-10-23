@@ -109,7 +109,7 @@ class AgendaGoogleControllerTest extends WebTestCase
 
         // Choose the club calendar
         $crawler = $this->client->request('GET', '/admin/agenda/google/' . $accountId . '/calendars');
-        $this->assertSame(['Prive', 'Handbal'], $crawler->filter('.list-group-item')->each(fn ($row) => trim((string) preg_replace('/\s+main calendar/', '', $row->text()))));
+        $this->assertSame(['Prive', 'Handbal'], $crawler->filter('.list-group-item')->each(fn ($row) => trim((string) preg_replace('/\s+hoofdagenda/', '', $row->text()))));
         $this->client->request('POST', '/admin/agenda/google/' . $accountId . '/calendars', [
             '_token' => $crawler->filter('input[name="_token"]')->attr('value'),
             'calendars' => ['club@group.calendar.google.com'],

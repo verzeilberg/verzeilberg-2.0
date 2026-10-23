@@ -18,22 +18,22 @@ class CategoryType extends AbstractType
     {
         $builder
             ->add('name', TextType::class, [
-                'label' => 'Name',
-                'attr' => ['placeholder' => 'Category name'],
+                'label' => 'Naam',
+                'attr' => ['placeholder' => 'Naam van de categorie'],
             ])
             ->add('slug', TextType::class, [
                 'label' => 'Slug (URL)',
                 'required' => false,
-                'attr' => ['placeholder' => 'Auto-generated from name'],
-                'help' => 'Leave empty to auto-generate from name',
+                'attr' => ['placeholder' => 'Wordt automatisch gemaakt uit de naam'],
+                'help' => 'Laat leeg om automatisch uit de naam te maken',
             ])
             ->add('description', TextareaType::class, [
-                'label' => 'Description',
+                'label' => 'Beschrijving',
                 'required' => false,
-                'attr' => ['rows' => 3, 'placeholder' => 'Optional description'],
+                'attr' => ['rows' => 3, 'placeholder' => 'Optionele beschrijving'],
             ])
             ->add('enabled', CheckboxType::class, [
-                'label' => 'Enabled',
+                'label' => 'Actief',
                 'required' => false,
             ]);
     }

@@ -19,18 +19,18 @@ class ResetPasswordFormType extends AbstractType
     {
         $builder
             ->add('plainPassword', PasswordType::class, [
-                'label' => 'New Password',
-                'attr' => ['placeholder' => 'Enter new password', 'autocomplete' => 'new-password'],
+                'label' => 'Nieuw wachtwoord',
+                'attr' => ['placeholder' => 'Nieuw wachtwoord', 'autocomplete' => 'new-password'],
                 'constraints' => [
-                    new NotBlank(message: 'Please enter a password'),
-                    new Length(min: 8, max: 4096, minMessage: 'Your password should be at least {{ limit }} characters'),
+                    new NotBlank(message: 'Vul een wachtwoord in'),
+                    new Length(min: 8, max: 4096, minMessage: 'Je wachtwoord moet minstens {{ limit }} tekens lang zijn'),
                 ],
             ])
             ->add('confirmPassword', PasswordType::class, [
-                'label' => 'Confirm Password',
-                'attr' => ['placeholder' => 'Confirm new password', 'autocomplete' => 'new-password'],
+                'label' => 'Herhaal wachtwoord',
+                'attr' => ['placeholder' => 'Bevestig nieuw wachtwoord', 'autocomplete' => 'new-password'],
                 'constraints' => [
-                    new NotBlank(message: 'Please confirm your password'),
+                    new NotBlank(message: 'Herhaal je wachtwoord'),
                 ],
             ]);
     }

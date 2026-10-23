@@ -1,0 +1,46 @@
+{% form_theme form 'bootstrap_5_layout.html.twig' %}
+{{ form_start(form) }}
+{{ form_errors(form) }}
+<div class="row">
+    <div class="col-md-5">{{ form_row(form.name) }}</div>
+    <div class="col-md-7">{{ form_row(form.description) }}</div>
+</div>
+
+{% if role.name == 'ROLE_ADMIN' %}
+    <div class="alert alert-warning small">
+        <i class="fas fa-crown me-1"></i>ROLE_ADMIN heeft altijd alle rechten en kan het hele beheer openen;
+        de vinkjes hieronder maken voor deze rol geen verschil.
+    </div>
+{% endif %}
+
+<hr class="my-4">
+<h6>{{ form_label(form.parentRoles) }}</h6>
+<div class="d-flex flex-wrap gap-3 mb-1">
+    {% for child in form.parentRoles %}
+        {{ form_widget(child) }}
+    {% else %}
+        <span class="text-muted">Geen andere rollen.</span>
+    {% endfor %}
+</div>
+{{ form_errors(form.parentRoles) }}
+<div class="form-text mb-3">{{ form.parentRoles.vars.help }}</div>
+
+<hr class="my-4">
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h6 class="mb-0">{{ form_label(form.permissions) }}</h6>
+    <a href="{{ path('admin_permission_index') }}" class="small">Rechten beheren</a>
+</div>
+<p class="form-text">
+    Vink <code>admin.access</code> aan om gebruikers met deze rol toegang tot het beheer te geven; welke onderdelen ze daar zien,
+    stel je in bij <a href="{{ path('admin_route_permission_index') }}">Routerechten</a>.
+</p>
+{% include 'admin/_grouped_checkboxes.html.twig' with {field: form.permissions} %}
+{{ form_errors(form.permissions) }}
+
+<div class="form-actions-bar">
+    <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save me-1"></i>{{ role.id ? 'Wijzigingen opslaan' : 'Rol aanmaken' }}
+    </button>
+    <a href="{{ path('admin_role_index') }}" class="btn btn-secondary">Annuleren</a>
+</div>
+{{ form_end(form) }}

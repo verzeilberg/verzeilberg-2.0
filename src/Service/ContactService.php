@@ -19,7 +19,8 @@ class ContactService
         private ContactRepository $contactRepository,
         private EntityManagerInterface $em,
         private MailerInterface $mailer,
-        private Environment $twig
+        private Environment $twig,
+        private string $notificationEmail,
     ) {
     }
 
@@ -79,7 +80,7 @@ public function sendConfirmationEmail(Contact $contact): void
     {
         $email = (new Email())
             ->from(new Address('noreply@verzeilberg.nl', 'Verzeilberg'))
-            ->to('sander@verzeilberg.nl')
+            ->to($this->notificationEmail)
             ->subject('Nieuw contactformulier: ' . $contact->getSubject())
             ->html($this->twig->render('email/contact_notification.html.twig', [
                 'contact' => $contact,

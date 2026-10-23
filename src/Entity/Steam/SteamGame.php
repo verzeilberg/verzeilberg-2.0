@@ -85,12 +85,21 @@ class SteamGame
     #[ORM\Column(nullable: true)]
     private ?int $achievementsPlaytime = null;
 
+    /** Steam refuses this player's progress for the game ("Profile is not public": the game is marked private in Steam) */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $achievementsPrivate = false;
+
     /** Hidden on the public pages (chosen in the admin) */
     #[ORM\Column(options: ['default' => false])]
     private bool $hidden = false;
 
     #[ORM\Column]
     private \DateTimeImmutable $addedAt;
+
+    /** Owning side (review_id here), so the review is only loaded when it's used */
+    #[ORM\OneToOne(inversedBy: 'game', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\JoinColumn(name: 'review_id', nullable: true, onDelete: 'SET NULL')]
+    private ?SteamGameReview $review = null;
 
     public function __construct(int $appId)
     {
@@ -314,9 +323,10 @@ class SteamGame
         return $this->achievementsUnlocked;
     }
 
+    /** Achievements with known progress (not for a game whose progress is private) */
     public function hasAchievements(): bool
     {
-        return ($this->achievementsTotal ?? 0) > 0;
+        return !$this->achievementsPrivate && ($this->achievementsTotal ?? 0) > 0;
     }
 
     /** Percentage of the achievements unlocked, null when the game has none (or they weren't read yet) */
@@ -330,14 +340,38 @@ class SteamGame
         $this->achievementsUnlocked = $unlocked;
         $this->achievementsTotal = $total;
         $this->achievementsPlaytime = $this->playtimeForever;
+        $this->achievementsPrivate = false;
 
         return $this;
     }
 
-    /** Achievements may have changed: never read, or played since the last read */
+    /**
+     * Steam won't give this player's progress for the game; only the number of achievements is known.
+     *
+     * @param int|null $total from the game's public achievement list, null when that isn't known either
+     */
+    public function setAchievementsPrivate(?int $total): self
+    {
+        $this->achievementsPrivate = true;
+        $this->achievementsUnlocked = null;
+        $this->achievementsTotal = $total;
+        $this->achievementsPlaytime = $this->playtimeForever;
+
+        return $this;
+    }
+
+    public function isAchievementsPrivate(): bool
+    {
+        return $this->achievementsPrivate;
+    }
+
+    /**
+     * Achievements may have changed: never read, played since the last read, or private in Steam
+     * (asked again every sync, so making the game public again in Steam is picked up)
+     */
     public function needsAchievementRefresh(): bool
     {
-        return $this->playtimeForever > 0 && $this->achievementsPlaytime !== $this->playtimeForever;
+        return $this->playtimeForever > 0 && ($this->achievementsPrivate || $this->achievementsPlaytime !== $this->playtimeForever);
     }
 
     public function isHidden(): bool
@@ -355,5 +389,24 @@ class SteamGame
     public function getAddedAt(): \DateTimeImmutable
     {
         return $this->addedAt;
+    }
+
+    /** My review, also when it's a draft */
+    public function getReview(): ?SteamGameReview
+    {
+        return $this->review;
+    }
+
+    /** The review visitors may see */
+    public function getPublishedReview(): ?SteamGameReview
+    {
+        return $this->review?->isPublished() ? $this->review : null;
+    }
+
+    public function setReview(?SteamGameReview $review): self
+    {
+        $this->review = $review;
+
+        return $this;
     }
 }

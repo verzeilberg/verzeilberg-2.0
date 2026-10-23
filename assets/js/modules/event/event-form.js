@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
         position: {lat: existingLat, lng: existingLng},
         map: map,
         draggable: true,
-        title: 'Drag to adjust location'
+        title: 'Sleep om de locatie aan te passen'
     });
     
     marker.addListener('dragend', function() {
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     var input = document.createElement('input');
     input.type = 'text';
-    input.placeholder = 'Search for a location...';
+    input.placeholder = 'Zoek een locatie...';
     input.className = 'form-control mb-2';
     input.style.maxWidth = '100%';
     document.getElementById('eventMap').parentNode.insertBefore(input, document.getElementById('eventMap'));
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showCropperModal(file) {
         if (!file.type.match('image.*')) {
-            alert('Please select an image file.');
+            AppDialog.alert('Kies een afbeeldingsbestand.');
             return;
         }
 
@@ -103,16 +103,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 const minHeight = 675;
                 
                 if (this.width < minWidth || this.height < minHeight) {
-                    const proceed = confirm(
-                        `⚠️ Waarschuwing: De afbeelding is ${this.width}x${this.height}px.\n` +
+                    AppDialog.confirm(
+                        `De afbeelding is ${this.width}x${this.height}px.\n` +
                         `Aanbevolen minimum: ${minWidth}x${minHeight}px (16:9).\n` +
-                        `De afbeelding kan onscherp verschijnen op grote schermen.\n\n` +
-                        `Toch doorgaan?`
-                    );
-                    if (!proceed) {
-                        imageInput.value = '';
-                        return;
-                    }
+                        `De afbeelding kan onscherp verschijnen op grote schermen.`,
+                        { title: 'Kleine afbeelding', confirmLabel: 'Toch doorgaan', confirmClass: 'btn-warning' }
+                    ).then(proceed => {
+                        if (proceed) {
+                            cropperModal.show();
+                        } else {
+                            imageInput.value = '';
+                        }
+                    });
+                    return;
                 }
                 
                 cropperModal.show();

@@ -12,10 +12,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/contact')]
-#[IsGranted('ROLE_ADMIN')]
 class ContactController extends AbstractController
 {
     public function __construct(
@@ -36,6 +34,11 @@ class ContactController extends AbstractController
     #[Route('/{id}', name: 'admin_contact_show', methods: ['GET'])]
     public function show(Contact $contact): Response
     {
+        if (!$contact->isRead()) {
+            $contact->markRead();
+            $this->contactService->saveContact($contact);
+        }
+
         return $this->render('admin/contact/show.html.twig', [
             'contact' => $contact,
         ]);

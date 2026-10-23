@@ -26,7 +26,7 @@ class FlipClock {
             
             const labelEl = document.createElement('div');
             labelEl.className = 'flip-label';
-            labelEl.textContent = unit.charAt(0).toUpperCase() + unit.slice(1);
+            labelEl.textContent = { days: 'Dagen', hours: 'Uren', minutes: 'Minuten', seconds: 'Seconden' }[unit];
             
             unitEl.appendChild(cardEl);
             unitEl.appendChild(labelEl);

@@ -18,10 +18,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/imap')]
-#[IsGranted('ROLE_ADMIN')]
 class ImapController extends AbstractController
 {
     public function __construct(
@@ -106,7 +104,7 @@ class ImapController extends AbstractController
     public function messageRead(Request $request, EmailMessage $message): JsonResponse
     {
         if (!$this->isCsrfTokenValid('read' . $message->getId(), $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $this->imapService->markAsRead($message);
@@ -118,7 +116,7 @@ class ImapController extends AbstractController
     public function messageUnread(Request $request, EmailMessage $message): JsonResponse
     {
         if (!$this->isCsrfTokenValid('unread' . $message->getId(), $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $this->imapService->markAsUnread($message);
@@ -130,7 +128,7 @@ class ImapController extends AbstractController
     public function messageDelete(Request $request, EmailMessage $message): JsonResponse
     {
         if (!$this->isCsrfTokenValid('delete' . $message->getId(), $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $this->imapService->deleteMessage($message);
@@ -142,7 +140,7 @@ class ImapController extends AbstractController
     public function messageBulkDelete(Request $request, EmailAccount $account): Response
     {
         if (!$this->isCsrfTokenValid('bulk_delete' . $account->getId(), $request->request->get('_token'))) {
-            $this->addFlash('error', 'Invalid token');
+            $this->addFlash('error', 'Ongeldig beveiligingstoken');
             return $this->redirectToRoute('admin_imap_messages', ['id' => $account->getId()]);
         }
 
@@ -150,7 +148,7 @@ class ImapController extends AbstractController
         $folder = $request->request->get('folder', 'INBOX');
 
         if (!$messageIds) {
-            $this->addFlash('error', 'No messages selected');
+            $this->addFlash('error', 'Geen berichten geselecteerd');
             return $this->redirectToRoute('admin_imap_messages', ['id' => $account->getId(), 'folder' => $folder]);
         }
 
@@ -171,10 +169,10 @@ class ImapController extends AbstractController
         }
 
         if ($deleted > 0) {
-            $this->addFlash('success', "Permanently deleted {$deleted} message(s)");
+            $this->addFlash('success', "{$deleted} bericht(en) definitief verwijderd");
         }
         if ($failed > 0) {
-            $this->addFlash('error', "Failed to delete {$failed} message(s)");
+            $this->addFlash('error', "{$failed} bericht(en) konden niet worden verwijderd");
         }
 
         return $this->redirectToRoute('admin_imap_messages', ['id' => $account->getId(), 'folder' => $folder]);
@@ -184,12 +182,12 @@ class ImapController extends AbstractController
     public function messageMove(Request $request, EmailMessage $message): JsonResponse
     {
         if (!$this->isCsrfTokenValid('move' . $message->getId(), $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $folder = $request->request->get('folder');
         if (!$folder) {
-            return new JsonResponse(['success' => false, 'message' => 'Folder required']);
+            return new JsonResponse(['success' => false, 'message' => 'Map is verplicht']);
         }
 
         try {
@@ -204,7 +202,7 @@ class ImapController extends AbstractController
     public function sync(Request $request, EmailAccount $account): JsonResponse
     {
         if (!$this->isCsrfTokenValid('sync' . $account->getId(), $request->request->get('_token'))) {
-            return new JsonResponse(['success' => false, 'message' => 'Invalid token']);
+            return new JsonResponse(['success' => false, 'message' => 'Ongeldig beveiligingstoken']);
         }
 
         $folder = $request->request->get('folder', 'INBOX');
@@ -263,9 +261,9 @@ class ImapController extends AbstractController
             );
 
             if ($success) {
-                $this->addFlash('success', 'Email sent successfully!');
+                $this->addFlash('success', 'E-mail verstuurd!');
             } else {
-                $this->addFlash('error', 'Failed to send email. Check SMTP settings.');
+                $this->addFlash('error', 'E-mail versturen mislukt. Controleer de SMTP-instellingen.');
             }
 
             return $this->redirectToRoute('admin_imap_compose');
@@ -284,15 +282,12 @@ class ImapController extends AbstractController
         $arrayIndex = $partNumber - 1;
         
         if (!isset($attachmentArray[$arrayIndex])) {
-            throw $this->createNotFoundException('Attachment index out of bounds');
+            throw $this->createNotFoundException('Bijlage niet gevonden');
         }
         
         $storedAttachment = $attachmentArray[$arrayIndex];
         $attachmentName = $storedAttachment['name'] ?? null;
         $attachmentId = $storedAttachment['id'] ?? null;
-
-        // Debug: log what we're looking for
-        error_log("DEBUG: Looking for attachment: name='$attachmentName', id='$attachmentId', partNumber=$partNumber, UID={$message->getUid()}, Folder={$message->getFolder()}");
 
         $attachment = $this->imapService->getAttachment(
             $message->getAccount(),
@@ -304,7 +299,7 @@ class ImapController extends AbstractController
         );
 
         if (!$attachment) {
-            throw $this->createNotFoundException('Attachment not found. Part number: ' . $partNumber . ', UID: ' . $message->getUid() . ', Folder: ' . $message->getFolder());
+            throw $this->createNotFoundException('Bijlage niet gevonden. Onderdeelnummer: ' . $partNumber . ', UID: ' . $message->getUid() . ', map: ' . $message->getFolder());
         }
 
         // If we have a filePath, stream the file directly to avoid memory issues
@@ -345,6 +340,6 @@ class ImapController extends AbstractController
             return $response;
         }
 
-        throw $this->createNotFoundException('Attachment content not available');
+        throw $this->createNotFoundException('Inhoud van de bijlage is niet beschikbaar');
     }
 }

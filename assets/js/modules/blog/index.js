@@ -4,13 +4,7 @@
  */
 (function () {
     function showError(message) {
-        const errorModal = document.getElementById('errorModal');
-        if (errorModal) {
-            document.getElementById('errorModalMessage').textContent = message;
-            new bootstrap.Modal(errorModal).show();
-        } else {
-            alert(message);
-        }
+        AppDialog.alert(message);
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -54,10 +48,10 @@
                         deletePostModal.hide();
                         location.reload();
                     } else {
-                        showError(data.message || 'Unknown error');
+                        showError(data.message || 'Onbekende fout');
                     }
                 })
-                .catch(err => showError('Request failed: ' + err.message));
+                .catch(err => showError('Verzoek mislukt: ' + err.message));
         });
 
         document.querySelectorAll('.change-status').forEach(link => {
@@ -77,7 +71,7 @@
                         if (data.success) {
                             const badge = document.querySelector('.status-badge[data-post-id="' + postId + '"]');
                             if (badge) {
-                                badge.textContent = ['Draft', 'Online', 'Offline', 'Archived'][data.status] || 'Unknown';
+                                badge.textContent = ['Concept', 'Online', 'Offline', 'Gearchiveerd'][data.status] || 'Onbekend';
                                 badge.className = 'badge bg-' + ['secondary', 'success', 'warning', 'danger'][data.status] + ' status-badge';
                             }
                         }

@@ -21,6 +21,13 @@ security:
             lazy: true
             provider: app_user_provider
             context: primary_auth
+            user_checker: App\Security\UserChecker
+            access_denied_handler: App\Security\AccessDeniedHandler
+
+            # 5 wrong passwords per email address and IP address in 15 minutes, then a wait
+            login_throttling:
+                max_attempts: 5
+                interval: '15 minutes'
 
             form_login:
                 login_path: app_login
@@ -37,11 +44,24 @@ security:
                 lifetime: 604800
                 path: /
 
+            # After the password, users with two-factor switched on enter a code (see scheb_2fa.yaml)
+            two_factor:
+                auth_form_path: 2fa_login
+                check_path: 2fa_login_check
+                default_target_path: app_home
+                enable_csrf: true
+                trusted_parameter_name: _trusted
+
     access_control:
-        - { path: ^/admin, roles: ROLE_ADMIN }
+        # Halfway a login (password done, code still to come) only the code form and logout are reachable
+        - { path: ^/logout, roles: PUBLIC_ACCESS }
+        - { path: ^/2fa, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
+        # Entering the admin needs the admin.access permission (ROLE_ADMIN has every permission);
+        # each admin page is then checked by App\EventListener\RoutePermissionListener
+        - { path: ^/admin, roles: PERM_admin.access }
         - { path: ^/profile, roles: ROLE_USER }
         - { path: ^/login$, roles: PUBLIC_ACCESS }
-        - { path: ^/register$, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/forgot-password$, roles: PUBLIC_ACCESS }
         - { path: ^/reset-password/, roles: PUBLIC_ACCESS }
 

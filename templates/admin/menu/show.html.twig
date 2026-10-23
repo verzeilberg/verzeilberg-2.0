@@ -1,38 +1,37 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}{{ menu.name }} - Menu Items{% endblock %}
+{% block title %}{{ menu.name }} - Menu-items{% endblock %}
 
 {% block body %}
-{% include 'admin/partials/delete_modal.html.twig' %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1><i class="fas fa-bars me-2"></i>{{ menu.name }}</h1>
-        <nav aria-label="breadcrumb">
+        <nav aria-label="Kruimelpad">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ path('admin_menu_index') }}">Menus</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('admin_menu_index') }}">Menu's</a></li>
                 <li class="breadcrumb-item active">{{ menu.name }}</li>
             </ol>
         </nav>
     </div>
     <div class="btn-group">
         <a href="{{ path('admin_menu_item_new', {id: menu.id}) }}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i>Add Item
+            <i class="fas fa-plus me-1"></i>Item toevoegen
         </a>
         <a href="{{ path('admin_menu_edit', {id: menu.id}) }}" class="btn btn-outline-secondary">
-            <i class="fas fa-edit me-1"></i>Edit Menu
+            <i class="fas fa-edit me-1"></i>Menu bewerken
         </a>
     </div>
 </div>
 
 {% if rootItems is empty %}
     <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>No items in this menu yet. Add your first menu item!
+        <i class="fas fa-info-circle me-2"></i>Dit menu heeft nog geen items. Voeg je eerste menu-item toe!
     </div>
 {% else %}
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0">Menu Structure (Drag & Drop to Reorder)</h5>
+            <h5 class="mb-0">Menustructuur (sleep om te ordenen)</h5>
         </div>
         <div class="card-body p-0">
             <ul class="list-group list-group-flush sortable-menu" data-menu-id="{{ menu.id }}">
@@ -50,5 +49,7 @@
     {{ parent() }}
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="{{ asset('js/components/ajax-delete.js') }}"></script>
-    <script src="{{ asset('js/modules/menu/show.js') }}" data-reorder-url="{{ path('admin_menu_item_reorder', {id: '__ID__'}) }}"></script>
+    <script src="{{ asset('js/modules/menu/show.js') }}"
+            data-reorder-url="{{ path('admin_menu_reorder', {id: menu.id}) }}"
+            data-csrf-token="{{ csrf_token('menu_reorder' ~ menu.id) }}"></script>
 {% endblock %}

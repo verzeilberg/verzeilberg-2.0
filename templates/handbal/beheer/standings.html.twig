@@ -44,58 +44,37 @@
 {% endif %}
 
 {% if standings.spelers|length > 0 %}
+    {# Same structure as the public page: one combined ranking, then the detail per round #}
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-running me-2"></i>Spelers & Keepers</h5>
+            <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Gecombineerde stand</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped table-hover standings-table">
+                <table class="table table-striped table-hover standings-table mb-0">
                     <thead class="table-dark">
                         <tr>
-                            <th rowspan="2" class="min-w-200px">Naam</th>
-                            {% for ronde in rondes %}
-                                <th class="score-header">
-                                    <span class="date">{{ ronde.datum|date('d-m') }}</span>
-                                </th>
-                            {% endfor %}
-                            <th rowspan="2">Doelpunten</th>
-                            <th rowspan="2">Gemiddelde</th>
-                        </tr>
-                        <tr class="table-dark">
-                            {% for ronde in rondes %}
-                                <th></th>
-                            {% endfor %}
+                            <th class="w-60px text-start">Pos</th>
+                            <th class="text-start">Speler</th>
+                            <th class="w-100px">Doelp./Redd.</th>
+                            <th class="w-100px">Gemiddelde</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in standings.spelers %}
                             <tr class="{{ item.is_keeper ? 'keeper-row' : '' }}">
-                                <td class="align-middle">
-                                    <strong>{{ item.speler.naam }}</strong>
+                                <td class="text-start"><strong>{{ loop.index }}</strong></td>
+                                <td class="text-start text-nowrap">
+                                    {{ item.speler.naam }}
                                     {% if item.speler.rugnummer %}
                                         <span class="badge bg-secondary ms-1">#{{ item.speler.rugnummer }}</span>
                                     {% endif %}
                                     {% if item.is_keeper %}
-                                        <span class="badge bg-warning text-dark ms-1">Keeper</span>
+                                        <span class="badge bg-warning text-dark ms-1" title="{{ item.doelpunten }} van {{ item.maxMogelijk }} mogelijke reddingen">Keeper</span>
                                     {% endif %}
                                 </td>
-                                {% for ronde in rondes %}
-                                    <td class="score-cell align-middle">
-                                        {% set score = scoresBySpelerAndRonde[item.speler.id][ronde.id] ?? null %}
-                                        {% if score %}
-                                            {% if score.gescored %}
-                                                <span class="score-goal"><i class="fas fa-futbol"></i></span>
-                                            {% else %}
-                                                <span class="score-save"><i class="fas fa-shield-alt"></i></span>
-                                            {% endif %}
-                                        {% else %}
-                                            <span class="score-empty">-</span>
-                                        {% endif %}
-                                    </td>
-                                {% endfor %}
-                                <td class="align-middle fw-bold">{{ item.doelpunten }}</td>
-                                <td class="align-middle fw-bold">{{ item.gemiddelde }}</td>
+                                <td>{{ item.doelpunten }}</td>
+                                <td>{{ (item.gemiddelde * 100)|number_format(0, '.', ',') }}%</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -104,60 +83,58 @@
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Keepers overzicht (Reddingen)</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover standings-table">
-                    <thead class="table-dark">
-                        <tr>
-                            <th rowspan="2" class="min-w-200px">Keeper</th>
-                            {% for ronde in rondes %}
-                                <th class="score-header">
-                                    <span class="date">{{ ronde.datum|date('d-m') }}</span>
-                                </th>
-                            {% endfor %}
-                            <th rowspan="2">Reddingen</th>
-                            <th rowspan="2">Max mogelijk</th>
-                            <th rowspan="2">Gemiddelde</th>
-                        </tr>
-                        <tr class="table-dark">
-                            {% for ronde in rondes %}
-                                <th></th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in standings.keepers %}
+    {% if rondes|length > 0 %}
+        {% set players = standings.spelers|filter(item => not item.is_keeper) %}
+        {% set keepers = standings.spelers|filter(item => item.is_keeper) %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Detail per ronde</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover standings-table mb-0">
+                        <thead class="table-dark">
                             <tr>
-                                <td class="align-middle">
-                                    <strong>{{ item.keeper.naam }}</strong>
-                                    {% if item.keeper.rugnummer %}
-                                        <span class="badge bg-secondary ms-1">#{{ item.keeper.rugnummer }}</span>
-                                    {% endif %}
-                                </td>
-                                {% for ronde in rondes %}
-                                    <td class="score-cell align-middle">
-                                        {% set reddingen = keeperScoresByRonde[item.keeper.id][ronde.id] ?? 0 %}
-                                        {% if reddingen > 0 %}
-                                            <span class="score-save">{{ reddingen }}</span>
-                                        {% else %}
-                                            <span class="score-empty">-</span>
-                                        {% endif %}
-                                    </td>
+                                <th class="w-120px">Ronde</th>
+                                {% for item in players %}
+                                    <th>{{ item.speler.naam }}</th>
                                 {% endfor %}
-                                <td class="align-middle fw-bold">{{ item.reddingen }}</td>
-                                <td class="align-middle">{{ item.maxMogelijk }}</td>
-                                <td class="align-middle fw-bold">{{ item.gemiddelde }}</td>
+                                {% for item in keepers %}
+                                    <th>
+                                        {{ item.speler.naam }}
+                                        <span class="badge bg-warning text-dark ms-1" title="Keeper: aantal reddingen">K</span>
+                                    </th>
+                                {% endfor %}
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {% for ronde in rondes %}
+                                <tr>
+                                    <td class="text-nowrap">{{ ronde.datum|date('d-m-Y') }}</td>
+                                    {% for item in players %}
+                                        {% set score = scoresBySpelerAndRonde[item.speler.id][ronde.id] ?? null %}
+                                        <td class="score-cell">
+                                            {% if score is null %}
+                                                {# Admin only: a round without an entered score, so it can be filled in #}
+                                                <span class="score-empty" title="Geen score ingevoerd">-</span>
+                                            {% elseif score.gescored %}
+                                                <span class="score-mark score-mark-yes" role="img" aria-label="Gescoord">✓</span>
+                                            {% else %}
+                                                <span class="score-mark score-mark-no" role="img" aria-label="Gemist">✗</span>
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                    {% for item in keepers %}
+                                        <td class="score-cell keeper-col">{{ keeperScoresByRonde[item.speler.id][ronde.id] ?? 0 }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
+    {% endif %}
 
     <div class="alert alert-secondary">
         <i class="fas fa-info-circle me-2"></i>

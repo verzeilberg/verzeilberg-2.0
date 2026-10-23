@@ -9,8 +9,20 @@
 .standings-table th:first-child {
     text-align: left;
 }
-.keeper-row {
-    background-color: #fff3cd !important;
+/* Keepers among the players: Bootstrap paints table backgrounds on the cells (and stripes on top),
+   so the colour goes through its table variables instead of on the row */
+.standings-table > tbody > tr.keeper-row > *,
+.standings-table > tbody > tr > td.keeper-col {
+    --bs-table-bg: #fff3cd;
+    --bs-table-bg-type: #fff3cd;
+    --bs-table-color-type: #212529;
+}
+.standings-table.table-hover > tbody > tr.keeper-row:hover > *,
+.standings-table.table-hover > tbody > tr:hover > td.keeper-col {
+    --bs-table-bg-state: #ffe69c;
+}
+.standings-table > tbody > tr.keeper-row > td:first-child {
+    box-shadow: inset 4px 0 0 #ffc107, inset 0 0 0 9999px var(--bs-table-bg-state, var(--bs-table-bg-type, var(--bs-table-accent-bg)));
 }
 .score-cell {
     text-align: center;

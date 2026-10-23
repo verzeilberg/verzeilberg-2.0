@@ -1,101 +1,91 @@
 {% extends 'admin/base.html.twig' %}
 
-{% block title %}Route Permissions - Admin{% endblock %}
+{% block title %}Routerechten - Beheer{% endblock %}
 
 {% block body %}
-{% include 'admin/partials/delete_modal.html.twig' %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="fas fa-route me-2"></i>Route Permissions</h1>
+    <h1><i class="fas fa-route me-2"></i>Routerechten</h1>
     <a href="{{ path('admin_route_permission_new') }}" class="btn btn-primary">
-        <i class="fas fa-plus me-1"></i>New Rule
+        <i class="fas fa-plus me-1"></i>Nieuwe regel
     </a>
 </div>
 
 <div class="alert alert-info">
     <i class="fas fa-info-circle me-2"></i>
-    <strong>How it works:</strong> Define which routes require which permissions. Rules are checked in priority order (highest first).
-    Use <code class="bg-light px-1">{id}</code> for route parameters. Leave methods empty to match all HTTP methods.
+    <strong>Zo werkt het:</strong> admins (ROLE_ADMIN) kunnen alles openen. Andere gebruikers komen in het beheer als een van hun
+    rollen het recht <code>{{ adminAccessPermission }}</code> heeft{% if rolesWithAdminAccess %} (nu: {{ rolesWithAdminAccess|join(', ') }}){% else %} (nog geen enkele rol){% endif %},
+    en zien dan alleen de onderdelen die een regel hieronder voor ze openzet. Zonder regel blijft een onderdeel alleen voor admins.
+    <br>Stappen: <a href="{{ path('admin_permission_index') }}">maak een recht aan</a> →
+    vink het aan bij een <a href="{{ path('admin_role_index') }}">rol</a> →
+    voeg hier een regel toe die routes eraan koppelt.
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3">
-            <div class="col-md-8">
-                <label class="form-label">Search</label>
-                <input type="text" name="search" class="form-control" placeholder="Search route, permission, description..." value="{{ search }}">
-            </div>
-            <div class="col-md-4 d-flex align-items-end">
-                <a href="{{ path('admin_route_permission_index') }}" class="btn btn-outline-secondary w-100">
-                    <i class="fas fa-times me-1"></i>Clear
-                </a>
-            </div>
-        </form>
+<h2 class="h5 mt-4">Regels</h2>
+<form method="GET" class="row g-2 mb-3">
+    <div class="col-md-8">
+        <input type="text" name="search" class="form-control" placeholder="Zoek op route, recht, notitie..." value="{{ search }}">
     </div>
-</div>
+    <div class="col-md-4 d-flex gap-2">
+        <button type="submit" class="btn btn-outline-primary flex-fill"><i class="fas fa-search me-1"></i>Zoeken</button>
+        <a href="{{ path('admin_route_permission_index') }}" class="btn btn-outline-secondary flex-fill"><i class="fas fa-times me-1"></i>Wissen</a>
+    </div>
+</form>
 
-{% if pagination.getTotalItemCount() == 0 %}
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>No route permissions configured. <a href="{{ path('admin_route_permission_new') }}">Create one</a>.
+{% if rules is empty %}
+    <div class="alert alert-light border">
+        Geen regels{% if search %} gevonden voor "{{ search }}"{% endif %}. Elk onderdeel van het beheer is alleen voor admins.
+        Gebruik <strong>Regel toevoegen</strong> in het overzicht hieronder om een onderdeel voor een recht open te zetten.
     </div>
 {% else %}
     <div class="table-responsive">
-        <table class="table table-hover">
+        <table class="table table-hover align-middle">
             <thead>
                 <tr>
-                    <th>Route Pattern</th>
-                    <th>Permission</th>
-                    <th>Methods</th>
-                    <th>Priority</th>
+                    <th>Route(s)</th>
+                    <th>Recht</th>
+                    <th>Methoden</th>
                     <th>Status</th>
-                    <th>Description</th>
-                    <th class="text-end">Actions</th>
+                    <th>Notitie</th>
+                    <th class="text-end">Acties</th>
                 </tr>
             </thead>
             <tbody>
-                {% for rp in pagination %}
-                <tr>
+                {% for rp in rules %}
+                <tr class="{{ rp.enabled ? '' : 'text-muted' }}">
+                    <td><code class="text-break">{{ rp.routePattern }}</code></td>
+                    <td><span class="badge bg-primary">{{ rp.permission.name }}</span></td>
                     <td>
-                        <code class="text-break">{{ rp.routePattern }}</code>
-                    </td>
-                    <td>
-                        <span class="badge bg-primary">{{ rp.permissionName }}</span>
-                        <small class="text-muted ms-1">(PERM_{{ rp.permissionName }})</small>
-                    </td>
-                    <td>
-                        {% if rp.methods %}
-                            {% for method in rp.methods %}
-                                <span class="badge bg-secondary me-1">{{ method }}</span>
-                            {% endfor %}
+                        {% for method in rp.methods ?? [] %}
+                            <span class="badge bg-secondary me-1">{{ method }}</span>
                         {% else %}
-                            <span class="text-muted">All</span>
-                        {% endif %}
+                            <span class="text-muted">Alle</span>
+                        {% endfor %}
                     </td>
-                    <td>{{ rp.priority }}</td>
                     <td>
                         {% if rp.enabled %}
-                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Enabled</span>
+                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Actief</span>
                         {% else %}
-                            <span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>Disabled</span>
+                            <span class="badge bg-secondary"><i class="fas fa-ban me-1"></i>Inactief</span>
                         {% endif %}
                     </td>
-                    <td>{{ rp.description|slice(0, 60) }}{% if rp.description and rp.description|length > 60 %}...{% endif %}</td>
-                    <td class="text-end">
-                        <a href="{{ path('admin_route_permission_edit', {id: rp.id}) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                    <td>{{ (rp.description ?? '')|u.truncate(60, '...') }}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="{{ path('admin_route_permission_edit', {id: rp.id}) }}" class="btn btn-sm btn-outline-primary" title="Bewerken">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <button type="button" class="btn btn-sm btn-outline-secondary toggle-rp" 
+                        <button type="button" class="btn btn-sm btn-outline-secondary toggle-rp"
                                 data-toggle-url="{{ path('admin_route_permission_toggle', {id: rp.id}) }}"
                                 data-csrf-token="{{ csrf_token('toggle_rp' ~ rp.id) }}"
-                                title="{{ rp.enabled ? 'Disable' : 'Enable' }}">
+                                title="{{ rp.enabled ? 'Uitschakelen' : 'Inschakelen' }}">
                             <i class="fas fa-{{ rp.enabled ? 'toggle-on' : 'toggle-off' }}"></i>
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-danger js-ajax-delete"
                                 data-delete-url="{{ path('admin_route_permission_delete', {id: rp.id}) }}"
-                                data-delete-message="Delete route permission for &quot;{{ rp.routePattern }}&quot;?"
-                                data-error-message="Failed to delete"
+                                data-delete-message="De regel voor &quot;{{ rp.routePattern }}&quot; verwijderen?"
+                                data-error-message="Verwijderen mislukt"
                                 data-csrf-token="{{ csrf_token('delete' ~ rp.id) }}"
-                                title="Delete">
+                                title="Verwijderen">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -104,11 +94,52 @@
             </tbody>
         </table>
     </div>
-
-    <nav aria-label="Route permissions pagination">
-        {{ knp_pagination_render(pagination) }}
-    </nav>
+    <p class="small text-muted">Als meerdere regels bij een route passen, wint de meest specifieke: een exacte routenaam gaat voor een wildcard, een langer patroon voor een korter.</p>
 {% endif %}
+
+<h2 class="h5 mt-5">Wie kan wat openen</h2>
+<p class="text-muted small">Elk onderdeel van het beheer, met het recht dat het openzet. Klik op een onderdeel om de pagina's te zien.</p>
+<div class="list-group mb-4">
+    {% for section in sections %}
+        <details class="list-group-item">
+            <summary class="d-flex flex-wrap align-items-center gap-2">
+                <strong class="me-2">{{ section.name }}</strong>
+                <code class="small text-muted">{{ section.pattern }}</code>
+                <span class="ms-auto d-flex flex-wrap gap-1 align-items-center">
+                    {% if section.adminOnly %}
+                        <span class="badge bg-dark" title="Altijd alleen voor admins"><i class="fas fa-lock me-1"></i>Alleen admins (vast)</span>
+                    {% else %}
+                        {% for permission, roles in section.permissions %}
+                            <span class="badge bg-primary" title="Rollen: {{ roles is empty ? 'nog geen' : roles|join(', ') }}">
+                                {{ permission }} <span class="opacity-75">· {{ roles is empty ? 'geen rol' : roles|join(', ') }}</span>
+                            </span>
+                        {% endfor %}
+                        {% if section.hasAdminOnlyRoutes %}
+                            <span class="badge bg-secondary">{{ section.permissions is empty ? 'Alleen admins' : 'sommige pagina\'s alleen admins' }}</span>
+                            <a href="{{ path('admin_route_permission_new', {route: section.pattern}) }}" class="btn btn-sm btn-outline-primary py-0">
+                                <i class="fas fa-plus me-1"></i>Regel toevoegen
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </span>
+            </summary>
+            <table class="table table-sm mt-2 mb-0">
+                {% for route in section.routes %}
+                    <tr>
+                        <td><code>{{ route.name }}</code></td>
+                        <td class="text-end">
+                            {% if route.permission %}
+                                <span class="badge bg-primary">{{ route.permission }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Alleen admins</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </details>
+    {% endfor %}
+</div>
 {% endblock %}
 
 {% block javascripts %}

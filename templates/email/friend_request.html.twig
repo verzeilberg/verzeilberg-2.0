@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ accepted ? 'Vriendschapsverzoek geaccepteerd' : 'Nieuw vriendschapsverzoek' }} - Verzeilberg.nl</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h1 style="color: #0d6efd;">{{ accepted ? 'Vriendschapsverzoek geaccepteerd' : 'Nieuw vriendschapsverzoek' }}</h1>
+
+    <p>Hallo {{ recipient.fullName }},</p>
+
+    {% if accepted %}
+        <p><strong>{{ other.fullName }}</strong> heeft je vriendschapsverzoek geaccepteerd. Jullie kunnen nu elkaars pagina zien, ook als die privé is.</p>
+    {% else %}
+        <p><strong>{{ other.fullName }}</strong> wil je vriend worden op Verzeilberg.nl.</p>
+    {% endif %}
+
+    <p style="text-align: center; margin: 30px 0;">
+        <a href="{{ accepted ? url('app_user_show', {id: other.id}) : url('app_friends') }}" style="background-color: #0d6efd; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            {{ accepted ? 'Bekijk ' ~ other.fullName : 'Bekijk het verzoek' }}
+        </a>
+    </p>
+
+    <hr style="border: none; border-top: 1px solid #dee2e6; margin: 30px 0;">
+    <p style="color: #6c757d; font-size: 0.875rem;">Verzeilberg.nl &middot; Geen meldingen meer? Zet ze uit bij <a href="{{ url('app_profile_edit') }}" style="color: #6c757d;">je profiel</a>.</p>
+</body>
+</html>

@@ -32,3 +32,6 @@
 @import "./modules/steam.css";
 
 @import "./vendor/flatpickr.css";
+
+/* Site theme last, so it styles Bootstrap and the shared components above */
+@import "./layout/site.css";

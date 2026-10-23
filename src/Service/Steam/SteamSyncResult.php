@@ -23,11 +23,11 @@ final class SteamSyncResult
     public function summary(): string
     {
         $summary = sprintf(
-            '%d added, %d updated, %d removed; store details for %d game(s), achievements for %d game(s).',
+            '%d toegevoegd, %d bijgewerkt, %d verwijderd; winkelgegevens voor %d game(s), prestaties voor %d game(s).',
             $this->added, $this->updated, $this->removed, $this->details, $this->achievements
         );
         if ($this->detailsPending > 0 || $this->achievementsPending > 0) {
-            $summary .= sprintf(' Next run: %d detail(s) and %d achievement read(s) left.', $this->detailsPending, $this->achievementsPending);
+            $summary .= sprintf(' Volgende keer: nog %d game(s) voor gegevens en %d voor prestaties.', $this->detailsPending, $this->achievementsPending);
         }
 
         return $summary;

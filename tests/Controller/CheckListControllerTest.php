@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\CheckList;
+use App\Entity\Friendship;
 use App\Tests\Checklist\ChecklistTestTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -54,7 +55,7 @@ class CheckListControllerTest extends WebTestCase
         $checkList = $this->checkListWithField(CheckList::ACCESS_PUBLIC);
 
         $crawler = $this->client->request('GET', '/checklists');
-        $this->assertStringContainsString($checkList->getName(), $crawler->filter('.list-group')->text());
+        $this->assertStringContainsString($checkList->getName(), $crawler->filter('main')->text());
 
         $form = $this->client->request('GET', '/checklists/' . $checkList->getId() . '/fill')->filter('form[name="check_list_item"]')->form();
         $form['check_list_item[field_naam]'] = 'Anoniem';
@@ -78,6 +79,40 @@ class CheckListControllerTest extends WebTestCase
         $this->assertStringNotContainsString($checkList->getName(), $crawler->filter('main')->text());
     }
 
+    public function testFriendsChecklistIsOnlyForTheOwnersFriends(): void
+    {
+        $owner = $this->createUser();
+        $friend = $this->createUser();
+        $stranger = $this->createUser();
+        $checkList = $this->checkListWithField(CheckList::ACCESS_FRIENDS);
+        $checkList->setOwner($owner);
+        $this->em->persist((new Friendship($owner, $friend))->accept());
+        $this->em->persist(new Friendship($owner, $stranger)); // only a request: not friends yet
+        $this->em->flush();
+        $fillUrl = '/checklists/' . $checkList->getId() . '/fill';
+
+        $this->client->request('GET', $fillUrl);
+        $this->assertStringContainsString('/login', (string) $this->client->getResponse()->headers->get('Location'), 'anonymous: log in first');
+
+        $this->loginAs($stranger);
+        $this->client->request('GET', $fillUrl);
+        $this->assertResponseStatusCodeSame(404);
+        $crawler = $this->client->request('GET', '/checklists');
+        $this->assertStringNotContainsString($checkList->getName(), $crawler->filter('main')->text());
+
+        $this->loginAs($friend);
+        $crawler = $this->client->request('GET', '/checklists');
+        $this->assertStringContainsString($checkList->getName(), $crawler->filter('main')->text());
+        $form = $this->client->request('GET', $fillUrl)->filter('form[name="check_list_item"]')->form();
+        $form['check_list_item[field_naam]'] = 'Vriend';
+        $this->client->submit($form);
+        $this->assertResponseRedirects('/checklists/' . $checkList->getId() . '/mine');
+
+        $this->loginAs($owner);
+        $crawler = $this->client->request('GET', '/checklists');
+        $this->assertStringContainsString($checkList->getName(), $crawler->filter('main')->text(), 'the owner sees it too');
+    }
+
     public function testUserCanViewAndEditOwnSubmissions(): void
     {
         $checkList = $this->checkListWithField(CheckList::ACCESS_USER);
@@ -92,7 +127,7 @@ class CheckListControllerTest extends WebTestCase
         $itemId = (int) $this->connection->fetchOne('SELECT id FROM checklist_items WHERE check_list_id = ? AND created_by = ?', [$checkList->getId(), $user->getId()]);
         $this->assertGreaterThan(0, $itemId);
         $this->client->request('GET', '/checklists/' . $checkList->getId() . '/mine');
-        $this->assertSelectorTextContains('.list-group', 'Submission #' . $itemId);
+        $this->assertSelectorTextContains('main table', 'Inzending #' . $itemId);
 
         $form = $this->client->request('GET', '/checklists/item/' . $itemId . '/edit')->filter('form[name="check_list_item"]')->form();
         $form['check_list_item[field_naam]'] = 'Jan Jansen';
@@ -144,7 +179,7 @@ class CheckListControllerTest extends WebTestCase
 
         // 5 per 10 minutes: the 6th is refused
         $this->assertResponseStatusCodeSame(429);
-        $this->assertSelectorTextContains('.alert-warning', 'too often');
+        $this->assertSelectorTextContains('.alert-warning', 'te vaak');
         $this->assertSame(5, (int) $this->connection->fetchOne('SELECT COUNT(*) FROM checklist_items WHERE check_list_id = ?', [$checkList->getId()]));
     }
 

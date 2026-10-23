@@ -135,7 +135,7 @@ class GoogleCalendarTest extends KernelTestCase
             $this->assertStringContainsString('expired or revoked', $e->getMessage());
         }
 
-        $this->assertStringContainsString('connect the account again', (string) $agenda->getGoogleAccount()?->getLastError());
+        $this->assertStringContainsString('koppel het account opnieuw', (string) $agenda->getGoogleAccount()?->getLastError());
         $this->assertNotNull($agenda->getLastSyncError());
     }
 

@@ -7,133 +7,103 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 {% endblock %}
 
-{% block body %}
-<div class="row">
-    <div class="col-md-8">
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('app_events') }}">Events</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ event.title }}</li>
-            </ol>
-        </nav>
+{% block page_title %}{{ event.title }}{% endblock %}
+{% block page_lead %}
+    {% if event.isUpcoming() %}Komend{% elseif event.isOngoing() %}Nu bezig{% else %}Afgelopen event{% endif %}{% if event.category %} in {{ event.category.name }}{% endif %}
+{% endblock %}
+{% block page_actions %}
+    <a href="{{ path('app_events') }}" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Alle events</a>
+    {% if not event.isPast() %}
+        <a href="{{ path('app_event_ics', {slug: event.slug}) }}" class="btn btn-outline-primary"><i class="fas fa-calendar-plus me-2"></i>Toevoegen aan agenda</a>
+    {% endif %}
+{% endblock %}
 
+{% block body %}
+<div class="row g-4">
+    <div class="col-lg-8">
         <article class="card">
             {% if event.eventImage %}
-                <img src="{{ event.eventImage.getPublicPath() }}" class="card-img-top" alt="{{ event.title }}">
+                <img src="{{ event.eventImage.getPublicPath() }}" class="article-image" alt="{{ event.title }}">
             {% endif %}
-            <div class="card-body">
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                    {% if event.category %}
-                        <span class="badge bg-info">{{ event.category.name }}</span>
-                    {% endif %}
-                    {% if event.isUpcoming() %}
-                        <span class="badge bg-primary"><i class="fas fa-clock me-1"></i>Upcoming</span>
-                    {% elseif event.isOngoing() %}
-                        <span class="badge bg-success"><i class="fas fa-play me-1"></i>Ongoing</span>
-                    {% else %}
-                        <span class="badge bg-secondary"><i class="fas fa-history me-1"></i>Past</span>
-                    {% endif %}
-                </div>
-
-                <h1 class="card-title mb-3">{{ event.title }}</h1>
-
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <p class="mb-1"><strong><i class="fas fa-calendar-day me-2"></i>Date:</strong></p>
-                        <p class="mb-0">{{ event.eventStartDate|date('l, d F Y') }}
-                            {% if event.eventEndDate != event.eventStartDate %}
-                                &nbsp;<i class="fas fa-arrow-right mx-1"></i>&nbsp;{{ event.eventEndDate|date('l, d F Y') }}
-                            {% endif %}
-                        </p>
+            <div class="card-body article-body">
+                <dl class="article-facts">
+                    <div>
+                        <dt>Datum</dt>
+                        <dd>{{ event.eventStartDate|nl_date('l j F Y') }}{% if event.eventEndDate != event.eventStartDate %} t/m {{ event.eventEndDate|nl_date('l j F Y') }}{% endif %}</dd>
                     </div>
                     {% if event.eventStartTime or event.eventEndTime %}
-                    <div class="col-md-6">
-                        <p class="mb-1"><strong><i class="fas fa-clock me-2"></i>Time:</strong></p>
-                        <p class="mb-0">
-                            {% if event.eventStartTime %}{{ event.eventStartTime|date('H:i') }}{% else %}00:00{% endif %}
-                            -
-                            {% if event.eventEndTime %}{{ event.eventEndTime|date('H:i') }}{% else %}23:59{% endif %}
-                        </p>
-                    </div>
+                        <div>
+                            <dt>Tijd</dt>
+                            <dd>{{ event.eventStartTime ? event.eventStartTime|date('H:i') : '00:00' }}–{{ event.eventEndTime ? event.eventEndTime|date('H:i') : '23:59' }}</dd>
+                        </div>
                     {% endif %}
-                </div>
-
-                {% if event.longitude and event.latitude %}
-                <div class="mb-4">
-                    <p class="mb-1"><strong><i class="fas fa-map-marker-alt me-2"></i>Location:</strong></p>
-                    <div id="eventMap" class="map-canvas"></div>
-                </div>
-                {% endif %}
+                </dl>
 
                 {% if event.labelText %}
-                    <div class="alert alert-light mb-4">
-                        {{ event.labelText|raw }}
-                    </div>
+                    <div class="article-intro">{{ event.labelText|raw }}</div>
                 {% endif %}
 
                 {% if event.text %}
-                    <div class="mb-4">
-                        {{ event.text|raw }}
-                    </div>
+                    <div class="prose mb-4">{{ event.text|raw }}</div>
+                {% endif %}
+
+                {% if racePoints is not empty %}
+                    <h2 class="h4 mb-3">Route</h2>
+                    <div id="eventMap" class="map-canvas"></div>
+                {% elseif event.longitude and event.latitude %}
+                    <h2 class="h4 mb-3">Locatie</h2>
+                    <div id="eventMap" class="map-canvas"></div>
                 {% endif %}
             </div>
         </article>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-lg-4">
+        {% if race %}
+            <aside class="card mb-4">
+                <div class="card-header"><h2>Mijn resultaat</h2></div>
+                <div class="card-body">
+                    <dl class="article-facts mb-0">
+                        <div><dt>Afstand</dt><dd>{{ race.distanceInKm|number_format(2, ',', '.') }} km</dd></div>
+                        <div><dt>Tijd</dt><dd>{{ race.movingTimeFormatted }}</dd></div>
+                        {% if race.type == 'Run' %}
+                            <div><dt>Tempo</dt><dd>{{ race.pace }} min/km</dd></div>
+                        {% elseif race.averageSpeed %}
+                            <div><dt>Snelheid</dt><dd>{{ (race.averageSpeed * 3.6)|number_format(1) }} km/h</dd></div>
+                        {% endif %}
+                        {% if race.totalElevationGain >= 1 %}
+                            <div><dt>Hoogtemeters</dt><dd>{{ race.totalElevationGain|number_format(0, '', '', '.') }} m</dd></div>
+                        {% endif %}
+                    </dl>
+                    <a href="https://www.strava.com/activities/{{ race.activityId }}" target="_blank" rel="noopener" class="d-inline-block mt-3"><i class="fab fa-strava me-1"></i>Bekijk op Strava</a>
+                </div>
+            </aside>
+        {% endif %}
         {% if relatedEvents %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Upcoming Events</h5>
-            </div>
-            <div class="card-body p-0">
+            <aside class="card mb-4">
+                <div class="card-header"><h2>Binnenkort</h2></div>
                 <div class="list-group list-group-flush">
                     {% for related in relatedEvents %}
-                    <a href="{{ path('app_event_show', {id: related.id}) }}" class="list-group-item list-group-item-action">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">{{ related.title }}</h6>
-                            <small>{{ related.eventStartDate|date('d M Y') }}</small>
-                        </div>
-                        {% if related.category %}
-                            <small class="text-muted">{{ related.category.name }}</small>
-                        {% endif %}
-                    </a>
+                        <a href="{{ path('app_event_show', {slug: related.slug}) }}" class="list-group-item list-group-item-action">
+                            <strong class="d-block">{{ related.title }}</strong>
+                            <small class="text-muted">{{ related.eventStartDate|nl_date('j M Y') }}{% if related.category %}, {{ related.category.name }}{% endif %}</small>
+                        </a>
                     {% endfor %}
                 </div>
-            </div>
-        </div>
+            </aside>
         {% endif %}
-
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-share-alt me-2"></i>Share</h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex gap-2">
-                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ app.request.uri|url_encode }}" target="_blank" class="btn btn-outline-primary" rel="noopener">
-                        <i class="fab fa-facebook-f"></i>
-                    </a>
-                    <a href="https://twitter.com/intent/tweet?text={{ event.title|url_encode }}&url={{ app.request.uri|url_encode }}" target="_blank" class="btn btn-outline-info" rel="noopener">
-                        <i class="fab fa-twitter"></i>
-                    </a>
-                    <a href="mailto:?subject={{ event.title|url_encode }}&body={{ app.request.uri|url_encode }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-envelope"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-    {% if event.longitude and event.latitude %}
+    {% if racePoints is not empty or (event.longitude and event.latitude) %}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="{{ asset('js/modules/event/event-map.js') }}"
             data-latitude="{{ event.latitude }}"
             data-longitude="{{ event.longitude }}"
-            data-title="{{ event.title }}"></script>
+            data-title="{{ event.title }}"
+            data-route="{{ racePoints|json_encode|e('html_attr') }}"></script>
     {% endif %}
 {% endblock %}

@@ -1,0 +1,36 @@
+# Two-factor login, always on: a code by email (the default) or from an authenticator app (TOTP),
+# with backup codes for the app and "trust this device". Users choose on their profile
+# (TwoFactorController). See https://symfony.com/bundles/SchebTwoFactorBundle
+scheb_two_factor:
+    security_tokens:
+        - Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken
+        - Symfony\Component\Security\Http\Authenticator\Token\PostAuthenticationToken
+
+    # A code that was just used can't be used again, also not within its 30 seconds
+    code_reuse_cache: cache.app
+    code_reuse_cache_duration: 90
+
+    email:
+        enabled: true
+        mailer: App\Security\TwoFactorCodeMailer
+        digits: 6
+        template: security/2fa_form.html.twig
+
+    totp:
+        enabled: true
+        issuer: 'Verzeilberg.nl'
+        server_name: 'Verzeilberg.nl'
+        # Accept a code from the previous/next 30-second window, for a phone clock that is a bit off
+        leeway: 15
+        template: security/2fa_form.html.twig
+
+    backup_codes:
+        enabled: true
+
+    trusted_device:
+        enabled: true
+        # 30 days
+        lifetime: 2592000
+        cookie_name: trusted_device
+        cookie_secure: auto
+        cookie_same_site: lax

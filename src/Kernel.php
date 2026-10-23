@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Doctrine\EncryptedStringType;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
@@ -16,6 +17,14 @@ class Kernel extends BaseKernel
     private function getAllowedEnvs(): array
     {
         return ['prod', 'dev', 'test'];
+    }
+
+    public function boot(): void
+    {
+        parent::boot();
+
+        // Encrypted database columns (passwords and tokens) use a key derived from APP_SECRET
+        EncryptedStringType::setSecret((string) $this->getContainer()->getParameter('kernel.secret'));
     }
 
     protected function configureRoutes(RoutingConfigurator $routes): void
