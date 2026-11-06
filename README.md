@@ -103,6 +103,8 @@ bin/build-release.sh                 # add --with-uploads the first time
 
 This builds a ready-to-upload copy in `release/`, with production packages, compiled assets and the settings from `.env.prod.local`. Upload its contents over FTP, then delete `var/cache/prod/` on the server.
 
+**First upload (replacing the old site's database):** the hosting allows no new database, so `bin/build-db-export.sh` (add `--mariadb` for a MariaDB server) builds one `.sql.gz` from the local database. Importing it in phpMyAdmin drops every table in the selected database, then creates and fills the new ones. Export the old database first as a backup, and delete the file afterwards, because it holds personal data.
+
 There is no shell on that server, so database changes go through phpMyAdmin. Create the SQL locally with `php bin/console doctrine:migrations:migrate --write-sql` and run it there. The admin status page (`/admin/status`) shows whether the database is up to date and whether mail works.
 
 Uploaded files (`public/uploads/`) are not in git. Copy them to the server over FTP.
