@@ -78,7 +78,7 @@ class SteamPagesTest extends WebTestCase
 
         $crawler = $this->client->request('GET', '/admin/settings/homepage');
         $this->assertResponseIsSuccessful();
-        $this->assertSame(['checked', 'checked', 'checked'], $crawler->filter('input[type=checkbox]')->each(fn ($node) => $node->attr('checked')), 'every block shows by default');
+        $this->assertSame(['checked', 'checked', 'checked', 'checked'], $crawler->filter('input[type=checkbox]')->each(fn ($node) => $node->attr('checked')), 'every block shows by default');
 
         $form = $crawler->selectButton('Wijzigingen opslaan')->form();
         $form['form[games]']->untick();

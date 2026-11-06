@@ -42,3 +42,8 @@
     font-weight: 600;
     font-size: 1.1rem;
 }
+
+/* Running charts on the home page: lower than on /running, the block shares the page */
+.home-running .chart-container {
+    height: 260px;
+}

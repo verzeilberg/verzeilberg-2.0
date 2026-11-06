@@ -6,6 +6,7 @@ namespace App\Tests\Running;
 
 use App\Entity\Event;
 use App\Entity\Strava\Activity;
+use App\Service\HomepageSections;
 use App\Service\Strava\RunningStats;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -65,6 +66,31 @@ class RunningPageTest extends WebTestCase
         $this->assertSelectorExists('a[href="/event/' . $event->getSlug() . '"]');
         $this->assertSelectorTextContains('body', '44:42', 'the race time');
         $this->assertSelectorTextNotContains('body', 'Morning run', 'no names of training runs');
+    }
+
+    public function testHomePageShowsTheNewestYearAndCanBeSwitchedOff(): void
+    {
+        // The home block takes the newest year with runs, so start without the runs of other tests (rolled back)
+        $this->connection->executeStatement('DELETE FROM strava_rounds');
+        $this->connection->executeStatement('DELETE FROM strava_activities');
+
+        $this->client->request('GET', '/');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorNotExists('.home-running', 'no block without runs');
+
+        $this->activity('Old run', '1990-03-01 08:00', 5000, 1500, null);
+        $this->activity('Run', '1991-05-01 08:00', 12400, 3700, null);
+        $this->activity('Race', '1991-09-01 10:00', 21100, 6300, 1);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/');
+        $this->assertSelectorTextContains('.home-running h2', 'Hardlopen in 1991');
+        $this->assertSame(['34', '2', '3', '1'], $crawler->filter('.home-running .stat-tile-value')->each(fn ($node) => $node->text()), 'km, runs, hours, races of 1991');
+        $this->assertSelectorExists('.home-running a[href="/running"]');
+
+        static::getContainer()->get(HomepageSections::class)->setVisible('running', false);
+        $this->client->request('GET', '/');
+        $this->assertSelectorNotExists('.home-running', 'switched off in the settings');
     }
 
     public function testFeedsForSearchEnginesAndCalendars(): void

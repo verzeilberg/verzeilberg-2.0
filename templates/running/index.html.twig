@@ -19,20 +19,8 @@
         {% endfor %}
     </nav>
 
-    <div class="row g-3 section">
-        {% for label, value in {
-            'Kilometers': totals.km|number_format(0, ',', '.'),
-            'Loopjes': totals.runs,
-            'Uren': (totals.seconds / 3600)|round|number_format(0, ',', '.'),
-            'Wedstrijden': totals.races,
-        } %}
-            <div class="col-6 col-md-3">
-                <div class="stat-tile">
-                    <div class="stat-tile-value">{{ value }}</div>
-                    <div class="stat-tile-label">{{ label }} in {{ year }}</div>
-                </div>
-            </div>
-        {% endfor %}
+    <div class="section">
+        {{ include('running/_stat_tiles.html.twig') }}
     </div>
 
     <div class="row g-4 section">

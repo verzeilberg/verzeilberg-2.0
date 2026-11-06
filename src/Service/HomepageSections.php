@@ -17,6 +17,7 @@ class HomepageSections
     public const SECTIONS = [
         'blog' => ['Nieuwste berichten', 'Het uitgelichte bericht en de drie berichten daarna'],
         'event' => ['Volgend event', 'Het eerstvolgende event met aftelklok'],
+        'running' => ['Hardlopen', 'Kilometers, loopjes, uren en wedstrijden van het laatste jaar met loopjes, uit Strava'],
         'games' => ['Recent gespeeld', 'De laatst gespeelde Steam-games (volgt ook de Steam-privacyinstelling)'],
     ];
 

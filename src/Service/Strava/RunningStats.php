@@ -8,12 +8,13 @@ use App\Entity\Event;
 use App\Entity\Strava\Activity;
 use App\Repository\EventRepository;
 use App\Repository\Strava\ActivityRepository;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * The public running overview (/running), from the Strava runs: totals per year and month, personal records per
  * distance and the races. Only numbers and race names: no routes, and no names of training runs.
  */
-class RunningStats
+class RunningStats implements ResetInterface
 {
     /** Distances for personal records: label => [shortest, longest] in meters a run may measure (GPS is never exact) */
     public const RECORD_DISTANCES = [
@@ -38,6 +39,13 @@ class RunningStats
         private ActivityRepository $activityRepository,
         private EventRepository $eventRepository,
     ) {
+    }
+
+    /** Forget the loaded runs between requests (a worker process or the test client handles several) */
+    public function reset(): void
+    {
+        $this->runs = null;
+        $this->eventsByDay = null;
     }
 
     /** @return list<int> years with runs, newest first */

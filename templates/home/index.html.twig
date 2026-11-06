@@ -75,6 +75,61 @@
 </section>
 {% endif %}
 
+{% if runningTotals %}
+<section class="section home-running">
+    <h2 class="section-title">Hardlopen in {{ runningYear }} <a href="{{ path('app_running') }}">Alle statistieken</a></h2>
+    {{ include('running/_stat_tiles.html.twig', {totals: runningTotals, year: runningYear}) }}
+
+    {% set months = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'] %}
+    <div class="row g-4 mt-0">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header"><h3>Kilometers per maand, {{ runningYear }}</h3></div>
+                <div class="card-body">
+                    <div class="chart-container"><canvas id="homeMonthChart" role="img" aria-label="Staafdiagram van de gelopen kilometers per maand in {{ runningYear }}"></canvas></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header"><h3>Opgeteld{% if runningPrevious %}: {{ runningYear }} tegen {{ runningYear - 1 }}{% else %} in {{ runningYear }}{% endif %}</h3></div>
+                <div class="card-body">
+                    <div class="chart-container"><canvas id="homeCumulativeChart" role="img" aria-label="Lijndiagram van de opgetelde kilometers per maand in {{ runningYear }}{% if runningPrevious %}, vergeleken met {{ runningYear - 1 }}{% endif %}"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <details class="mt-2">
+        <summary class="small text-muted">Toon de grafieken als tabel</summary>
+        <div class="table-responsive">
+            <table class="table table-sm mt-2 mb-0">
+                <thead>
+                    <tr>
+                        <th>Maand</th>
+                        <th class="text-end">km {{ runningYear }}</th>
+                        <th class="text-end">Opgeteld {{ runningYear }}</th>
+                        {% if runningPrevious %}<th class="text-end">Opgeteld {{ runningYear - 1 }}</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set sum = 0 %}{% set previousSum = 0 %}
+                    {% for km in runningTotals.kmPerMonth %}
+                        {% set sum = sum + km %}
+                        {% if runningPrevious %}{% set previousSum = previousSum + runningPrevious.kmPerMonth[loop.index0] %}{% endif %}
+                        <tr>
+                            <td>{{ months[loop.index0] }}</td>
+                            <td class="text-end">{{ loop.index <= runningMonths ? km|number_format(1, ',', '.') : '–' }}</td>
+                            <td class="text-end">{{ loop.index <= runningMonths ? sum|number_format(1, ',', '.') : '–' }}</td>
+                            {% if runningPrevious %}<td class="text-end">{{ previousSum|number_format(1, ',', '.') }}</td>{% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+</section>
+{% endif %}
+
 {% if recentGames %}
 <section class="section">
     <h2 class="section-title">Recent gespeeld <a href="{{ path('app_games') }}">Gamebibliotheek</a></h2>
@@ -93,4 +148,13 @@
 {% block javascripts %}
     {{ parent() }}
     <script src="{{ asset('js/modules/home/flip-clock.js') }}"></script>
+    {% if runningTotals %}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+        <script src="{{ asset('js/modules/home/running-charts.js') }}"
+                data-months="{{ ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']|json_encode|e('html_attr') }}"
+                data-year="{{ runningYear }}"
+                data-month-km="{{ runningTotals.kmPerMonth|json_encode|e('html_attr') }}"
+                data-shown-months="{{ runningMonths }}"
+                {% if runningPrevious %}data-previous-month-km="{{ runningPrevious.kmPerMonth|json_encode|e('html_attr') }}"{% endif %}></script>
+    {% endif %}
 {% endblock %}

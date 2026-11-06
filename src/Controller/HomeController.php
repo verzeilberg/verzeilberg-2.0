@@ -12,6 +12,7 @@ use App\Repository\MenuItemRepository;
 use App\Repository\Steam\SteamGameRepository;
 use App\Service\HomepageSections;
 use App\Service\Steam\SteamPrivacy;
+use App\Service\Strava\RunningStats;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -26,6 +27,7 @@ class HomeController extends AbstractController
         private SteamGameRepository $steamGameRepository,
         private SteamPrivacy $steamPrivacy,
         private HomepageSections $homepageSections,
+        private RunningStats $runningStats,
     ) {}
 
     #[Route('/', name: 'app_home')]
@@ -37,6 +39,8 @@ class HomeController extends AbstractController
         $latestPosts = $this->homepageSections->isVisible('blog') ? $this->blogPostRepository->findOnlinePosts(4, 0) : [];
         $upcomingEvents = $this->homepageSections->isVisible('event') ? $this->eventRepository->findUpcoming(1) : [];
         $showGames = $this->homepageSections->isVisible('games') && !$this->steamPrivacy->isActivityHidden();
+        // The newest year with runs, so the block doesn't show zeros in January
+        $runningYear = $this->homepageSections->isVisible('running') ? ($this->runningStats->years()[0] ?? null) : null;
 
         $featuredPost = null;
         $otherPosts = [];
@@ -52,6 +56,13 @@ class HomeController extends AbstractController
             'featuredPost' => $featuredPost,
             'otherPosts' => $otherPosts,
             'upcomingEvent' => $upcomingEvents ? $upcomingEvents[0] : null,
+            'runningYear' => $runningYear,
+            'runningTotals' => $runningYear !== null ? $this->runningStats->year($runningYear) : null,
+            // Last year as comparison in the cumulative chart, when there were runs
+            'runningPrevious' => $runningYear !== null && in_array($runningYear - 1, $this->runningStats->years(), true)
+                ? $this->runningStats->year($runningYear - 1) : null,
+            // The running year only up to this month, so its line doesn't run flat into the future
+            'runningMonths' => $runningYear === (int) date('Y') ? (int) date('n') : 12,
             // "Recently played" shows when games were played, so it follows the Steam privacy switch
             'recentGames' => $showGames ? $this->steamGameRepository->findRecentlyPlayed(4) : [],
         ]);
