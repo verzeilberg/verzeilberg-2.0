@@ -1,0 +1,45 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Startpagina - Instellingen{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-home me-2"></i>Startpagina</h1>
+    <a href="{{ path('admin_settings_index') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Terug naar instellingen
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <p class="text-muted">Kies welke blokken op de startpagina getoond worden. Een blok zonder inhoud (bijvoorbeeld geen komend event) wordt nooit getoond.</p>
+                {{ form_start(form) }}
+                    {% for child in form %}
+                        {% if child.vars.name != '_token' %}
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                {{ form_widget(child, {'attr': {'class': 'form-check-input', 'role': 'switch'}}) }}
+                                <label class="form-check-label fw-bold" for="{{ child.vars.id }}">{{ child.vars.label }}</label>
+                                <div class="form-text">{{ child.vars.help }}</div>
+                            </div>
+                            {{ form_errors(child) }}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <div class="form-actions-bar">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Wijzigingen opslaan
+                        </button>
+                        <a href="{{ path('app_home') }}" class="btn btn-outline-secondary" target="_blank" rel="noopener">
+                            <i class="fas fa-external-link-alt me-1"></i>Bekijk startpagina
+                        </a>
+                    </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

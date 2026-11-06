@@ -10,6 +10,7 @@ use App\Repository\EventRepository;
 use App\Repository\MenuRepository;
 use App\Repository\MenuItemRepository;
 use App\Repository\Steam\SteamGameRepository;
+use App\Service\HomepageSections;
 use App\Service\Steam\SteamPrivacy;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,6 +25,7 @@ class HomeController extends AbstractController
         private EventRepository $eventRepository,
         private SteamGameRepository $steamGameRepository,
         private SteamPrivacy $steamPrivacy,
+        private HomepageSections $homepageSections,
     ) {}
 
     #[Route('/', name: 'app_home')]
@@ -31,8 +33,10 @@ class HomeController extends AbstractController
     {
         $mainMenu = $this->menuRepository->findByName('main');
         $menuItems = $mainMenu ? $this->menuItemRepository->findRootItemsByMenu($mainMenu) : [];
-        $latestPosts = $this->blogPostRepository->findOnlinePosts(4, 0);
-        $upcomingEvents = $this->eventRepository->findUpcoming(1);
+        // Hidden blocks are not queried at all
+        $latestPosts = $this->homepageSections->isVisible('blog') ? $this->blogPostRepository->findOnlinePosts(4, 0) : [];
+        $upcomingEvents = $this->homepageSections->isVisible('event') ? $this->eventRepository->findUpcoming(1) : [];
+        $showGames = $this->homepageSections->isVisible('games') && !$this->steamPrivacy->isActivityHidden();
 
         $featuredPost = null;
         $otherPosts = [];
@@ -49,7 +53,7 @@ class HomeController extends AbstractController
             'otherPosts' => $otherPosts,
             'upcomingEvent' => $upcomingEvents ? $upcomingEvents[0] : null,
             // "Recently played" shows when games were played, so it follows the Steam privacy switch
-            'recentGames' => $this->steamPrivacy->isActivityHidden() ? [] : $this->steamGameRepository->findRecentlyPlayed(4),
+            'recentGames' => $showGames ? $this->steamGameRepository->findRecentlyPlayed(4) : [],
         ]);
     }
 

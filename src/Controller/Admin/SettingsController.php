@@ -7,8 +7,10 @@ namespace App\Controller\Admin;
 use App\Entity\Setting;
 use App\Form\SettingType;
 use App\Repository\SettingRepository;
+use App\Service\HomepageSections;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -59,6 +61,34 @@ class SettingsController extends AbstractController
         return $this->render('admin/settings/comment_moderation.html.twig', [
             'form' => $form->createView(),
             'setting' => $setting,
+        ]);
+    }
+
+    #[Route('/homepage', name: 'admin_settings_homepage', methods: ['GET', 'POST'])]
+    public function homepage(Request $request, HomepageSections $homepageSections): Response
+    {
+        $builder = $this->createFormBuilder($homepageSections->all());
+        foreach (HomepageSections::SECTIONS as $section => [$label, $description]) {
+            $builder->add($section, CheckboxType::class, [
+                'label' => $label,
+                'help' => $description,
+                'required' => false,
+            ]);
+        }
+        $form = $builder->getForm();
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            foreach ($form->getData() as $section => $visible) {
+                $homepageSections->setVisible($section, (bool) $visible);
+            }
+            $this->addFlash('success', 'Instellingen voor de startpagina opgeslagen.');
+
+            return $this->redirectToRoute('admin_settings_homepage');
+        }
+
+        return $this->render('admin/settings/homepage.html.twig', [
+            'form' => $form->createView(),
         ]);
     }
 }

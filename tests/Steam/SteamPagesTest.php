@@ -7,6 +7,7 @@ namespace App\Tests\Steam;
 use App\Entity\Role;
 use App\Entity\Steam\SteamGame;
 use App\Entity\User;
+use App\Service\HomepageSections;
 use App\Service\Steam\SteamApiClient;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -65,6 +66,32 @@ class SteamPagesTest extends WebTestCase
 
         $this->game(10, 'Factorio', 600, '-1 day', ['Strategy']);
         $this->em->flush();
+        $this->client->request('GET', '/');
+        $this->assertSelectorTextContains('.steam-game .card-title', 'Factorio');
+    }
+
+    public function testAdminCanSwitchHomePageBlocksOff(): void
+    {
+        $this->game(10, 'Factorio', 600, '-1 day', ['Strategy']);
+        $this->em->flush();
+        $this->loginAsAdmin();
+
+        $crawler = $this->client->request('GET', '/admin/settings/homepage');
+        $this->assertResponseIsSuccessful();
+        $this->assertSame(['checked', 'checked', 'checked'], $crawler->filter('input[type=checkbox]')->each(fn ($node) => $node->attr('checked')), 'every block shows by default');
+
+        $form = $crawler->selectButton('Wijzigingen opslaan')->form();
+        $form['form[games]']->untick();
+        $this->client->submit($form);
+        $this->assertResponseRedirects('/admin/settings/homepage');
+
+        $this->assertFalse(static::getContainer()->get(HomepageSections::class)->isVisible('games'));
+        $this->assertTrue(static::getContainer()->get(HomepageSections::class)->isVisible('blog'));
+        $this->client->request('GET', '/');
+        $this->assertResponseIsSuccessful();
+        $this->assertSelectorNotExists('.steam-game', 'games block switched off');
+
+        static::getContainer()->get(HomepageSections::class)->setVisible('games', true);
         $this->client->request('GET', '/');
         $this->assertSelectorTextContains('.steam-game .card-title', 'Factorio');
     }

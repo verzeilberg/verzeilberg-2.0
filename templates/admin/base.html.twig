@@ -143,7 +143,7 @@
                 </a>
                 {% endif %}
                 {% if can_access('admin_settings_index') %}
-                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_settings_index', 'admin_settings_comment_moderation'] %}active{% endif %}" href="{{ path('admin_settings_index') }}">
+                <a class="nav-link {% if app.request.attributes.get('_route') in ['admin_settings_index', 'admin_settings_comment_moderation', 'admin_settings_homepage'] %}active{% endif %}" href="{{ path('admin_settings_index') }}">
                     <i class="fas fa-cog"></i> Instellingen
                 </a>
                 {% endif %}
