@@ -78,7 +78,7 @@
 {% if runningTotals %}
 <section class="section home-running">
     <h2 class="section-title">Hardlopen in {{ runningYear }} <a href="{{ path('app_running') }}">Alle statistieken</a></h2>
-    {{ include('running/_stat_tiles.html.twig', {totals: runningTotals, year: runningYear}) }}
+    {{ include('running/_stat_tiles.html.twig', {totals: runningTotals, year: runningYear, illustrated: true}) }}
 
     {% set months = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'] %}
     <div class="row g-4 mt-0">

@@ -47,3 +47,40 @@
 .home-running .chart-container {
     height: 260px;
 }
+
+/* Running tiles on the home page: a photo per tile under a navy wash, so the white numbers stay readable.
+   Photos from Unsplash (free to use under the Unsplash License, https://unsplash.com/license):
+   km    https://unsplash.com/photos/QVD3Xht9txA (Andrea Leopardi)
+   runs  https://unsplash.com/photos/bE6k8SQT2FQ (Kelly Sikkema)
+   hours https://unsplash.com/photos/VwqMTcsb0Tg (William Warby)
+   races https://unsplash.com/photos/u8S_aBv4eDU */
+/* .stat-tile.… : this file loads before the base .stat-tile rule (site.css), so one class alone would lose */
+.stat-tile.stat-tile-illustrated {
+    border-color: var(--vz-navy);
+    border-top-color: var(--vz-yellow);
+    background-color: var(--vz-navy);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+.stat-tile-illustrated .stat-tile-value {
+    color: var(--vz-white);
+}
+.stat-tile-illustrated .stat-tile-label {
+    color: rgba(255, 255, 255, 0.88);
+}
+.stat-tile.stat-tile-km {
+    background-image: linear-gradient(90deg, rgba(11, 37, 69, 0.9) 0%, rgba(11, 37, 69, 0.55) 100%), url('../../images/running/km.jpg');
+    background-position: center, center 70%;
+}
+.stat-tile.stat-tile-runs {
+    background-image: linear-gradient(90deg, rgba(11, 37, 69, 0.9) 0%, rgba(11, 37, 69, 0.55) 100%), url('../../images/running/runs.jpg');
+}
+.stat-tile.stat-tile-hours {
+    background-image: linear-gradient(90deg, rgba(11, 37, 69, 0.9) 0%, rgba(11, 37, 69, 0.55) 100%), url('../../images/running/hours.jpg');
+    background-position: center, 70% center;
+}
+.stat-tile.stat-tile-races {
+    background-image: linear-gradient(90deg, rgba(11, 37, 69, 0.9) 0%, rgba(11, 37, 69, 0.55) 100%), url('../../images/running/races.jpg');
+    background-position: center, 70% 40%;
+}

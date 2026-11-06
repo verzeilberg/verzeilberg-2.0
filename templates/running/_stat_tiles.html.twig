@@ -1,15 +1,16 @@
-{# The year's running totals as four tiles; used on /running and on the home page. Needs: totals (RunningStats::year), year #}
+{# The year's running totals as four tiles; used on /running and on the home page.
+   Needs: totals (RunningStats::year), year. Optional: illustrated (true on the home page: a picture per tile) #}
 <div class="row g-3">
-    {% for label, value in {
-        'Kilometers': totals.km|number_format(0, ',', '.'),
-        'Loopjes': totals.runs,
-        'Uren': (totals.seconds / 3600)|round|number_format(0, ',', '.'),
-        'Wedstrijden': totals.races,
-    } %}
+    {% for tile in [
+        {key: 'km', label: 'Kilometers', value: totals.km|number_format(0, ',', '.')},
+        {key: 'runs', label: 'Loopjes', value: totals.runs},
+        {key: 'hours', label: 'Uren', value: (totals.seconds / 3600)|round|number_format(0, ',', '.')},
+        {key: 'races', label: 'Wedstrijden', value: totals.races},
+    ] %}
         <div class="col-6 col-md-3">
-            <div class="stat-tile">
-                <div class="stat-tile-value">{{ value }}</div>
-                <div class="stat-tile-label">{{ label }} in {{ year }}</div>
+            <div class="stat-tile{% if illustrated ?? false %} stat-tile-illustrated stat-tile-{{ tile.key }}{% endif %}">
+                <div class="stat-tile-value">{{ tile.value }}</div>
+                <div class="stat-tile-label">{{ tile.label }} in {{ year }}</div>
             </div>
         </div>
     {% endfor %}
