@@ -42,7 +42,7 @@ step "Code"
 excludes=(
     --include=/.env --exclude='/.*' --exclude="/$OUT/"
     --exclude=/var/ --exclude=/vendor/ --exclude=/tests/ --exclude=/.phpunit.cache/
-    --exclude=/public/assets/ --exclude=/public/bundles/ --exclude=/public/share-images/
+    --exclude=/public/assets/ --exclude=/public/bundles/ --exclude=/public/share-images/ --exclude=/public/pma/
     --exclude='/compose*.yaml' --exclude=/cookies.txt --exclude='/phpunit*' --exclude=/phpstan.neon
 )
 [ "$WITH_UPLOADS" = 1 ] || excludes+=(--exclude=/public/uploads/)

@@ -27,3 +27,6 @@
 
 # FTP release built by bin/build-release.sh
 /release/
+
+# Local phpMyAdmin, not part of the site
+/public/pma/
