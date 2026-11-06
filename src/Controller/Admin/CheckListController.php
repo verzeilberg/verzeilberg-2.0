@@ -18,11 +18,13 @@ use App\Entity\User;
 use App\Security\Voter\CheckListVoter;
 use App\Service\CheckListConditionEvaluator;
 use App\Service\CheckListExporter;
+use App\Service\CheckListImporter;
 use App\Service\CheckListService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\Pagination\PaginationInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -210,6 +212,55 @@ class CheckListController extends AbstractController
         $items = $this->checkListService->findItemsForList($checkList, $listQuery['search'], $listQuery['filters'], $listQuery['order']);
 
         return $exporter->createResponse($checkList, $format, $items);
+    }
+
+    #[Route('/{id<\d+>}/import/template', name: 'admin_checklist_import_template', methods: ['GET'])]
+    public function importTemplate(int $id, CheckListImporter $importer): Response
+    {
+        $checkList = $this->checkListService->getCheckListById($id);
+
+        if (!$checkList) {
+            throw $this->createNotFoundException('Checklist niet gevonden');
+        }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
+
+        return $importer->createTemplateResponse($checkList);
+    }
+
+    #[Route('/{id<\d+>}/import', name: 'admin_checklist_import', methods: ['GET', 'POST'])]
+    public function import(Request $request, int $id, CheckListImporter $importer): Response
+    {
+        $checkList = $this->checkListService->getCheckListById($id);
+
+        if (!$checkList) {
+            throw $this->createNotFoundException('Checklist niet gevonden');
+        }
+        $this->denyAccessUnlessGranted(CheckListVoter::MANAGE, $checkList);
+
+        $errors = [];
+        if ($request->isMethod('POST')) {
+            $file = $request->files->get('file');
+            if (!$this->isCsrfTokenValid('import_checklist' . $checkList->getId(), $request->request->getString('_token'))) {
+                $errors = ['Ongeldig beveiligingstoken. Probeer het opnieuw.'];
+            } elseif (!$file instanceof UploadedFile) {
+                $errors = ['Kies een bestand om te importeren.'];
+            } else {
+                $result = $importer->import($checkList, $file, $this->getAppUser());
+                if ($result->isSuccessful()) {
+                    $this->addFlash('success', sprintf('%d %s geïmporteerd.', $result->imported, $result->imported === 1 ? 'item' : 'items'));
+
+                    return $this->redirectToRoute('admin_checklist_show', ['id' => $checkList->getId()]);
+                }
+                $errors = $result->errors;
+            }
+        }
+
+        return $this->render('admin/checklist/import.html.twig', [
+            'checkList' => $checkList,
+            'columns' => $importer->getImportColumns($checkList),
+            'errors' => $errors,
+            'maxRows' => CheckListImporter::MAX_ROWS,
+        ], new Response(status: $errors ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
     #[Route('/item/{id<\d+>}', name: 'admin_checklist_item_show', methods: ['GET'])]

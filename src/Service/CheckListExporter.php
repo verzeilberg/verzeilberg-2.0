@@ -97,30 +97,11 @@ class CheckListExporter
     }
 
     /**
-     * Fields with a value, in the same (tree) order as the item detail page.
-     * Fields inside a fieldset get the fieldset name in their header.
-     *
      * @return list<array{field: CheckListField, header: string}>
      */
     private function getColumns(CheckList $checkList): array
     {
-        $fields = $this->checkListService->getCheckListFieldsByCheckListWithChildren($checkList);
-        $columns = [];
-        $walk = function (iterable $fields, string $prefix) use (&$walk, &$columns): void {
-            foreach ($fields as $field) {
-                if ($field->getFormType() === 'fieldset') {
-                    $walk($field->getChildren(), $prefix . $field->getName() . ' › ');
-                    continue;
-                }
-                if ($field->getFormType() !== 'hidden') {
-                    $columns[] = ['field' => $field, 'header' => $prefix . $field->getName()];
-                }
-                $walk($field->getChildren(), $prefix);
-            }
-        };
-        $walk(array_filter($fields, fn (CheckListField $field) => $field->getParent() === null), '');
-
-        return $columns;
+        return $this->checkListService->getValueColumns($checkList);
     }
 
     private function valueCell(CheckListItem $item, CheckListField $field, ?string $value, string $format): Cell

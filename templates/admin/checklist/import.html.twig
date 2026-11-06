@@ -1,0 +1,66 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Importeren - {{ checkList.name }} - Beheer{% endblock %}
+
+{% block body %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1><i class="fas fa-file-import me-2"></i>Items importeren in "{{ checkList.name }}"</h1>
+    <a href="{{ path('admin_checklist_show', {id: checkList.id}) }}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Terug naar antwoorden</a>
+</div>
+
+{% if errors is not empty %}
+    <div class="alert alert-danger" role="alert">
+        <p class="fw-bold mb-2"><i class="fas fa-exclamation-triangle me-1"></i>Er is niets geïmporteerd. Pas het bestand aan en probeer het opnieuw.</p>
+        <ul class="mb-0">
+            {% for error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+{% if columns is empty %}
+    <div class="alert alert-warning">
+        <i class="fas fa-info-circle me-1"></i>Deze checklist heeft nog geen velden die je kunt importeren.
+        <a href="{{ path('admin_checklist_edit', {id: checkList.id}) }}">Voeg eerst velden toe</a>.
+    </div>
+{% else %}
+    <div class="card mb-4">
+        <div class="card-header"><h5 class="mb-0">1. Sjabloon downloaden en invullen</h5></div>
+        <div class="card-body">
+            <p>Het sjabloon is een Excel-bestand met een kolom per veld. Vul één item per rij in. Op het tabblad <em>Uitleg</em> staat per kolom wat je kunt invullen; bij keuzevelden kies je uit een lijst.</p>
+            <a href="{{ path('admin_checklist_import_template', {id: checkList.id}) }}" class="btn btn-success">
+                <i class="fas fa-file-excel me-1"></i>Importsjabloon downloaden
+            </a>
+            <details class="mt-3">
+                <summary>Kolommen in het sjabloon ({{ columns|length }})</summary>
+                <ul class="mt-2 mb-0">
+                    {% for column in columns %}
+                        <li>{{ column.header }}{% if column.field.required %} <span class="badge bg-secondary">verplicht</span>{% endif %}</li>
+                    {% endfor %}
+                </ul>
+            </details>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h5 class="mb-0">2. Ingevuld bestand importeren</h5></div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                <input type="hidden" name="_token" value="{{ csrf_token('import_checklist' ~ checkList.id) }}">
+                <div class="mb-3">
+                    <label for="importFile" class="form-label">Excel- of CSV-bestand</label>
+                    <input type="file" id="importFile" name="file" class="form-control" required
+                           accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv">
+                </div>
+                <div class="alert alert-info small">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Elke rij wordt een nieuw item; bestaande items worden niet aangepast. De rijen worden op dezelfde manier gecontroleerd als het formulier.
+                    Klopt er één rij niet, dan wordt niets geïmporteerd. Maximaal {{ maxRows }} items per keer. Bestanden uploaden kan niet via de import.
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-file-import me-1"></i>Importeren</button>
+            </form>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

@@ -74,6 +74,8 @@ class OwnChecklistTest extends WebTestCase
             '/admin/checklist/' . $other->getId() . '/edit',
             '/admin/checklist/' . $other->getId(),
             '/admin/checklist/' . $other->getId() . '/export/csv',
+            '/admin/checklist/' . $other->getId() . '/import',
+            '/admin/checklist/' . $other->getId() . '/import/template',
             '/admin/checklist/' . $other->getId() . '/fields/new',
             '/admin/checklist/field/' . $field->getId() . '/edit',
             '/admin/checklist/item/' . $item->getId(),

@@ -197,6 +197,33 @@ class CheckListService
     }
 
     /**
+     * Fields with a value, in the same (tree) order as the item detail page, as used for the export and import columns.
+     * Fields inside a fieldset get the fieldset name in their header ("Fieldset › Field"). Hidden fields are left out.
+     *
+     * @return list<array{field: CheckListField, header: string}>
+     */
+    public function getValueColumns(CheckList $checkList): array
+    {
+        $fields = $this->getCheckListFieldsByCheckListWithChildren($checkList);
+        $columns = [];
+        $walk = function (iterable $fields, string $prefix) use (&$walk, &$columns): void {
+            foreach ($fields as $field) {
+                if ($field->getFormType() === 'fieldset') {
+                    $walk($field->getChildren(), $prefix . $field->getName() . ' › ');
+                    continue;
+                }
+                if ($field->getFormType() !== 'hidden') {
+                    $columns[] = ['field' => $field, 'header' => $prefix . $field->getName()];
+                }
+                $walk($field->getChildren(), $prefix);
+            }
+        };
+        $walk(array_filter($fields, fn (CheckListField $field) => $field->getParent() === null), '');
+
+        return $columns;
+    }
+
+    /**
      * Fieldsets of the checklist that $field may be placed in, without making the tree deeper
      * than MAX_FIELD_DEPTH and without placing a field inside itself or one of its own descendants.
      *
