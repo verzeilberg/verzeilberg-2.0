@@ -101,7 +101,7 @@ This pulls the code, installs the packages, backs up the database, runs the migr
 bin/build-release.sh                 # add --with-uploads the first time
 ```
 
-This builds a ready-to-upload copy in `release/`, with production packages, compiled assets and the settings from `.env.prod.local`. Upload its contents over FTP, then delete `var/cache/prod/` on the server.
+This builds a ready-to-upload copy in `release/`, with production packages, compiled assets and the settings from `.env.prod.local`. Upload its contents over FTP, then delete `var/cache/prod/` on the server. Always include `vendor/composer/`: the autoloader only knows the classes listed there, so a new class in `src/` without it gives a 500 on every page. Never upload `var/` or `public/share-images/`; in a sync tool (PhpStorm's "Sync with Deployed") exclude those, `vendor/` and `public/uploads/`.
 
 **First upload (replacing the old site's database):** the hosting allows no new database, so `bin/build-db-export.sh` (add `--mariadb` for a MariaDB server) builds one `.sql.gz` from the local database. Importing it in phpMyAdmin drops every table in the selected database, then creates and fills the new ones. Export the old database first as a backup, and delete the file afterwards, because it holds personal data.
 

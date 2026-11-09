@@ -48,6 +48,8 @@ excludes=(
 [ "$WITH_UPLOADS" = 1 ] || excludes+=(--exclude=/public/uploads/)
 mkdir -p "$OUT"
 rsync -a --delete "${excludes[@]}" ./ "$OUT/"
+# Excluded folders survive rsync --delete: remove what an older build left that must never reach the server
+rm -rf "$OUT/public/pma"
 cp .env.prod.local "$OUT/.env.prod.local"
 ok "Copied the working tree"
 cd "$OUT"
@@ -77,7 +79,10 @@ cat <<EOF
 
     Upload over FTP:
       - the contents of $OUT/ into the site folder (the one that holds public/)
-      - vendor/ only when composer.lock changed; public/uploads/ only on the first upload (--with-uploads)
+      - vendor/composer/ ALWAYS: the autoloader only knows the classes listed there, so a new class
+        in src/ breaks the whole site without it. The rest of vendor/ only when composer.lock changed
+      - public/uploads/ only on the first upload (--with-uploads)
+    Never upload var/ or public/share-images/ (the server's own), and exclude them in a sync tool
     Then on the server (FTP):
       - delete var/cache/prod/, so the new code is used
       - files removed here are not removed there; delete those by hand (or use a sync tool)
