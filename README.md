@@ -107,7 +107,7 @@ This builds a ready-to-upload copy in `release/`, with production packages, comp
 
 There is no shell on that server, so database changes go through phpMyAdmin. Create the SQL locally with `php bin/console doctrine:migrations:migrate --write-sql` and run it there. The admin status page (`/admin/status`) shows whether the database is up to date and whether mail works.
 
-Uploaded files (`public/uploads/`) are not in git. Copy them to the server over FTP.
+Uploaded files (`public/uploads/`) are not in git. Copy them to the server over FTP. Blog videos for logged in visitors are uploaded in the admin and live only on the server, in `var/storage/blog-videos/` (outside `public/`, so there is no URL to them): back that folder up over FTP now and then, and never delete `var/storage/`.
 
 ### Background jobs
 

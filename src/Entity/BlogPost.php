@@ -79,6 +79,11 @@ class BlogPost
     #[ORM\JoinTable(name: 'blog_post_youtube')]
     private Collection $youTubes;
 
+    /** @var Collection<int, BlogVideo> videos for logged in visitors only */
+    #[ORM\OneToMany(mappedBy: 'blogPost', targetEntity: BlogVideo::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['sortOrder' => 'ASC', 'id' => 'ASC'])]
+    private Collection $videos;
+
     /** @var Collection<int, BlogComment> */
     #[ORM\OneToMany(mappedBy: 'blogPost', targetEntity: BlogComment::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy(['dateCreated' => 'ASC'])]
@@ -90,6 +95,7 @@ class BlogPost
         $this->images = new ArrayCollection();
         $this->files = new ArrayCollection();
         $this->youTubes = new ArrayCollection();
+        $this->videos = new ArrayCollection();
         $this->comments = new ArrayCollection();
     }
 
@@ -288,6 +294,28 @@ class BlogPost
         if ($this->files->contains($file)) {
             $this->files->removeElement($file);
         }
+        return $this;
+    }
+
+    /** @return Collection<int, BlogVideo> */
+    public function getVideos(): Collection
+    {
+        return $this->videos;
+    }
+
+    public function addVideo(BlogVideo $video): self
+    {
+        if (!$this->videos->contains($video)) {
+            $this->videos->add($video);
+        }
+
+        return $this;
+    }
+
+    public function removeVideo(BlogVideo $video): self
+    {
+        $this->videos->removeElement($video);
+
         return $this;
     }
 

@@ -28,6 +28,9 @@ parameters:
 
     # Uploaded blog/event files, managed in the admin under Media (see MediaLibrary)
     app.uploads_dir: '%kernel.project_dir%/public/uploads'
+
+    # Blog videos for logged in visitors: outside public/, served by BlogVideoController only
+    app.blog_video_dir: '%kernel.project_dir%/var/storage/blog-videos'
     app.uploads_url: '/uploads'
 
     # Where notifications about new contact messages and blog comments go
@@ -61,3 +64,4 @@ when@test:
     parameters:
         # Tests get their own folder, so they never touch real uploads
         app.uploads_dir: '%kernel.project_dir%/var/test-uploads'
+        app.blog_video_dir: '%kernel.project_dir%/var/test-uploads/blog-videos'

@@ -96,6 +96,37 @@
                     </section>
                 {% endif %}
 
+                {# Own videos: only for logged in visitors. Others don't get the URL, the title or the file name #}
+                {% if post.videos|length > 0 %}
+                    <section class="mt-4" id="videos">
+                        <h2 class="h4 mb-3">Video's</h2>
+                        {% if can_see_private() %}
+                            <div class="row g-3">
+                                {% for video in post.videos %}
+                                    <div class="col-md-6">
+                                        <video class="w-100 rounded bg-dark protected-video" controls playsinline preload="metadata"
+                                               controlslist="nodownload noremoteplayback" disablepictureinpicture disableremoteplayback
+                                               src="{{ path('blog_video_stream', {id: video.id}) }}">
+                                            Je browser kan deze video niet afspelen.
+                                        </video>
+                                        {% if video.title %}
+                                            <p class="small text-muted mt-1 mb-0">{{ video.title|names }}</p>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-secondary d-flex align-items-center gap-3 mb-0">
+                                <i class="fas fa-lock fa-lg"></i>
+                                <div>
+                                    Bij dit bericht {{ post.videos|length == 1 ? 'hoort een video' : 'horen ' ~ post.videos|length ~ " video's" }} die alleen te zien {{ post.videos|length == 1 ? 'is' : 'zijn' }} als je bent ingelogd.
+                                    <a href="{{ path('app_login') }}">Inloggen</a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </section>
+                {% endif %}
+
                 {% if post.files|length > 0 %}
                     <section class="mt-4">
                         <h2 class="h4 mb-3">Bijlagen</h2>
@@ -180,5 +211,8 @@
     {{ parent() }}
     {% if post.images|length > 1 %}
         <script src="{{ asset('js/modules/blog/carousel.js') }}"></script>
+    {% endif %}
+    {% if post.videos|length > 0 and can_see_private() %}
+        <script src="{{ asset('js/modules/blog/video.js') }}"></script>
     {% endif %}
 {% endblock %}

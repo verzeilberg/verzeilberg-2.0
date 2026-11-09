@@ -228,6 +228,52 @@
                 </div>
             </div>
         </div>
+
+        {# Own video files: only logged in visitors can watch them (BlogVideoController); uploaded in chunks #}
+        <div class="card mb-4" id="blogVideos">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-lock me-2"></i>Video's voor ingelogde bezoekers</h5>
+            </div>
+            <div class="card-body">
+                <div id="videoList">
+                    {% for video in post.videos %}
+                        <div class="d-flex justify-content-between align-items-center mb-2 video-item">
+                            <div class="text-truncate me-2">
+                                <i class="fas fa-film me-2"></i>{{ video.title ?? video.originalName ?? 'Video' }}
+                                <small class="text-muted ms-2">{{ video.getHumanReadableSize() }}</small>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-danger delete-video" data-delete-url="{{ path('admin_blog_video_delete', {id: post.id, videoId: video.id}) }}" data-csrf-token="{{ csrf_token('delete_video' ~ video.id) }}" title="Verwijderen">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Nog geen video's geüpload</p>
+                    {% endfor %}
+                </div>
+
+                <form id="videoUploadForm" class="border-top pt-3 mt-2"
+                      data-upload-url="{{ path('admin_blog_video_upload', {id: post.id}) }}"
+                      data-csrf-token="{{ csrf_token('blog_video_upload' ~ post.id) }}"
+                      data-chunk-size="{{ video_chunk_size }}"
+                      data-max-size="{{ video_max_size }}">
+                    <div class="mb-2">
+                        <label for="videoFile" class="form-label">Videobestand</label>
+                        <input type="file" id="videoFile" class="form-control" accept="video/mp4,video/webm,video/quicktime,video/x-m4v,.mp4,.webm,.mov,.m4v" required>
+                        <div class="form-text">mp4 werkt in elke browser. Een iPhone-video (.mov) eerst als mp4 exporteren.</div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="videoTitle" class="form-label">Titel <span class="text-muted">(optioneel)</span></label>
+                        <input type="text" id="videoTitle" class="form-control" maxlength="255">
+                    </div>
+                    <div class="progress mb-2 d-none" id="videoProgress" role="progressbar" aria-label="Uploadvoortgang">
+                        <div class="progress-bar" style="width: 0%">0%</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm" id="videoUploadButton">
+                        <i class="fas fa-upload me-1"></i>Uploaden
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -374,6 +420,7 @@
 {% block javascripts %}
     {{ parent() }}
     <script src="{{ asset('js/components/copy-button.js') }}"></script>
+    {% if post.id %}<script src="{{ asset('js/modules/blog/video-upload.js') }}"></script>{% endif %}
     <script src="{{ asset('js/modules/blog/post-form.js') }}"
             {%- if post.id %}
             data-image-upload-url="{{ path('admin_blog_image_upload', {id: post.id}) }}"

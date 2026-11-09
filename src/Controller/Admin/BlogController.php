@@ -18,6 +18,7 @@ use App\Form\BlogYouTubeType;
 use App\Repository\BlogPostRepository;
 use App\Repository\BlogCommentRepository;
 use App\Service\ActivityNotifier;
+use App\Service\BlogVideoStorage;
 use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
@@ -129,7 +130,7 @@ class BlogController extends AbstractController
     }
 
     #[Route('/{id<\d+>}/edit', name: 'admin_blog_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, int $id, UriSigner $uriSigner): Response
+    public function edit(Request $request, int $id, UriSigner $uriSigner, BlogVideoStorage $videoStorage): Response
     {
         $post = $this->blogPostRepository->findForAdmin($id);
 
@@ -162,6 +163,8 @@ class BlogController extends AbstractController
             'post' => $post,
             'previewUrl' => $previewUrl,
             'previewUntil' => $previewUntil,
+            'video_chunk_size' => $videoStorage->chunkSize(),
+            'video_max_size' => BlogVideoStorage::MAX_SIZE,
         ]);
     }
 
