@@ -6,6 +6,7 @@ namespace App\Tests\Security;
 
 use App\Entity\Contact;
 use App\Entity\User;
+use App\Tests\Support\MathCaptchaSolver;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -91,6 +92,7 @@ class RateLimitTest extends WebTestCase
                 'contact[email]' => 'visitor@example.com',
                 'contact[subject]' => 'Message ' . $i,
                 'contact[message]' => 'Hello there, message number ' . $i,
+                'contact[captcha]' => MathCaptchaSolver::answer($crawler),
             ]));
         }
 

@@ -50,6 +50,17 @@
                     {{ form_errors(form.message) }}
                 </div>
 
+                <div class="mb-4">
+                    {{ form_label(form.captcha) }}
+                    {{ form_widget(form.captcha, {attr: {class: 'form-control' ~ (form.captcha.vars.valid ? '' : ' is-invalid')}}) }}
+                    {{ form_errors(form.captcha) }}
+                </div>
+
+                {# Spam trap: hidden for people (and screen readers), bots fill it in #}
+                <div class="visually-offscreen" aria-hidden="true">
+                    {{ form_row(form.website) }}
+                </div>
+
                 <div class="d-grid">
                     {{ form_widget(form.submit, {label: 'Bericht versturen', attr: {class: 'btn btn-primary'}}) }}
                 </div>

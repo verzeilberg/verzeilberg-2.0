@@ -15,6 +15,8 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class ContactController extends AbstractController
 {
+    private const SENT_MESSAGE = 'Je bericht is verstuurd. We nemen zo snel mogelijk contact met je op.';
+
     public function __construct(
         private ContactService $contactService
     ) {}
@@ -25,6 +27,13 @@ class ContactController extends AbstractController
         $contact = new Contact();
         $form = $this->createForm(ContactType::class, $contact);
         $form->handleRequest($request);
+
+        // A filled in honeypot means a bot: act as if it worked, but save and send nothing
+        if ($form->isSubmitted() && $form->isValid() && $form->get(ContactType::HONEYPOT_FIELD)->getData()) {
+            $this->addFlash('success', self::SENT_MESSAGE);
+
+            return $this->redirectToRoute('app_contact');
+        }
 
         // Spam protection: each message mails the sender and the site's owner
         if ($form->isSubmitted() && $form->isValid() && !$contactFormLimiter->create('ip-' . $request->getClientIp())->consume()->isAccepted()) {
@@ -52,7 +61,7 @@ class ContactController extends AbstractController
                 // Log error but don't show to user
             }
 
-            $this->addFlash('success', 'Je bericht is verstuurd. We nemen zo snel mogelijk contact met je op.');
+            $this->addFlash('success', self::SENT_MESSAGE);
             
             return $this->redirectToRoute('app_contact');
         }

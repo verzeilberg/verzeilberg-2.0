@@ -16,6 +16,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ContactType extends AbstractType
 {
+    /** Name of the honeypot field: hidden for people, bots fill it in */
+    public const HONEYPOT_FIELD = 'website';
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -50,6 +53,13 @@ class ContactType extends AbstractType
                 'label' => 'Bericht',
                 'required' => true,
                 'attr' => ['class' => 'form-control', 'rows' => 6, 'placeholder' => 'Je bericht...'],
+            ])
+            ->add('captcha', MathCaptchaType::class)
+            ->add(self::HONEYPOT_FIELD, TextType::class, [
+                'mapped' => false,
+                'required' => false,
+                'label' => 'Laat dit veld leeg',
+                'attr' => ['autocomplete' => 'off', 'tabindex' => '-1'],
             ])
             ->add('submit', SubmitType::class, [
                 'label' => 'Versturen',
