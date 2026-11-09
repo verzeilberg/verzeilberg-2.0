@@ -48,7 +48,8 @@ excludes=(
 [ "$WITH_UPLOADS" = 1 ] || excludes+=(--exclude=/public/uploads/)
 mkdir -p "$OUT"
 rsync -a --delete "${excludes[@]}" ./ "$OUT/"
-# Excluded folders survive rsync --delete: remove what an older build left that must never reach the server
+# Excluded folders survive rsync --delete: remove what an older build left. public/pma (phpMyAdmin) is kept
+# on the server on purpose, but it is managed there by hand and shouldn't go along with every release
 rm -rf "$OUT/public/pma"
 cp .env.prod.local "$OUT/.env.prod.local"
 ok "Copied the working tree"
