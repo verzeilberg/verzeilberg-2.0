@@ -1,0 +1,13 @@
+{#
+ # A post's image in a fixed frame (blog cards, the home page's newest post). Landscape photos fill the frame
+ # (a little is cut off); square and portrait images like logos are shown whole, on a blurred copy of
+ # themselves, so nothing important is cut off. Needs: image (BlogImage), class, alt.
+ #}
+{% set wide = image.width and image.height and image.width / image.height >= 1.4 %}
+{% if wide or not image.width or not image.height %}
+    <img src="{{ image.getPublicPath() }}" class="{{ class }}" alt="{{ alt }}" loading="lazy">
+{% else %}
+    <div class="{{ class }} img-fit-whole" style="--img-fit-bg: url('{{ image.getPublicPath()|e('css') }}')">
+        <img src="{{ image.getPublicPath() }}" alt="{{ alt }}" loading="lazy">
+    </div>
+{% endif %}

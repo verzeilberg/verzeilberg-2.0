@@ -12,7 +12,7 @@
     <article class="feature-card card-link-cover mb-4">
         <a href="{{ path('blog_detail', {slug: featuredPost.slug}) }}" tabindex="-1" aria-hidden="true">
             {% if featuredPost.images|length > 0 %}
-                <img src="{{ featuredPost.images.first().getPublicPath() }}" alt="{{ featuredPost.images.first().alt ?? featuredPost.title }}" class="feature-card-image">
+                {{ include('blog/_list_image.html.twig', {image: featuredPost.images.first(), class: 'feature-card-image', alt: featuredPost.images.first().alt ?? featuredPost.title}) }}
             {% else %}
                 <div class="feature-card-image card-img-placeholder"><i class="fas fa-anchor"></i></div>
             {% endif %}
@@ -22,7 +22,7 @@
                 <span><i class="fas fa-calendar-day"></i>{{ (featuredPost.dateOnline ?? featuredPost.dateCreated)|nl_date('j F Y') }}</span>
             </div>
             <h3 class="card-title"><a href="{{ path('blog_detail', {slug: featuredPost.slug}) }}">{{ featuredPost.title }}</a></h3>
-            <p class="mb-0">{{ featuredPost.introText|names|striptags|u.truncate(220, '…') }}</p>
+            <p class="mb-0">{{ featuredPost.introText|names(featuredPost)|striptags|u.truncate(220, '…') }}</p>
             <div class="mt-auto pt-2">
                 <a href="{{ path('blog_detail', {slug: featuredPost.slug}) }}" class="btn btn-primary">Lees het bericht</a>
             </div>

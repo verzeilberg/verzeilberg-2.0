@@ -3,8 +3,7 @@
     <article class="card h-100 card-link-cover">
         <a href="{{ path('blog_detail', {slug: post.slug}) }}" tabindex="-1" aria-hidden="true">
             {% if post.images|length > 0 %}
-                {% set image = post.images.first() %}
-                <img src="{{ image.getPublicPath() }}" class="card-img-top" alt="" loading="lazy">
+                {{ include('blog/_list_image.html.twig', {image: post.images.first(), class: 'card-img-top', alt: ''}) }}
             {% else %}
                 <div class="card-img-top card-img-placeholder"><i class="fas fa-newspaper"></i></div>
             {% endif %}
@@ -17,7 +16,7 @@
             {% endif %}
             <h3 class="card-title"><a href="{{ path('blog_detail', {slug: post.slug}) }}">{{ post.title }}</a></h3>
             {% if post.introText %}
-                <p class="card-text text-muted">{{ post.introText|names|striptags|u.truncate(120, '…') }}</p>
+                <p class="card-text text-muted">{{ post.introText|names(post)|striptags|u.truncate(120, '…') }}</p>
             {% endif %}
             <div class="card-meta mt-auto">
                 <span><i class="fas fa-calendar-day"></i>{{ (post.dateOnline ?? post.dateCreated)|nl_date('j M Y') }}</span>

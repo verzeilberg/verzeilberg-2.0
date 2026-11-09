@@ -14,3 +14,27 @@
     object-fit: cover;
 }
 
+
+/* Square and portrait images in a fixed frame (blog/_list_image.html.twig): shown whole,
+   on a blurred copy of themselves instead of cut off */
+.img-fit-whole {
+    position: relative;
+    overflow: hidden;
+    background-color: #1f2328;
+}
+
+.img-fit-whole::before {
+    content: "";
+    position: absolute;
+    inset: -24px;
+    background: var(--img-fit-bg) center / cover no-repeat;
+    filter: blur(18px) brightness(0.8);
+}
+
+.img-fit-whole > img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
