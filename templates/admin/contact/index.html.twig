@@ -10,10 +10,31 @@
 <div class="card">
     <div class="card-body">
         {% if contacts is defined and contacts.getTotalItemCount() > 0 %}
+            {% set total = contacts.getTotalItemCount() %}
+            {# The checkboxes in the table belong to this form (form="contactBulkForm"), so the rows can keep their own delete forms #}
+            <form id="contactBulkForm" action="{{ path('admin_contact_bulk_delete') }}" method="POST" class="d-flex flex-wrap align-items-center gap-2 mb-3" data-total="{{ total }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('contact_bulk_delete') }}">
+                <input type="hidden" name="all" value="0" id="contactBulkAll">
+                <button type="submit" class="btn btn-danger btn-sm" id="contactBulkDelete">
+                    <i class="fas fa-trash-alt me-1"></i><span>Geselecteerde verwijderen</span>
+                </button>
+                <span class="text-muted small d-none" id="contactBulkAllNotice">
+                    Alle berichten op deze pagina zijn geselecteerd.
+                    <button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="contactBulkSelectAll">Selecteer alle {{ total }} berichten</button>
+                </span>
+                <span class="text-muted small d-none" id="contactBulkAllSelected">
+                    Alle {{ total }} berichten zijn geselecteerd.
+                    <button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="contactBulkClear">Selectie wissen</button>
+                </span>
+            </form>
+
             <div class="table-responsive">
                 <table class="table table-hover table-striped">
                     <thead class="table-dark">
                         <tr>
+                            <th class="text-center" style="width: 2.5rem;">
+                                <input type="checkbox" class="form-check-input" id="contactSelectAll" title="Alles op deze pagina selecteren" aria-label="Alles op deze pagina selecteren">
+                            </th>
                             <th>Aanhef</th>
                             <th>Naam</th>
                             <th>E-mail</th>
@@ -25,6 +46,9 @@
                     <tbody>
                         {% for contact in contacts %}
                         <tr class="js-row-link cursor-pointer {{ contact.isRead ? '' : 'fw-bold' }}" data-href="{{ path('admin_contact_show', {id: contact.id}) }}" {{ contact.isRead ? '' : 'title="Ongelezen"' }}>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input contact-checkbox" name="ids[]" value="{{ contact.id }}" form="contactBulkForm" aria-label="Selecteer bericht van {{ contact.name }}">
+                            </td>
                             <td>{{ contact.salutationLabel }}</td>
                             <td>{{ contact.name }}</td>
                             <td>{{ contact.email }}</td>
@@ -58,4 +82,9 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/modules/contact/index.js') }}"></script>
 {% endblock %}

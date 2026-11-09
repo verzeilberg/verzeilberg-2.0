@@ -40,6 +40,25 @@ class ContactService
         $this->em->flush();
     }
 
+    /**
+     * Deletes the messages with these ids, or every message when $ids is null.
+     *
+     * @param list<int>|null $ids
+     * @return int how many were deleted
+     */
+    public function deleteContacts(?array $ids): int
+    {
+        $query = $this->em->createQueryBuilder()->delete(Contact::class, 'c');
+        if ($ids !== null) {
+            if ($ids === []) {
+                return 0;
+            }
+            $query->where('c.id IN (:ids)')->setParameter('ids', $ids);
+        }
+
+        return (int) $query->getQuery()->execute();
+    }
+
     public function saveContact(Contact $contact): void
     {
         $this->em->persist($contact);

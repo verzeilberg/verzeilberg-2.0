@@ -31,6 +31,32 @@ class ContactController extends AbstractController
         ]);
     }
 
+    /** Deletes the ticked messages, or all of them ("all" = every message, also those on other pages) */
+    #[Route('/bulk-delete', name: 'admin_contact_bulk_delete', methods: ['POST'])]
+    public function bulkDelete(Request $request): Response
+    {
+        if (!$this->isCsrfTokenValid('contact_bulk_delete', $request->request->getString('_token'))) {
+            $this->addFlash('error', 'Ongeldig beveiligingstoken, probeer het opnieuw.');
+
+            return $this->redirectToRoute('admin_contact_index');
+        }
+
+        $ids = $request->request->getBoolean('all')
+            ? null
+            : array_values(array_filter(array_map('intval', $request->request->all('ids'))));
+
+        if ($ids === []) {
+            $this->addFlash('error', 'Selecteer eerst een of meer contactformulieren.');
+
+            return $this->redirectToRoute('admin_contact_index');
+        }
+
+        $deleted = $this->contactService->deleteContacts($ids);
+        $this->addFlash('success', $deleted === 1 ? '1 contactformulier verwijderd.' : $deleted . ' contactformulieren verwijderd.');
+
+        return $this->redirectToRoute('admin_contact_index');
+    }
+
     #[Route('/{id}', name: 'admin_contact_show', methods: ['GET'])]
     public function show(Contact $contact): Response
     {
