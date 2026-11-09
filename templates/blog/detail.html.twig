@@ -71,11 +71,11 @@
                 {% endif %}
 
                 {% if post.introText %}
-                    <p class="article-intro">{{ post.introText|names|striptags }}</p>
+                    <p class="article-intro">{{ post.introText|names(post)|striptags }}</p>
                 {% endif %}
 
                 <div class="prose content">
-                    {{ post.content|names|raw }}
+                    {{ post.content|names(post)|raw }}
                 </div>
 
                 {% if post.youTubes|length > 0 %}
@@ -110,7 +110,7 @@
                                             Je browser kan deze video niet afspelen.
                                         </video>
                                         {% if video.title %}
-                                            <p class="small text-muted mt-1 mb-0">{{ video.title|names }}</p>
+                                            <p class="small text-muted mt-1 mb-0">{{ video.title|names(post) }}</p>
                                         {% endif %}
                                     </div>
                                 {% endfor %}

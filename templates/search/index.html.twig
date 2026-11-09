@@ -57,7 +57,7 @@
                                 </div>
                                 <h2 class="card-title"><a href="{{ url }}">{{ item.entity.title }}</a></h2>
                                 {% if item.entity.introText %}
-                                    <p class="card-text text-muted">{{ item.entity.introText|names|striptags|u.truncate(200, '…') }}</p>
+                                    <p class="card-text text-muted">{{ item.entity.introText|names(item.entity)|striptags|u.truncate(200, '…') }}</p>
                                 {% endif %}
                                 <div class="card-meta">
                                     <span><i class="fas fa-calendar-day"></i>{{ item.entity.dateCreated|nl_date('j M Y') }}</span>

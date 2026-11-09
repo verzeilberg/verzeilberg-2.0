@@ -58,6 +58,40 @@ class BlogNamesTest extends WebTestCase
         $this->assertSame('Hoi Jan Jansen!', NameMasker::reveal('Hoi [[Jan Jansen]]!'));
     }
 
+    public function testNamesWithTheSameInitialsGetASecondLetter(): void
+    {
+        // Never more than two letters, and only when that tells names apart
+        $this->assertSame(['karel' => 'K.', 'karin' => 'K.'], NameMasker::abbreviations(['Karel', 'Karin']));
+        $this->assertSame(['karel jansen' => 'K.J.', 'karin pieters' => 'K.P.'], NameMasker::abbreviations(['Karel Jansen', 'Karin Pieters']));
+        $this->assertSame(['karel' => 'Ka.', 'kees' => 'Ke.'], NameMasker::abbreviations(['Karel', 'Kees']));
+        $this->assertSame(['karel' => 'Ka.', 'kees' => 'Ke.', 'karin' => 'Ka.', 'piet' => 'P.'], NameMasker::abbreviations(['Karel', 'Kees', 'Karin', 'Piet']));
+        $this->assertSame(['jan jansen' => 'Ja.J.', 'joop jansen' => 'Jo.J.'], NameMasker::abbreviations(['Jan Jansen', 'Joop Jansen']));
+        $this->assertSame(['jan jansen' => 'J.J.', 'jan jacobs' => 'J.J.'], NameMasker::abbreviations(['Jan Jansen', 'Jan Jacobs']));
+        $this->assertSame(['jo' => 'J.', 'joop' => 'J.'], NameMasker::abbreviations(['Jo', 'Joop']));
+        $this->assertSame(['jan jansen' => 'Ja.J.', 'jan jacobs' => 'Ja.J.', 'joop jansen' => 'Jo.J.'], NameMasker::abbreviations(['Jan Jansen', 'Jan Jacobs', 'Joop Jansen']));
+        $this->assertSame(['jan' => 'J.', 'jan jansen' => 'J.J.'], NameMasker::abbreviations(['Jan', 'Jan Jansen']));
+        // The same name twice, written a bit differently, is one person
+        $this->assertSame(['karel' => 'K.'], NameMasker::abbreviations(['Karel', '<strong>karel</strong>']));
+
+        // The whole post decides: the intro alone has only Karel, but the content also has Kees
+        $context = 'Met [[Karel]]' . "\n" . '<div>[[Kees]] en [[Karel]]</div>';
+        $this->assertSame('Met Ka.', NameMasker::mask('Met [[Karel]]', $context));
+        $this->assertSame('Met K.', NameMasker::mask('Met [[Karel]]'));
+    }
+
+    public function testPageKeepsKarelAndKeesApart(): void
+    {
+        $this->post->setIntroText('Lopen met [[Karel]]')->setContent('<div>[[Karel]] en [[Kees]] liepen mee.</div>');
+        $this->em->flush();
+
+        $this->client->request('GET', '/blog/' . $this->post->getSlug());
+
+        $this->assertSelectorTextContains('.article-intro', 'Lopen met Ka.');
+        $this->assertSelectorTextContains('.prose.content', 'Ka. en Ke. liepen mee.');
+        $this->assertStringNotContainsString('Karel', $this->client->getResponse()->getContent());
+        $this->assertStringNotContainsString('Kees', $this->client->getResponse()->getContent());
+    }
+
     public function testVisitorSeesOnlyInitials(): void
     {
         $this->client->request('GET', '/blog/' . $this->post->getSlug());

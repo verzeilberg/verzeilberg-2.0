@@ -238,7 +238,7 @@ class BlogController extends AbstractController
         $firstImage = $post->getImages()->first();
         $ogImage = $firstImage ? $this->shareImage->forImage($firstImage) : null;
         // Initials only: link previews are public and get cached by other sites
-        $ogDescription = $this->plainSummary(NameMasker::mask($post->getIntroText() ?: $post->getContent()));
+        $ogDescription = $this->plainSummary(NameMasker::mask($post->getIntroText() ?: $post->getContent(), NameMasker::postContext($post)));
 
         // The newest other posts, for the sidebar (like the upcoming events next to an event)
         $recentPosts = array_slice(array_values(array_filter(
