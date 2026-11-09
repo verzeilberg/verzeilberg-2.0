@@ -37,7 +37,7 @@
 
                     <div class="mb-3">
                         {{ form_label(form.introText) }}
-                        {{ form_widget(form.introText, {'attr': {'class': 'form-control', 'rows': 3}}) }}
+                        {{ form_widget(form.introText, {'attr': {'class': 'form-control', 'rows': 3, 'data-emoji-picker': ''}}) }}
                         {{ form_errors(form.introText) }}
                     </div>
 
@@ -378,5 +378,6 @@
             data-image-upload-url="{{ path('admin_blog_image_upload', {id: post.id}) }}"
             data-file-upload-url="{{ path('admin_blog_file_upload', {id: post.id}) }}"
             data-youtube-add-url="{{ path('admin_blog_youtube_add', {id: post.id}) }}"{% endif %}></script>
+    <script src="{{ asset('js/components/emoji-picker.js') }}"></script>
     <script src="https://unpkg.com/trix@2.0.0/dist/trix.umd.min.js"></script>
 {% endblock %}
