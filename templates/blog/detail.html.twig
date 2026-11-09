@@ -71,11 +71,11 @@
                 {% endif %}
 
                 {% if post.introText %}
-                    <p class="article-intro">{{ post.introText|striptags }}</p>
+                    <p class="article-intro">{{ post.introText|names|striptags }}</p>
                 {% endif %}
 
                 <div class="prose content">
-                    {{ post.content|raw }}
+                    {{ post.content|names|raw }}
                 </div>
 
                 {% if post.youTubes|length > 0 %}

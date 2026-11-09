@@ -19,7 +19,8 @@ class SiteSearchService
         private EventRepository $eventRepository,
         private SearchPhraseRepository $searchPhraseRepository,
         private SteamGameRepository $steamGameRepository,
-        private EntityManagerInterface $em
+        private EntityManagerInterface $em,
+        private NameMasker $nameMasker,
     ) {
     }
 
@@ -50,7 +51,10 @@ class SiteSearchService
         $this->em->flush();
 
         // Only posts that are online (search() also finds scheduled/expired ones and stops at 10)
-        $blogPosts = $this->blogPostRepository->createPublicListQuery(null, $term)->setMaxResults(100)->getQuery()->getResult();
+        $blogPosts = $this->nameMasker->filterSearchResults(
+            $this->blogPostRepository->createPublicListQuery(null, $term)->setMaxResults(100)->getQuery()->getResult(),
+            $term
+        );
         $events = $this->eventRepository->search($term);
         $games = $this->steamGameRepository->searchPublic($term);
 

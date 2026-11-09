@@ -103,3 +103,9 @@ trix-toolbar .emoji-picker-toggle.trix-button {
     font-size: 1.1rem;
     padding: 0 0.5em;
 }
+
+trix-toolbar .trix-name-button.trix-button {
+    font-size: 0.85rem;
+    padding: 0 0.6em;
+    white-space: nowrap;
+}

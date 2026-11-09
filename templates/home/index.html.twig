@@ -22,7 +22,7 @@
                 <span><i class="fas fa-calendar-day"></i>{{ (featuredPost.dateOnline ?? featuredPost.dateCreated)|nl_date('j F Y') }}</span>
             </div>
             <h3 class="card-title"><a href="{{ path('blog_detail', {slug: featuredPost.slug}) }}">{{ featuredPost.title }}</a></h3>
-            <p class="mb-0">{{ featuredPost.introText|striptags|u.truncate(220, '…') }}</p>
+            <p class="mb-0">{{ featuredPost.introText|names|striptags|u.truncate(220, '…') }}</p>
             <div class="mt-auto pt-2">
                 <a href="{{ path('blog_detail', {slug: featuredPost.slug}) }}" class="btn btn-primary">Lees het bericht</a>
             </div>

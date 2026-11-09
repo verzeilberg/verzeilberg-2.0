@@ -17,7 +17,7 @@
             {% endif %}
             <h3 class="card-title"><a href="{{ path('blog_detail', {slug: post.slug}) }}">{{ post.title }}</a></h3>
             {% if post.introText %}
-                <p class="card-text text-muted">{{ post.introText|striptags|u.truncate(120, '…') }}</p>
+                <p class="card-text text-muted">{{ post.introText|names|striptags|u.truncate(120, '…') }}</p>
             {% endif %}
             <div class="card-meta mt-auto">
                 <span><i class="fas fa-calendar-day"></i>{{ (post.dateOnline ?? post.dateCreated)|nl_date('j M Y') }}</span>

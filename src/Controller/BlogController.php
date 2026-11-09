@@ -15,6 +15,7 @@ use App\Repository\SettingRepository;
 use App\Service\ActivityNotifier;
 use App\Service\CommentNotifier;
 use App\Service\SearchPhraseService;
+use App\Service\NameMasker;
 use App\Service\ShareImage;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -48,6 +49,7 @@ class BlogController extends AbstractController
         private ShareImage $shareImage,
         private CommentNotifier $commentNotifier,
         private ActivityNotifier $activityNotifier,
+        private NameMasker $nameMasker,
     ) {}
 
     /** RSS feed of the newest posts; priority 1, so "feed.xml" isn't taken for a post's slug */
@@ -121,7 +123,10 @@ class BlogController extends AbstractController
 
         $categories = $this->categoriesWithPosts();
 
-        $pagination = $this->paginator->paginate($this->blogPostRepository->createPublicListQuery(null, (string) $searchTerm), $page, self::PER_PAGE);
+        // Names in posts are hidden from visitors who aren't logged in, so they mustn't be findable either
+        $query = $this->blogPostRepository->createPublicListQuery(null, (string) $searchTerm);
+        $results = $this->nameMasker->canSeeNames() ? $query : $this->nameMasker->filterSearchResults($query->getQuery()->getResult(), (string) $searchTerm);
+        $pagination = $this->paginator->paginate($results, $page, self::PER_PAGE);
 
         return $this->render('blog/search.html.twig', [
             'pagination' => $pagination,
@@ -232,7 +237,8 @@ class BlogController extends AbstractController
         // Picture for link previews (og:image), e.g. when the post is shared in WhatsApp
         $firstImage = $post->getImages()->first();
         $ogImage = $firstImage ? $this->shareImage->forImage($firstImage) : null;
-        $ogDescription = $this->plainSummary($post->getIntroText() ?: $post->getContent());
+        // Initials only: link previews are public and get cached by other sites
+        $ogDescription = $this->plainSummary(NameMasker::mask($post->getIntroText() ?: $post->getContent()));
 
         // The newest other posts, for the sidebar (like the upcoming events next to an event)
         $recentPosts = array_slice(array_values(array_filter(

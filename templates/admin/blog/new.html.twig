@@ -32,7 +32,7 @@
 
                     <div class="mb-3">
                         {{ form_label(form.introText) }}
-                        {{ form_widget(form.introText, {'attr': {'class': 'form-control', 'rows': 3, 'data-emoji-picker': ''}}) }}
+                        {{ form_widget(form.introText, {'attr': {'class': 'form-control', 'rows': 3, 'data-emoji-picker': '', 'data-name-button': ''}}) }}
                         {{ form_errors(form.introText) }}
                     </div>
 
@@ -40,6 +40,7 @@
                         {{ form_label(form.content) }}
                         <trix-editor input="{{ form.content.vars.id }}" class="trix-content trix-content-xl form-control"></trix-editor>
                         {{ form_widget(form.content, {'attr': {'class': 'form-control d-none'}}) }}
+                        <div class="form-text">Zet namen tussen <code>[[</code> en <code>]]</code> (of gebruik de knop <i class="fas fa-user-secret"></i> Naam): ingelogde bezoekers zien de naam, anderen alleen de initialen, bijvoorbeeld [[Jan de Vries]] wordt J.d.V.</div>
                         {{ form_errors(form.content) }}
                     </div>
 
@@ -281,5 +282,6 @@
             data-file-upload-url="{{ path('admin_blog_file_upload', {id: post.id}) }}"
             data-youtube-add-url="{{ path('admin_blog_youtube_add', {id: post.id}) }}"{% endif %}></script>
     <script src="{{ asset('js/components/emoji-picker.js') }}"></script>
+    <script src="{{ asset('js/components/name-button.js') }}"></script>
     <script src="https://unpkg.com/trix@2.0.0/dist/trix.umd.min.js"></script>
 {% endblock %}
